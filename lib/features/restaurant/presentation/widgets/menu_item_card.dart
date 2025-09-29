@@ -1,0 +1,156 @@
+import 'package:flutter/material.dart';
+import 'package:food_delivery_app/shared/models/menu_item.dart';
+
+class MenuItemCard extends StatelessWidget {
+  final MenuItem menuItem;
+  final VoidCallback? onAddToCart;
+
+  const MenuItemCard({
+    Key? key,
+    required this.menuItem,
+    this.onAddToCart,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      elevation: 2,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Menu item image placeholder
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.local_dining,
+                    size: 40,
+                    color: Colors.grey,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                
+                // Menu item details
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              menuItem.name,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            '\$${menuItem.price.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.deepOrange,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      
+                      // Dietary restrictions badges
+                      if (menuItem.dietaryRestrictions != null && menuItem.dietaryRestrictions!.isNotEmpty)
+                        Wrap(
+                          spacing: 8,
+                          children: menuItem.dietaryRestrictions!.map<Widget>((restriction) {
+                            Color badgeColor;
+                            String badgeText;
+                            
+                            switch (restriction.toLowerCase()) {
+                              case 'vegetarian':
+                                badgeColor = Colors.green;
+                                badgeText = 'Veg';
+                                break;
+                              case 'vegan':
+                                badgeColor = Colors.green.shade700;
+                                badgeText = 'Vegan';
+                                break;
+                              case 'gluten-free':
+                                badgeColor = Colors.blue;
+                                badgeText = 'GF';
+                                break;
+                              default:
+                                badgeColor = Colors.grey;
+                                badgeText = restriction;
+                            }
+                            
+                            return Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: badgeColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: badgeColor),
+                              ),
+                              child: Text(
+                                badgeText,
+                                style: TextStyle(
+                                  color: badgeColor,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      
+                      const SizedBox(height: 8),
+                      
+                      Text(
+                        menuItem.description ?? 'No description available',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 12, right: 12, bottom: 12),
+            child: SizedBox(
+              width: double.infinity,
+              height: 40,
+              child: ElevatedButton(
+                onPressed: onAddToCart,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepOrange,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text('Add to Cart'),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+ }
+}

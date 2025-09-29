@@ -1,0 +1,368 @@
+openapi: 3.0.0
+info:
+  title: Restaurant API
+  description: API for managing restaurants in the food delivery app
+  version: 1.0.0
+servers:
+  - url: https://api.fooddeliveryapp.com/v1
+    description: Production server
+ - url: https://staging-api.fooddeliveryapp.com/v1
+    description: Staging server
+
+paths:
+  /restaurants:
+    get:
+      summary: Get list of restaurants
+      description: Retrieve a list of available restaurants with optional filtering and sorting
+      parameters:
+        - name: cuisine_type
+          in: query
+          description: Filter by cuisine type
+          required: false
+          schema:
+            type: string
+        - name: min_rating
+          in: query
+          description: Minimum rating filter
+          required: false
+          schema:
+            type: number
+            minimum: 0
+            maximum: 5
+        - name: max_delivery_time
+          in: query
+          description: Maximum delivery time in minutes
+          required: false
+          schema:
+            type: integer
+        - name: dietary_restriction
+          in: query
+          description: Filter by dietary restriction (vegetarian, vegan, gluten-free)
+          required: false
+          schema:
+            type: string
+        - name: sort_by
+          in: query
+          description: Sort by field (recommended, popularity, rating, delivery_time)
+          required: false
+          schema:
+            type: string
+            enum: [recommended, popularity, rating, delivery_time]
+        - name: page
+          in: query
+          description: Page number for pagination
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: Number of results per page
+          required: false
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        '200':
+          description: List of restaurants
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Restaurant'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /restaurants/{id}:
+    get:
+      summary: Get restaurant by ID
+      description: Retrieve details of a specific restaurant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique identifier of the restaurant
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Restaurant details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Restaurant'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /restaurants/{id}/menu:
+    get:
+      summary: Get restaurant menu
+      description: Retrieve the menu items for a specific restaurant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique identifier of the restaurant
+          schema:
+            type: string
+            format: uuid
+        - name: category
+          in: query
+          description: Filter menu items by category
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Menu items for the restaurant
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MenuItem'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  schemas:
+    Restaurant:
+      type: object
+      required:
+        - id
+        - name
+        - cuisine_type
+        - address
+        - rating
+        - is_active
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the restaurant
+        name:
+          type: string
+          description: Name of the restaurant
+        description:
+          type: string
+          description: Description of the restaurant
+        cuisine_type:
+          type: string
+          description: Type of cuisine offered
+        address:
+          $ref: '#/components/schemas/Address'
+        phone_number:
+          type: string
+          description: Restaurant phone number
+        email:
+          type: string
+          format: email
+          description: Restaurant email
+        opening_hours:
+          type: object
+          description: Operating hours for each day of the week
+          additionalProperties:
+            type: object
+            properties:
+              open:
+                type: string
+                description: Opening time (HH:MM format)
+              close:
+                type: string
+                description: Closing time (HH:MM format)
+        rating:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 5.0
+          description: Average rating from 0.0 to 5.0
+        delivery_radius:
+          type: number
+          format: float
+          description: Delivery radius in kilometers
+        estimated_delivery_time:
+          type: integer
+          description: Estimated delivery time in minutes
+        is_active:
+          type: boolean
+          description: Whether the restaurant is accepting orders
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when restaurant was added
+        updated_at:
+          type: string
+          format: date-time
+          description: Timestamp when restaurant was last updated
+
+    MenuItem:
+      type: object
+      required:
+        - id
+        - restaurant_id
+        - name
+        - price
+        - is_available
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the menu item
+        restaurant_id:
+          type: string
+          format: uuid
+          description: Reference to the restaurant
+        name:
+          type: string
+          description: Name of the menu item
+        description:
+          type: string
+          description: Description of the menu item
+        price:
+          type: number
+          format: decimal
+          description: Price of the menu item
+        category:
+          type: string
+          description: Category of the menu item
+        is_available:
+          type: boolean
+          description: Whether the item is currently available
+        dietary_restrictions:
+          type: array
+          items:
+            type: string
+            enum: [vegetarian, vegan, gluten-free]
+          description: Array of dietary restrictions
+        image_url:
+          type: string
+          format: uri
+          description: URL to the menu item image
+        preparation_time:
+          type: integer
+          description: Estimated preparation time in minutes
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when menu item was added
+        updated_at:
+          type: string
+          format: date-time
+          description: Timestamp when menu item was last updated
+
+    Address:
+      type: object
+      required:
+        - street
+        - city
+        - state
+        - zip_code
+        - coordinates
+      properties:
+        street:
+          type: string
+          description: Street address
+        city:
+          type: string
+          description: City name
+        state:
+          type: string
+          description: State name
+        zip_code:
+          type: string
+          description: ZIP code
+        coordinates:
+          $ref: '#/components/schemas/Coordinates'
+
+    Coordinates:
+      type: object
+      required:
+        - latitude
+        - longitude
+      properties:
+        latitude:
+          type: number
+          format: float
+          minimum: -90
+          maximum: 90
+          description: Latitude coordinate
+        longitude:
+          type: number
+          format: float
+          minimum: -180
+          maximum: 180
+          description: Longitude coordinate
+
+    Pagination:
+      type: object
+      required:
+        - page
+        - limit
+        - total
+        - total_pages
+      properties:
+        page:
+          type: integer
+          description: Current page number
+        limit:
+          type: integer
+          description: Number of results per page
+        total:
+          type: integer
+          description: Total number of results
+        total_pages:
+          type: integer
+          description: Total number of pages
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          description: Additional error details
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
