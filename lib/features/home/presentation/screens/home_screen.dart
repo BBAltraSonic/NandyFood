@@ -5,6 +5,7 @@ import 'package:food_delivery_app/features/restaurant/presentation/providers/res
 import 'package:food_delivery_app/features/home/presentation/widgets/home_map_view_widget.dart';
 import 'package:food_delivery_app/features/home/presentation/widgets/featured_restaurants_carousel.dart';
 import 'package:food_delivery_app/features/home/presentation/widgets/categories_horizontal_list.dart';
+import 'package:food_delivery_app/features/home/presentation/widgets/order_again_section.dart';
 import 'package:food_delivery_app/core/services/location_service.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -228,6 +229,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     .take(5)
                     .toList(),
               ),
+            ),
+
+            // Order Again Section (only visible if user has past orders)
+            const SliverToBoxAdapter(
+              child: OrderAgainSection(),
             ),
 
             // Categories
