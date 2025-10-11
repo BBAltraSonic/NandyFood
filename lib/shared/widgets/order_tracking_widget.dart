@@ -85,7 +85,7 @@ class OrderTrackingWidget extends StatelessWidget {
     final steps = [
       {'title': 'Order Placed', 'status': OrderStatus.placed},
       {'title': 'Preparing', 'status': OrderStatus.preparing},
-      {'title': 'Out for Delivery', 'status': OrderStatus.outForDelivery},
+      {'title': 'Out for Delivery', 'status': OrderStatus.out_for_delivery},
       {'title': 'Delivered', 'status': OrderStatus.delivered},
     ];
 
@@ -148,7 +148,7 @@ class OrderTrackingWidget extends StatelessWidget {
     final statusOrder = [
       OrderStatus.placed,
       OrderStatus.preparing,
-      OrderStatus.outForDelivery,
+      OrderStatus.out_for_delivery,
       OrderStatus.delivered,
       OrderStatus.cancelled,
     ];

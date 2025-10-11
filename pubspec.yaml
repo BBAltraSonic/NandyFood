@@ -54,8 +54,12 @@ dependencies:
   flutter_map: ^6.1.0
   latlong2: ^0.9.0
 
-  # Payments
-  # stripe_flutter: # Temporarily commented out due to version issues
+  # Notifications
+  flutter_local_notifications: ^17.2.3
+  timezone: ^0.9.2
+
+  # Payments (currently using cash only)
+  # Payment gateway integration can be added later
 
   # Images and media
   image_picker: ^1.0.4
@@ -64,6 +68,13 @@ dependencies:
   # Security
   crypto: ^3.0.3
   json_annotation: ^4.9.0
+
+  # Environment variables
+  flutter_dotenv: ^5.1.0
+
+  # Social Authentication
+  google_sign_in: ^6.1.5
+  sign_in_with_apple: ^6.1.2
 
   # Utilities
   intl: ^0.18.1
@@ -98,6 +109,7 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/branding/
+    - .env
 
  # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

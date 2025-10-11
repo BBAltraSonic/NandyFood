@@ -1,9 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:food_delivery_app/features/restaurant/presentation/providers/restaurant_provider.dart';
-import 'package:food_delivery_app/features/restaurant/presentation/widgets/restaurant_card.dart';
-import 'package:food_delivery_app/shared/widgets/loading_indicator.dart';
-import 'package:food_delivery_app/shared/widgets/error_message_widget.dart';
+import 'package:go_router/go_router.dart';
+import 'package:food_delivery_app/shared/models/restaurant.dart';
+import 'package:food_delivery_app/core/services/database_service.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
@@ -14,248 +14,357 @@ class SearchScreen extends ConsumerStatefulWidget {
 
 class _SearchScreenState extends ConsumerState<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final DatabaseService _databaseService = DatabaseService();
+  
+  List<Restaurant> _searchResults = [];
   bool _isSearching = false;
+  bool _hasSearched = false;
+  Timer? _debounceTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(_onSearchChanged);
+  }
 
   @override
   void dispose() {
+    _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
+    _debounceTimer?.cancel();
     super.dispose();
+  }
+
+  /// Debounced search handler (300ms delay)
+  void _onSearchChanged() {
+    if (_debounceTimer?.isActive ?? false) {
+      _debounceTimer!.cancel();
+    }
+    
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+      _performSearch(_searchController.text);
+    });
+  }
+
+  /// Perform search query against database
+  Future<void> _performSearch(String query) async {
+    if (query.trim().isEmpty) {
+      setState(() {
+        _searchResults = [];
+        _hasSearched = false;
+        _isSearching = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _isSearching = true;
+      _hasSearched = true;
+    });
+
+    try {
+      final results = await _databaseService.searchRestaurants(query);
+      
+      if (mounted) {
+        setState(() {
+          _searchResults = results.map((data) => Restaurant.fromJson(data)).toList();
+          _isSearching = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _searchResults = [];
+          _isSearching = false;
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final restaurantState = ref.watch(restaurantProvider);
-
+    final theme = Theme.of(context);
+    
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          // Search app bar
-          SliverAppBar(
-            expandedHeight: 100,
-            floating: true,
-            pinned: true,
-            backgroundColor: Colors.white,
-            elevation: 0,
-            flexibleSpace: LayoutBuilder(
-              builder: (context, constraints) {
-                return FlexibleSpaceBar(
-                  titlePadding: const EdgeInsets.only(left: 16, bottom: 16),
-                  title: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      decoration: const InputDecoration(
-                        hintText: 'Search for restaurants or dishes...',
-                        prefixIcon: Icon(Icons.search),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                      onChanged: (value) {
-                        if (value.length > 2) {
-                          setState(() {
-                            _isSearching = true;
-                          });
-                          // In a real implementation, this would trigger a search
-                          // For now, we'll just use the existing restaurant list
-                        } else if (value.isEmpty) {
-                          setState(() {
-                            _isSearching = false;
-                          });
-                        }
-                      },
-                      onSubmitted: (value) {
-                        if (value.length > 2) {
-                          // Perform search
-                          ref.read(restaurantProvider.notifier).loadRestaurants();
-                        }
-                      },
-                    ),
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
+          onPressed: () => context.pop(),
+        ),
+        title: Text(
+          'Search Restaurants',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      body: Column(
+        children: [
+          // Search bar
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 20,
+                    offset: const Offset(0, 4),
                   ),
-                );
-              },
+                ],
+              ),
+              child: TextField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: 'Search by restaurant or cuisine...',
+                  hintStyle: TextStyle(
+                    color: theme.colorScheme.onSurface.withOpacity(0.4),
+                    fontSize: 15,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search_rounded,
+                    color: theme.colorScheme.primary,
+                    size: 24,
+                  ),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: Icon(
+                            Icons.clear,
+                            color: theme.colorScheme.onSurface.withOpacity(0.6),
+                          ),
+                          onPressed: () {
+                            _searchController.clear();
+                          },
+                        )
+                      : null,
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                ),
+              ),
             ),
           ),
           
-          // Search results or categories
-          if (!_isSearching)
-            _buildCategoriesSection()
-          else if (restaurantState.isLoading)
-            SliverToBoxAdapter(
-              child: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 20),
-                child: const LoadingIndicator(),
-              ),
-            )
-          else if (restaurantState.errorMessage != null)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: ErrorMessageWidget(
-                  message: restaurantState.errorMessage!,
-                  onRetry: () => ref.read(restaurantProvider.notifier).loadRestaurants(),
-                ),
-              ),
-            )
-          else if (restaurantState.restaurants.isEmpty)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.search_off,
-                        size: 80,
-                        color: Colors.grey.shade400,
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'No results found',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Try adjusting your search',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            )
-          else
-            _buildSearchResults(restaurantState),
+          // Search results
+          Expanded(
+            child: _buildSearchResults(theme),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildCategoriesSection() {
-    final categories = [
-      {'name': 'Pizza', 'icon': Icons.local_pizza},
-      {'name': 'Burgers', 'icon': Icons.fastfood},
-      {'name': 'Sushi', 'icon': Icons.restaurant_menu},
-      {'name': 'Salads', 'icon': Icons.eco},
-      {'name': 'Desserts', 'icon': Icons.cake},
-      {'name': 'Chinese', 'icon': Icons.lunch_dining},
-      {'name': 'Indian', 'icon': Icons.ramen_dining},
-      {'name': 'Healthy', 'icon': Icons.health_and_safety},
-    ];
+  Widget _buildSearchResults(ThemeData theme) {
+    if (_isSearching) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
 
-    return SliverToBoxAdapter(
+    if (!_hasSearched) {
+      return _buildEmptyState(
+        theme,
+        icon: Icons.search_rounded,
+        title: 'Search for restaurants',
+        message: 'Try searching for "Pizza", "Sushi", or your favorite cuisine',
+      );
+    }
+
+    if (_searchResults.isEmpty) {
+      return _buildEmptyState(
+        theme,
+        icon: Icons.restaurant_outlined,
+        title: 'No results found',
+        message: 'Try searching with different keywords',
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      itemCount: _searchResults.length,
+      itemBuilder: (context, index) {
+        final restaurant = _searchResults[index];
+        return _RestaurantSearchResultCard(
+          restaurant: restaurant,
+          onTap: () {
+            context.push('/restaurant/${restaurant.id}');
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildEmptyState(
+    ThemeData theme, {
+    required IconData icon,
+    required String title,
+    required String message,
+  }) {
+    return Center(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(40.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(
-              'Popular Categories',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 100,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: categories.length,
-                itemBuilder: (context, index) {
-                  final category = categories[index];
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 16),
-                    child: Column(
-                      children: [
-                        Container(
-                          width: 70,
-                          height: 70,
-                          decoration: BoxDecoration(
-                            color: Colors.deepOrange.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            category['icon'] as IconData,
-                            color: Colors.deepOrange,
-                            size: 30,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          category['name'] as String,
-                          style: const TextStyle(
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 20),
-            
-            // Recent searches section
-            const Text(
-              'Recent Searches',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(8),
+                color: theme.colorScheme.primary.withOpacity(0.1),
+                shape: BoxShape.circle,
               ),
-              child: const Row(
-                children: [
-                  Icon(Icons.access_time, size: 16),
-                  SizedBox(width: 8),
-                  Text('Pizza'),
-                ],
+              child: Icon(
+                icon,
+                size: 64,
+                color: theme.colorScheme.primary,
               ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              title,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.6),
+              ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildSearchResults(restaurantState) {
-    return SliverList(
-      delegate: SliverChildBuilderDelegate(
-        (context, index) {
-          if (index >= restaurantState.restaurants.length) {
-            return const SizedBox.shrink();
-          }
-          
-          final restaurant = restaurantState.restaurants[index];
-          return RestaurantCard(
-            restaurant: restaurant,
-            onTap: () {
-              // Navigate to restaurant detail
-              Navigator.of(context).pushNamed(
-                '/restaurant/${restaurant.id}',
-                arguments: restaurant,
-              );
-            },
-          );
-        },
-        childCount: restaurantState.restaurants.length,
+/// Restaurant search result card widget
+class _RestaurantSearchResultCard extends StatelessWidget {
+  final Restaurant restaurant;
+  final VoidCallback onTap;
+
+  const _RestaurantSearchResultCard({
+    required this.restaurant,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                // Restaurant icon/image placeholder
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.restaurant,
+                    color: theme.colorScheme.primary,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                
+                // Restaurant info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        restaurant.name,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        restaurant.cuisineType,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurface.withOpacity(0.6),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.star,
+                            size: 16,
+                            color: Colors.amber,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            restaurant.rating.toStringAsFixed(1),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Icon(
+                            Icons.access_time,
+                            size: 16,
+                            color: theme.colorScheme.onSurface.withOpacity(0.6),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${restaurant.estimatedDeliveryTime} min',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurface.withOpacity(0.6),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Arrow icon
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: theme.colorScheme.onSurface.withOpacity(0.3),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

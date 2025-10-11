@@ -13,6 +13,7 @@ class RestaurantState {
   final bool isLoading;
   final String? errorMessage;
   final List<String> selectedDietaryRestrictions; // Added for tracking selected filters
+  final String? selectedCategory; // Added for category filtering
 
   RestaurantState({
     this.restaurants = const [],
@@ -23,6 +24,7 @@ class RestaurantState {
     this.isLoading = false,
     this.errorMessage,
     this.selectedDietaryRestrictions = const [],
+    this.selectedCategory,
   });
 
   RestaurantState copyWith({
@@ -34,6 +36,7 @@ class RestaurantState {
     bool? isLoading,
     String? errorMessage,
     List<String>? selectedDietaryRestrictions,
+    String? selectedCategory,
   }) {
     return RestaurantState(
       restaurants: restaurants ?? this.restaurants,
@@ -44,6 +47,7 @@ class RestaurantState {
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage ?? this.errorMessage,
       selectedDietaryRestrictions: selectedDietaryRestrictions ?? this.selectedDietaryRestrictions,
+      selectedCategory: selectedCategory ?? this.selectedCategory,
     );
   }
 }
@@ -203,7 +207,7 @@ void _applyRestaurantFilters() {
    state = state.copyWith(filteredMenuItems: filtered);
  }
 
- // Clear all dietary restriction filters
+// Clear all dietary restriction filters
  void clearDietaryRestrictionsFilter() {
    // Only reset filtered menu items to the ones for the selected restaurant
    final selectedRestaurantMenuItems = state.menuItems.where(
@@ -214,6 +218,39 @@ void _applyRestaurantFilters() {
      selectedDietaryRestrictions: const [],
      filteredRestaurants: state.restaurants,
      filteredMenuItems: selectedRestaurantMenuItems,
+   );
+ }
+
+ /// Filter restaurants by category
+ Future<void> filterByCategory(String category) async {
+   state = state.copyWith(
+     isLoading: true,
+     selectedCategory: category,
+   );
+   
+   try {
+     final dbService = DatabaseService();
+     final restaurantData = await dbService.getRestaurantsByCategory(category);
+     
+     final filteredRestaurants = restaurantData.map((data) => Restaurant.fromJson(data)).toList();
+     
+     state = state.copyWith(
+       filteredRestaurants: filteredRestaurants,
+       isLoading: false,
+     );
+   } catch (e) {
+     state = state.copyWith(
+       isLoading: false,
+       errorMessage: e.toString(),
+     );
+   }
+ }
+
+ /// Clear category filter
+ void clearCategoryFilter() {
+   state = state.copyWith(
+     selectedCategory: null,
+     filteredRestaurants: state.restaurants,
    );
  }
 }

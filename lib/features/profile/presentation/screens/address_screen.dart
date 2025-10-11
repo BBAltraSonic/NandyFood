@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:food_delivery_app/shared/widgets/loading_indicator_widget.dart';
+import 'package:food_delivery_app/shared/widgets/loading_indicator.dart';
 
 class AddressScreen extends ConsumerWidget {
   const AddressScreen({super.key});

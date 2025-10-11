@@ -1,22 +1,14 @@
-import 'package:food_delivery_app/shared/models/order.dart';
+import 'package:flutter/material.dart';
+import 'package:food_delivery_app/core/services/database_service.dart';
+import 'package:food_delivery_app/core/utils/app_logger.dart';
 
-// Mock payment method class for our payment service
-class PaymentMethod {
-  final String id;
-  final String type; // 'card', 'paypal', etc.
-  final String last4;
-  final String brand;
-  final int expiryMonth;
-  final int expiryYear;
-
-  PaymentMethod({
-    required this.id,
-    required this.type,
-    required this.last4,
-    required this.brand,
-    required this.expiryMonth,
-    required this.expiryYear,
-  });
+/// Payment method types
+enum PaymentMethodType {
+  cash,
+  card,
+  // Future payment methods can be added here
+  // digitalWallet,
+  // bankTransfer,
 }
 
 class PaymentService {
@@ -24,170 +16,199 @@ class PaymentService {
   factory PaymentService() => _instance;
   PaymentService._internal();
 
-  /// Initialize the payment service
-  Future<void> initialize() async {
-    // In a real implementation, this would initialize the payment provider
-    print('Payment service initialized');
-  }
+  final DatabaseService _dbService = DatabaseService();
 
-  /// Create a payment intent for an order
-  Future<String?> createPaymentIntent({
+  /// Process cash payment
+  /// For cash payments, we simply confirm the order and mark payment as "pending"
+  /// Payment will be collected on delivery
+  Future<bool> processPayment({
+    required BuildContext context,
     required double amount,
-    required String currency,
-    required String description,
+    required String orderId,
+    PaymentMethodType method = PaymentMethodType.cash,
   }) async {
+    AppLogger.function('PaymentService.processPayment', 'ENTER', params: {
+      'amount': amount,
+      'orderId': orderId,
+      'method': method.toString(),
+    });
+
     try {
-      // Simulate network delay
-      await Future.delayed(const Duration(seconds: 1));
-      
-      // Return a mock payment intent ID
-      return 'pi_mock_${DateTime.now().millisecondsSinceEpoch}';
-    } catch (e) {
-      print('Error creating payment intent: $e');
-      return null;
-    }
-  }
-
-  /// Confirm a payment using the payment method
-  Future<bool> confirmPayment({
-    required String paymentIntentId,
-    required PaymentMethod paymentMethod,
-  }) async {
-    try {
-      // Simulate network delay
-      await Future.delayed(const Duration(seconds: 1));
-      
-      // Simulate payment processing - 90% success rate
-      final random = DateTime.now().millisecond % 10;
-      return random != 0; // 90% success rate (if random is not 0)
-    } catch (e) {
-      print('Error confirming payment: $e');
-      return false;
-    }
-  }
-
- /// Create a payment method from card details
-  Future<PaymentMethod> createPaymentMethod({
-    required String type,
-    required String number,
-    required int expiryMonth,
-    required int expiryYear,
-    required String cvc,
-    required String holderName,
-  }) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 500));
-    
-    // Create a mock payment method
-    return PaymentMethod(
-      id: 'pm_mock_${DateTime.now().millisecondsSinceEpoch}',
-      type: type,
-      last4: number.substring(number.length - 4),
-      brand: getCardBrand(number),
-      expiryMonth: expiryMonth,
-      expiryYear: expiryYear,
-    );
- }
-
-  /// Process a complete payment for an order
-  Future<bool> processOrderPayment({
-    required Order order,
-    required PaymentMethod paymentMethod,
-  }) async {
-    try {
-      // Create payment intent
-      final paymentIntentId = await createPaymentIntent(
-        amount: order.totalAmount * 100, // Convert to cents
-        currency: 'usd',
-        description: 'Order ${order.id} for ${order.userId}',
-      );
-
-      if (paymentIntentId == null) {
+      if (method == PaymentMethodType.cash) {
+        // Cash on delivery - no actual payment processing needed
+        AppLogger.info('Processing cash on delivery payment');
+        
+        // Simulate a small delay for UX
+        await Future.delayed(const Duration(milliseconds: 500));
+        
+        // Record the payment intent in database
+        await _recordPaymentIntent(
+          orderId: orderId,
+          amount: amount,
+          method: 'cash',
+          status: 'pending',
+        );
+        
+        AppLogger.success('Cash payment confirmed', details: 'Payment will be collected on delivery');
+        
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Order confirmed! Pay cash on delivery.'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+        
+        AppLogger.function('PaymentService.processPayment', 'EXIT', result: true);
+        return true;
+      } else {
+        // Card payment - to be implemented later
+        AppLogger.warning('Card payment not yet implemented');
+        
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Card payment coming soon! Please use cash on delivery.'),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+        
+        AppLogger.function('PaymentService.processPayment', 'EXIT', result: false);
         return false;
       }
+    } catch (e, stack) {
+      AppLogger.error('Payment processing failed', error: e, stack: stack);
+      
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Payment error: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+      
+      AppLogger.function('PaymentService.processPayment', 'EXIT', result: false);
+      return false;
+    }
+  }
 
-      // Confirm payment
-      final paymentSuccess = await confirmPayment(
-        paymentIntentId: paymentIntentId,
-        paymentMethod: paymentMethod,
-      );
-
-      return paymentSuccess;
+  /// Record payment intent in database
+  Future<void> _recordPaymentIntent({
+    required String orderId,
+    required double amount,
+    required String method,
+    required String status,
+  }) async {
+    try {
+      AppLogger.database('INSERT', 'payment_transactions', data: {
+        'order_id': orderId,
+        'amount': amount,
+        'method': method,
+      });
+      
+      await _dbService.client.from('payment_transactions').insert({
+        'order_id': orderId,
+        'amount': amount,
+        'payment_method': method,
+        'status': status,
+        'created_at': DateTime.now().toIso8601String(),
+      });
+      
+      AppLogger.success('Payment intent recorded');
     } catch (e) {
-      print('Error processing order payment: $e');
+      AppLogger.warning('Failed to record payment intent', );
+      // Don't throw - this shouldn't block the order
+    }
+  }
+
+  /// Confirm cash payment (called when driver confirms payment received)
+  Future<bool> confirmCashPayment(String orderId) async {
+    AppLogger.function('PaymentService.confirmCashPayment', 'ENTER', params: {
+      'orderId': orderId,
+    });
+
+    try {
+      await _dbService.client
+          .from('payment_transactions')
+          .update({
+            'status': 'completed',
+            'completed_at': DateTime.now().toIso8601String(),
+          })
+          .eq('order_id', orderId)
+          .eq('payment_method', 'cash');
+      
+      AppLogger.success('Cash payment confirmed');
+      AppLogger.function('PaymentService.confirmCashPayment', 'EXIT', result: true);
+      return true;
+    } catch (e, stack) {
+      AppLogger.error('Failed to confirm cash payment', error: e, stack: stack);
+      AppLogger.function('PaymentService.confirmCashPayment', 'EXIT', result: false);
       return false;
     }
   }
 
- /// Get card brand from card number
- String getCardBrand(String cardNumber) {
-    if (cardNumber.startsWith('4')) {
-      return 'Visa';
-    } else if (cardNumber.startsWith('5') || cardNumber.startsWith('2')) {
-      return 'Mastercard';
-    } else if (cardNumber.startsWith('3')) {
-      return 'Amex';
-    } else {
-      return 'Unknown';
+  /// Get payment methods available for orders
+  List<Map<String, dynamic>> getAvailablePaymentMethods() {
+    return [
+      {
+        'type': PaymentMethodType.cash,
+        'name': 'Cash on Delivery',
+        'description': 'Pay with cash when your order arrives',
+        'icon': Icons.money,
+        'enabled': true,
+      },
+      {
+        'type': PaymentMethodType.card,
+        'name': 'Credit/Debit Card',
+        'description': 'Pay securely with your card',
+        'icon': Icons.credit_card,
+        'enabled': false, // Disabled for now
+      },
+    ];
+  }
+
+  /// Helper: Get payment method display name
+  String getPaymentMethodName(PaymentMethodType type) {
+    switch (type) {
+      case PaymentMethodType.cash:
+        return 'Cash on Delivery';
+      case PaymentMethodType.card:
+        return 'Credit/Debit Card';
     }
   }
 
- /// Validate card number
+  /// Validate card number using Luhn algorithm (for future card payments)
   bool validateCardNumber(String cardNumber) {
-    // Remove spaces and other characters
-    final cleanCardNumber = cardNumber.replaceAll(RegExp(r'\s+'), '');
+    // Remove spaces and dashes
+    final cleaned = cardNumber.replaceAll(RegExp(r'[\s-]'), '');
     
-    // Check if it's numeric and has valid length
-    if (!RegExp(r'^\d{13,19}$').hasMatch(cleanCardNumber)) {
+    // Check if it's all digits
+    if (!RegExp(r'^\d+$').hasMatch(cleaned)) {
       return false;
     }
     
-    // Implement Luhn algorithm for validation
-    return _validateLuhn(cleanCardNumber);
-  }
-
-  /// Validate expiry date
-  bool validateExpiryDate(int month, int year) {
-    final now = DateTime.now();
-    final currentYear = now.year % 100; // Get last 2 digits of year
-    final currentMonth = now.month;
-
-    if (year < currentYear) {
+    // Check length (13-19 digits for most cards)
+    if (cleaned.length < 13 || cleaned.length > 19) {
       return false;
     }
     
-    if (year == currentYear && month < currentMonth) {
-      return false;
-    }
-    
-    return true;
-  }
-
- /// Validate CVC
-  bool validateCvc(String cvc, String cardNumber) {
-    final cleanCvc = cvc.replaceAll(RegExp(r'\s+'), '');
-    
-    if (cardNumber.startsWith('3')) {
-      // Amex cards have 4-digit CVC
-      return RegExp(r'^\d{4}$').hasMatch(cleanCvc);
-    } else {
-      // Other cards have 3-digit CVC
-      return RegExp(r'^\d{3}$').hasMatch(cleanCvc);
-    }
-  }
-
- /// Luhn algorithm implementation
-  bool _validateLuhn(String cardNumber) {
+    // Luhn algorithm
     int sum = 0;
     bool alternate = false;
     
-    for (int i = cardNumber.length - 1; i >= 0; i--) {
-      int digit = int.parse(cardNumber[i]);
+    for (int i = cleaned.length - 1; i >= 0; i--) {
+      int digit = int.parse(cleaned[i]);
       
       if (alternate) {
         digit *= 2;
         if (digit > 9) {
-          digit = (digit % 10) + 1;
+          digit -= 9;
         }
       }
       
@@ -195,6 +216,90 @@ class PaymentService {
       alternate = !alternate;
     }
     
-    return (sum % 10 == 0);
+    return (sum % 10) == 0;
+  }
+
+  /// Validate expiry date
+  bool validateExpiryDate(int month, int year) {
+    if (month < 1 || month > 12) {
+      return false;
+    }
+    
+    final now = DateTime.now();
+    final currentYear = now.year;
+    final currentMonth = now.month;
+    
+    // Handle 2-digit year
+    final fullYear = year < 100 ? 2000 + year : year;
+    
+    // Check if card is expired
+    if (fullYear < currentYear) {
+      return false;
+    }
+    
+    if (fullYear == currentYear && month < currentMonth) {
+      return false;
+    }
+    
+    return true;
+  }
+
+  /// Validate CVC/CVV
+  bool validateCvc(String cvc, String cardNumber) {
+    // Remove spaces
+    final cleaned = cvc.replaceAll(RegExp(r'\s'), '');
+    
+    // Check if it's all digits
+    if (!RegExp(r'^\d+$').hasMatch(cleaned)) {
+      return false;
+    }
+    
+    // American Express uses 4 digits, others use 3
+    final brand = getCardBrand(cardNumber);
+    final expectedLength = (brand == 'amex') ? 4 : 3;
+    
+    return cleaned.length == expectedLength;
+  }
+
+  /// Get card brand from card number
+  String getCardBrand(String cardNumber) {
+    final cleaned = cardNumber.replaceAll(RegExp(r'[\s-]'), '');
+    
+    if (cleaned.isEmpty) {
+      return 'unknown';
+    }
+    
+    // Visa: starts with 4
+    if (RegExp(r'^4').hasMatch(cleaned)) {
+      return 'visa';
+    }
+    
+    // Mastercard: starts with 51-55 or 2221-2720
+    if (RegExp(r'^5[1-5]').hasMatch(cleaned) || 
+        RegExp(r'^2(2[2-9][0-9]|[3-6][0-9]{2}|7[0-1][0-9]|720)').hasMatch(cleaned)) {
+      return 'mastercard';
+    }
+    
+    // American Express: starts with 34 or 37
+    if (RegExp(r'^3[47]').hasMatch(cleaned)) {
+      return 'amex';
+    }
+    
+    // Discover: starts with 6011, 622126-622925, 644-649, or 65
+    if (RegExp(r'^6(?:011|5[0-9]{2}|4[4-9][0-9]|22(1(2[6-9]|[3-9][0-9])|[2-8][0-9]{2}|9([01][0-9]|2[0-5])))').hasMatch(cleaned)) {
+      return 'discover';
+    }
+    
+    // Diners Club: starts with 36 or 38 or 300-305
+    if (RegExp(r'^3(?:0[0-5]|[68])').hasMatch(cleaned)) {
+      return 'diners';
+    }
+    
+    // JCB: starts with 2131, 1800, or 35
+    if (RegExp(r'^(?:2131|1800|35)').hasMatch(cleaned)) {
+      return 'jcb';
+    }
+    
+    return 'unknown';
   }
 }

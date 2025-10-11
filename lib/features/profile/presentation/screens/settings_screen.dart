@@ -1,321 +1,284 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:food_delivery_app/core/providers/auth_provider.dart';
-import 'package:food_delivery_app/shared/widgets/loading_indicator.dart';
+import 'package:food_delivery_app/core/providers/theme_provider.dart';
+import 'package:go_router/go_router.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final themeState = ref.watch(themeProvider);
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
-        centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        child: Column(
+      body: ListView(
+        children: [
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text(
+              'Appearance',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          
+          // Theme selection
+          ListTile(
+            leading: const Icon(Icons.palette),
+            title: const Text('Theme'),
+            subtitle: Text(_getThemeLabel(themeState.themeMode)),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () => _showThemeDialog(context, ref),
+          ),
+          
+          const Divider(),
+          
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text(
+              'Notifications',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          
+          // Notification settings
+          SwitchListTile(
+            secondary: const Icon(Icons.notifications),
+            title: const Text('Push Notifications'),
+            subtitle: const Text('Receive order updates'),
+            value: true,
+            onChanged: (value) {
+              // TODO: Implement notification toggle
+            },
+          ),
+          
+          SwitchListTile(
+            secondary: const Icon(Icons.email),
+            title: const Text('Email Notifications'),
+            subtitle: const Text('Receive promotional emails'),
+            value: false,
+            onChanged: (value) {
+              // TODO: Implement email notification toggle
+            },
+          ),
+          
+          const Divider(),
+          
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text(
+              'Account',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          
+          ListTile(
+            leading: const Icon(Icons.person),
+            title: const Text('Edit Profile'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              // Navigate to edit profile
+            },
+          ),
+          
+          ListTile(
+            leading: const Icon(Icons.location_on),
+            title: const Text('Delivery Addresses'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              // Navigate to addresses
+            },
+          ),
+          
+          ListTile(
+            leading: const Icon(Icons.payment),
+            title: const Text('Payment Methods'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () => context.push('/profile/payment-methods'),
+          ),
+          
+          const Divider(),
+          
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text(
+              'Support',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          
+          ListTile(
+            leading: const Icon(Icons.help),
+            title: const Text('Help & Support'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              // Navigate to help
+            },
+          ),
+          
+          ListTile(
+            leading: const Icon(Icons.privacy_tip),
+            title: const Text('Privacy Policy'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              // Navigate to privacy policy
+            },
+          ),
+          
+          ListTile(
+            leading: const Icon(Icons.description),
+            title: const Text('Terms of Service'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              // Navigate to terms
+            },
+          ),
+          
+          const Divider(),
+          
+          ListTile(
+            leading: const Icon(Icons.info),
+            title: const Text('About'),
+            subtitle: const Text('Version 1.0.0'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              _showAboutDialog(context);
+            },
+          ),
+          
+          const SizedBox(height: 16),
+          
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: OutlinedButton.icon(
+              onPressed: () {
+                _showLogoutConfirmation(context);
+              },
+              icon: const Icon(Icons.logout, color: Colors.red),
+              label: const Text(
+                'Sign Out',
+                style: TextStyle(color: Colors.red),
+              ),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                side: const BorderSide(color: Colors.red),
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  String _getThemeLabel(AppThemeMode mode) {
+    switch (mode) {
+      case AppThemeMode.light:
+        return 'Light';
+      case AppThemeMode.dark:
+        return 'Dark';
+      case AppThemeMode.system:
+        return 'System default';
+    }
+  }
+
+  void _showThemeDialog(BuildContext context, WidgetRef ref) {
+    final currentTheme = ref.read(themeProvider).themeMode;
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Choose Theme'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            // Account settings section
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text(
-                'Account Settings',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+            RadioListTile<AppThemeMode>(
+              title: const Text('Light'),
+              value: AppThemeMode.light,
+              groupValue: currentTheme,
+              onChanged: (value) {
+                if (value != null) {
+                  ref.read(themeProvider.notifier).setThemeMode(value);
+                  Navigator.pop(context);
+                }
+              },
             ),
-            
-            Card(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Column(
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.person, color: Colors.deepOrange),
-                    title: const Text('Edit Profile'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () {
-                      // Navigate to edit profile screen
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Edit Profile functionality coming soon')),
-                      );
-                    },
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.notifications, color: Colors.deepOrange),
-                    title: const Text('Notifications'),
-                    trailing: Switch(
-                      value: true,
-                      onChanged: (value) {
-                        // Toggle notifications
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Notifications ${value ? 'enabled' : 'disabled'}')),
-                        );
-                      },
-                      activeColor: Colors.deepOrange,
-                    ),
-                    onTap: () {
-                      // Toggle notifications
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Toggle notifications functionality coming soon')),
-                      );
-                    },
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.security, color: Colors.deepOrange),
-                    title: const Text('Security'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () {
-                      // Navigate to security settings screen
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Security settings functionality coming soon')),
-                      );
-                    },
-                  ),
-                ],
-              ),
+            RadioListTile<AppThemeMode>(
+              title: const Text('Dark'),
+              value: AppThemeMode.dark,
+              groupValue: currentTheme,
+              onChanged: (value) {
+                if (value != null) {
+                  ref.read(themeProvider.notifier).setThemeMode(value);
+                  Navigator.pop(context);
+                }
+              },
             ),
-            
-            // Preferences section
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text(
-                'Preferences',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+            RadioListTile<AppThemeMode>(
+              title: const Text('System default'),
+              value: AppThemeMode.system,
+              groupValue: currentTheme,
+              onChanged: (value) {
+                if (value != null) {
+                  ref.read(themeProvider.notifier).setThemeMode(value);
+                  Navigator.pop(context);
+                }
+              },
             ),
-            
-            Card(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Column(
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.dark_mode, color: Colors.deepOrange),
-                    title: const Text('Dark Mode'),
-                    trailing: Switch(
-                      value: false,
-                      onChanged: (value) {
-                        // Toggle dark mode
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Dark mode ${value ? 'enabled' : 'disabled'}')),
-                        );
-                      },
-                      activeColor: Colors.deepOrange,
-                    ),
-                    onTap: () {
-                      // Toggle dark mode
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Toggle dark mode functionality coming soon')),
-                      );
-                    },
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.language, color: Colors.deepOrange),
-                    title: const Text('Language'),
-                    subtitle: const Text('English'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () {
-                      // Navigate to language selection screen
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Language selection functionality coming soon')),
-                      );
-                    },
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.location_on, color: Colors.deepOrange),
-                    title: const Text('Location Services'),
-                    trailing: Switch(
-                      value: true,
-                      onChanged: (value) {
-                        // Toggle location services
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Location services ${value ? 'enabled' : 'disabled'}')),
-                        );
-                      },
-                      activeColor: Colors.deepOrange,
-                    ),
-                    onTap: () {
-                      // Toggle location services
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Toggle location services functionality coming soon')),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-            
-            // Support section
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text(
-                'Support',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            
-            Card(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Column(
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.help, color: Colors.deepOrange),
-                    title: const Text('Help Center'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () {
-                      // Navigate to help center
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Help center functionality coming soon')),
-                      );
-                    },
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.feedback, color: Colors.deepOrange),
-                    title: const Text('Send Feedback'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () {
-                      // Navigate to feedback screen
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Feedback functionality coming soon')),
-                      );
-                    },
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.info, color: Colors.deepOrange),
-                    title: const Text('About'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () {
-                      // Navigate to about screen
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('About functionality coming soon')),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-            
-            // Danger zone section
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text(
-                'Danger Zone',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            
-            Card(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Column(
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.delete, color: Colors.red),
-                    title: const Text('Delete Account'),
-                    textColor: Colors.red,
-                    iconColor: Colors.red,
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () {
-                      // Show delete account confirmation dialog
-                      _showDeleteAccountDialog(context, ref);
-                    },
-                  ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 30),
           ],
         ),
       ),
     );
   }
 
-  void _showDeleteAccountDialog(BuildContext context, WidgetRef ref) {
+  void _showAboutDialog(BuildContext context) {
+    showAboutDialog(
+      context: context,
+      applicationName: 'NandyFood',
+      applicationVersion: '1.0.0',
+      applicationIcon: const Icon(Icons.fastfood, size: 48, color: Colors.deepOrange),
+      children: [
+        const Text('A modern food delivery application built with Flutter and Supabase.'),
+      ],
+    );
+  }
+
+  void _showLogoutConfirmation(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Account'),
-        content: const Text(
-          'Are you sure you want to delete your account? This action cannot be undone. '
-          'All your data will be permanently removed.',
-        ),
+        title: const Text('Sign Out'),
+        content: const Text('Are you sure you want to sign out?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
-          TextButton(
-            onPressed: () async {
-              Navigator.of(context).pop(); // Close dialog
-              
-              // Show loading indicator
-              final loadingDialog = AlertDialog(
-                content: const Row(
-                  children: [
-                    LoadingIndicator(),
-                    SizedBox(width: 20),
-                    Text('Deleting account...'),
-                  ],
-                ),
-              );
-              
-              showDialog(context: context, builder: (context) => loadingDialog);
-              
-              try {
-                // In a real implementation, this would delete the user account
-                await Future.delayed(const Duration(seconds: 2));
-                
-                // Close loading dialog
-                Navigator.of(context).pop();
-                
-                // Sign out the user
-                await ref.read(authStateProvider.notifier).signOut();
-                
-                // Show success message
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Account deleted successfully'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-                
-                // Navigate back to the home screen
-                if (context.mounted) {
-                  Navigator.of(context).pop(); // Close settings screen
-                }
-              } catch (e) {
-                // Close loading dialog
-                if (Navigator.canPop(context)) {
-                  Navigator.of(context).pop();
-                }
-                
-                // Show error message
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Error deleting account: $e'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
+          ElevatedButton(
+            onPressed: () {
+              // TODO: Implement sign out
+              Navigator.pop(context);
+              context.go('/auth/login');
             },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text('Sign Out'),
           ),
         ],
       ),

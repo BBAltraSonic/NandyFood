@@ -100,6 +100,14 @@ class Order {
   }
 }
 
-enum OrderStatus { placed, preparing, outForDelivery, delivered, cancelled }
+enum OrderStatus { 
+  placed, 
+  confirmed, 
+  preparing, 
+  ready_for_pickup, 
+  out_for_delivery, 
+  delivered, 
+  cancelled 
+}
 
 enum PaymentStatus { pending, completed, failed, refunded }

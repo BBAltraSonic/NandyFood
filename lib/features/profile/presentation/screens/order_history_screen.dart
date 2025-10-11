@@ -177,7 +177,7 @@ class OrderHistoryScreen extends ConsumerWidget {
         return 'Placed';
       case OrderStatus.preparing:
         return 'Preparing';
-      case OrderStatus.outForDelivery:
+      case OrderStatus.out_for_delivery:
         return 'Out for Delivery';
       case OrderStatus.delivered:
         return 'Delivered';
