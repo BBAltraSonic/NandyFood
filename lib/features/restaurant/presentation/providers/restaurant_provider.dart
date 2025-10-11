@@ -10,6 +10,7 @@ class RestaurantState {
   final Restaurant? selectedRestaurant;
   final List<MenuItem> menuItems;
   final List<MenuItem> filteredMenuItems; // Added for filtering
+  final List<MenuItem> popularItems; // Added for popular items
   final bool isLoading;
   final String? errorMessage;
   final List<String> selectedDietaryRestrictions; // Added for tracking selected filters
@@ -21,6 +22,7 @@ class RestaurantState {
     this.selectedRestaurant,
     this.menuItems = const [],
     this.filteredMenuItems = const [],
+    this.popularItems = const [],
     this.isLoading = false,
     this.errorMessage,
     this.selectedDietaryRestrictions = const [],
@@ -33,6 +35,7 @@ class RestaurantState {
     Restaurant? selectedRestaurant,
     List<MenuItem>? menuItems,
     List<MenuItem>? filteredMenuItems,
+    List<MenuItem>? popularItems,
     bool? isLoading,
     String? errorMessage,
     List<String>? selectedDietaryRestrictions,
@@ -44,6 +47,7 @@ class RestaurantState {
       selectedRestaurant: selectedRestaurant ?? this.selectedRestaurant,
       menuItems: menuItems ?? this.menuItems,
       filteredMenuItems: filteredMenuItems ?? this.filteredMenuItems,
+      popularItems: popularItems ?? this.popularItems,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage ?? this.errorMessage,
       selectedDietaryRestrictions: selectedDietaryRestrictions ?? this.selectedDietaryRestrictions,
@@ -98,9 +102,14 @@ class RestaurantNotifier extends StateNotifier<RestaurantState> {
      
      final menuItems = menuItemData.map((data) => MenuItem.fromJson(data)).toList();
      
+     // Also load popular items
+     final popularItemData = await dbService.getPopularMenuItems(restaurantId, limit: 5);
+     final popularItems = popularItemData.map((data) => MenuItem.fromJson(data)).toList();
+     
      state = state.copyWith(
        menuItems: menuItems,
        filteredMenuItems: menuItems, // Initially show all menu items
+       popularItems: popularItems,
        isLoading: false,
      );
    } catch (e) {
