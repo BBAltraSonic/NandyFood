@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:food_delivery_app/core/services/database_service.dart';
+import 'package:food_delivery_app/core/services/auth_service.dart';
 
 // Auth state class to represent the authentication state
 class AuthState {
@@ -134,11 +135,87 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  // Sign in with Google
+  Future<AuthResponse> signInWithGoogle() async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      final response = await AuthService().signInWithGoogle();
+      
+      // Update state with authenticated user
+      if (response.user != null) {
+        state = AuthState(
+          user: response.user,
+          isAuthenticated: true,
+          isLoading: false,
+        );
+      } else {
+        state = state.copyWith(isLoading: false);
+      }
+      
+      return response;
+    } on AuthException catch (e) {
+      // Handle user cancellation gracefully (no error message)
+      if (e.statusCode == 'user_cancelled') {
+        state = state.copyWith(isLoading: false);
+      } else {
+        state = state.copyWith(
+          isLoading: false,
+          errorMessage: e.message,
+        );
+      }
+      rethrow;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: 'Google sign-in failed. Please try again.',
+      );
+      rethrow;
+    }
+  }
+
+  // Sign in with Apple
+  Future<AuthResponse> signInWithApple() async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      final response = await AuthService().signInWithApple();
+      
+      // Update state with authenticated user
+      if (response.user != null) {
+        state = AuthState(
+          user: response.user,
+          isAuthenticated: true,
+          isLoading: false,
+        );
+      } else {
+        state = state.copyWith(isLoading: false);
+      }
+      
+      return response;
+    } on AuthException catch (e) {
+      // Handle user cancellation gracefully (no error message)
+      if (e.statusCode == 'user_cancelled') {
+        state = state.copyWith(isLoading: false);
+      } else {
+        state = state.copyWith(
+          isLoading: false,
+          errorMessage: e.message,
+        );
+      }
+      rethrow;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: 'Apple sign-in failed. Please try again.',
+      );
+      rethrow;
+    }
+  }
+
   // Sign out method
   Future<void> signOut() async {
     state = state.copyWith(isLoading: true);
     try {
-      await DatabaseService().client.auth.signOut();
+      await AuthService().signOut();
       state = state.copyWith(isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
