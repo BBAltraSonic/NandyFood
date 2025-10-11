@@ -79,7 +79,10 @@ class AuthService {
       // Trigger Google Sign-In flow
       final GoogleSignInAccount? googleUser = await _googleSignIn!.signIn();
       if (googleUser == null) {
-        throw Exception('Google sign in was canceled');
+        throw AuthException(
+          'Google sign-in was canceled by user',
+          statusCode: 'user_cancelled',
+        );
       }
 
       // Get authentication details
@@ -89,7 +92,10 @@ class AuthService {
       final String? idToken = googleAuth.idToken;
 
       if (accessToken == null || idToken == null) {
-        throw Exception('Failed to get Google credentials');
+        throw AuthException(
+          'Failed to retrieve Google credentials. Please try again.',
+          statusCode: 'credential_error',
+        );
       }
 
       // Sign in to Supabase with Google credentials
@@ -108,8 +114,29 @@ class AuthService {
       }
 
       return response;
+    } on AuthException {
+      rethrow;
     } catch (e) {
-      throw Exception('Google sign in failed: $e');
+      if (e.toString().contains('network')) {
+        throw AuthException(
+          'Network error. Please check your internet connection and try again.',
+          statusCode: 'network_error',
+        );
+      } else if (e.toString().contains('PlatformException')) {
+        throw AuthException(
+          'Google sign-in is not properly configured. Please contact support.',
+          statusCode: 'config_error',
+        );
+      } else if (e.toString().contains('User already exists')) {
+        throw AuthException(
+          'An account with this email already exists. Please sign in with your password.',
+          statusCode: 'duplicate_account',
+        );
+      }
+      throw AuthException(
+        'Google sign-in failed: ${e.toString()}',
+        statusCode: 'unknown_error',
+      );
     }
   }
 
@@ -118,7 +145,19 @@ class AuthService {
     try {
       // Check if Apple Sign-In is available (iOS 13+)
       if (!Platform.isIOS) {
-        throw Exception('Apple Sign-In is only available on iOS');
+        throw AuthException(
+          'Apple Sign-In is only available on iOS devices.',
+          statusCode: 'platform_error',
+        );
+      }
+
+      // Check if Apple Sign-In is available on device
+      final isAvailable = await SignInWithApple.isAvailable();
+      if (!isAvailable) {
+        throw AuthException(
+          'Apple Sign-In is not available on this device. Please use iOS 13 or later.',
+          statusCode: 'unavailable',
+        );
       }
 
       // Trigger Apple Sign-In flow
@@ -131,7 +170,10 @@ class AuthService {
 
       final idToken = credential.identityToken;
       if (idToken == null) {
-        throw Exception('Failed to get Apple ID token');
+        throw AuthException(
+          'Failed to retrieve Apple ID token. Please try again.',
+          statusCode: 'credential_error',
+        );
       }
 
       // Sign in to Supabase with Apple credentials
@@ -152,8 +194,45 @@ class AuthService {
       }
 
       return response;
+    } on AuthException {
+      rethrow;
+    } on SignInWithAppleAuthorizationException catch (e) {
+      if (e.code == AuthorizationErrorCode.canceled) {
+        throw AuthException(
+          'Apple sign-in was canceled by user',
+          statusCode: 'user_cancelled',
+        );
+      } else if (e.code == AuthorizationErrorCode.failed) {
+        throw AuthException(
+          'Apple sign-in failed. Please try again.',
+          statusCode: 'sign_in_failed',
+        );
+      } else if (e.code == AuthorizationErrorCode.notHandled) {
+        throw AuthException(
+          'Apple sign-in could not be completed. Please try again.',
+          statusCode: 'not_handled',
+        );
+      }
+      throw AuthException(
+        'Apple sign-in error: ${e.message}',
+        statusCode: e.code.toString(),
+      );
     } catch (e) {
-      throw Exception('Apple sign in failed: $e');
+      if (e.toString().contains('network')) {
+        throw AuthException(
+          'Network error. Please check your internet connection and try again.',
+          statusCode: 'network_error',
+        );
+      } else if (e.toString().contains('User already exists')) {
+        throw AuthException(
+          'An account with this email already exists. Please sign in with your password.',
+          statusCode: 'duplicate_account',
+        );
+      }
+      throw AuthException(
+        'Apple sign-in failed: ${e.toString()}',
+        statusCode: 'unknown_error',
+      );
     }
   }
 
