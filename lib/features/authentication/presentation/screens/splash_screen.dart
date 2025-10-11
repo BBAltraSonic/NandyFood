@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:food_delivery_app/core/providers/auth_provider.dart';
+import 'package:food_delivery_app/features/onboarding/providers/onboarding_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -64,6 +65,24 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     if (!mounted) return;
 
     try {
+      // Check onboarding status first
+      final onboardingStatus = await Future.microtask(
+        () => ref.read(onboardingCompletedProvider),
+      ).timeout(
+        const Duration(seconds: 2),
+        onTimeout: () => const AsyncValue.data(false),
+      );
+
+      // If user hasn't completed onboarding, show onboarding
+      final hasCompletedOnboarding = onboardingStatus.value ?? false;
+      if (!hasCompletedOnboarding) {
+        if (mounted) {
+          print('INFO: First-time user, navigating to onboarding');
+          context.go('/onboarding');
+        }
+        return;
+      }
+
       // Check auth status with timeout
       final authState =
           await Future.microtask(() => ref.read(authStateProvider)).timeout(
@@ -85,11 +104,24 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         context.go('/home');
       }
     } catch (e) {
-      print('ERROR checking auth status: $e');
+      print('ERROR checking auth/onboarding status: $e');
       if (mounted) {
-        // On error, still go to home - allow guest access
-        print('INFO: Error occurred, navigating to home as guest');
-        context.go('/home');
+        // On error, check if it's first launch by trying onboarding status
+        try {
+          final onboardingStatus = ref.read(onboardingCompletedProvider);
+          final hasCompleted = onboardingStatus.value ?? false;
+          if (!hasCompleted) {
+            print('INFO: Error occurred, navigating to onboarding');
+            context.go('/onboarding');
+          } else {
+            print('INFO: Error occurred, navigating to home as guest');
+            context.go('/home');
+          }
+        } catch (e) {
+          // If everything fails, go to onboarding for safety
+          print('INFO: All checks failed, navigating to onboarding');
+          context.go('/onboarding');
+        }
       }
     }
   }

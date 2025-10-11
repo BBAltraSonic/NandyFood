@@ -9,6 +9,7 @@ import 'package:food_delivery_app/features/authentication/presentation/screens/l
 import 'package:food_delivery_app/features/authentication/presentation/screens/signup_screen.dart';
 import 'package:food_delivery_app/features/authentication/presentation/screens/splash_screen.dart';
 import 'package:food_delivery_app/features/home/presentation/screens/home_screen.dart';
+import 'package:food_delivery_app/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:food_delivery_app/features/profile/presentation/screens/payment_methods_screen.dart';
 import 'package:food_delivery_app/features/profile/presentation/screens/add_edit_payment_screen.dart';
 import 'package:food_delivery_app/features/order/presentation/screens/order_tracking_screen.dart';
@@ -82,6 +83,10 @@ GoRouter createRouter() {
     initialLocation: '/',
     routes: [
       GoRoute(path: '/', builder: (context, state) => const SplashScreen()),
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingScreen(),
+      ),
       GoRoute(
         path: '/auth/login',
         builder: (context, state) => const LoginScreen(),
