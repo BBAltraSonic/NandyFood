@@ -7,6 +7,7 @@ import 'package:food_delivery_app/features/home/presentation/widgets/featured_re
 import 'package:food_delivery_app/features/home/presentation/widgets/categories_horizontal_list.dart';
 import 'package:food_delivery_app/features/home/presentation/widgets/order_again_section.dart';
 import 'package:food_delivery_app/core/services/location_service.dart';
+import 'package:food_delivery_app/shared/widgets/floating_cart_button.dart';
 import 'package:latlong2/latlong.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -58,7 +59,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final restaurantState = ref.watch(restaurantProvider);
     final theme = Theme.of(context);
 
-    return Scaffold(
+    return Stack(
+      children: [
+        Scaffold(
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -558,6 +561,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
       ),
+        ),
+        // Floating Cart Button
+        const FloatingCartButton(),
+      ],
     );
   }
 }

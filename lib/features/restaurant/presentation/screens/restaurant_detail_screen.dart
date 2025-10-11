@@ -8,6 +8,7 @@ import 'package:food_delivery_app/features/restaurant/presentation/widgets/opera
 import 'package:food_delivery_app/shared/models/restaurant.dart';
 import 'package:food_delivery_app/shared/widgets/loading_indicator.dart';
 import 'package:food_delivery_app/shared/widgets/error_message_widget.dart';
+import 'package:food_delivery_app/shared/widgets/floating_cart_button.dart';
 
 class RestaurantDetailScreen extends ConsumerStatefulWidget {
   final Restaurant restaurant;
@@ -71,7 +72,9 @@ class _RestaurantDetailScreenState
   Widget build(BuildContext context) {
     final restaurantState = ref.watch(restaurantProvider);
 
-    return Scaffold(
+    return Stack(
+      children: [
+        Scaffold(
       body: restaurantState.isLoading
           ? const LoadingIndicator()
           : restaurantState.errorMessage != null
@@ -82,6 +85,10 @@ class _RestaurantDetailScreenState
                   .loadMenuItems(widget.restaurant.id),
             )
           : _buildRestaurantDetailContent(restaurantState, context),
+        ),
+        // Floating Cart Button
+        const FloatingCartButton(),
+      ],
     );
   }
 

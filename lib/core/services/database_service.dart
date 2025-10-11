@@ -255,6 +255,21 @@ class DatabaseService {
     }
   }
 
+  /// Get a single menu item by ID
+  Future<Map<String, dynamic>?> getMenuItemById(String menuItemId) async {
+    try {
+      final response = await client
+          .from('menu_items')
+          .select()
+          .eq('id', menuItemId)
+          .single();
+      return response;
+    } catch (e) {
+      // Handle error
+      return null;
+    }
+  }
+
   // Order Operations
   Future<List<Map<String, dynamic>>> getUserOrders(String userId) async {
     try {
