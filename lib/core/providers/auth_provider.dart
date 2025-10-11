@@ -227,4 +227,47 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
   void clearErrorMessage() {
     state = state.copyWith(errorMessage: null);
   }
+
+  // DAY 20: Password reset
+  Future<void> sendPasswordResetEmail({
+    required String email,
+    String? redirectTo,
+  }) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      await DatabaseService().client.auth.resetPasswordForEmail(
+        email,
+        redirectTo: redirectTo,
+      );
+      state = state.copyWith(isLoading: false);
+    } on AuthException catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.message);
+      rethrow;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+      rethrow;
+    }
+  }
+
+  // DAY 20: Email verification resend
+  Future<void> resendVerificationEmail({
+    required String email,
+  }) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      await DatabaseService().client.auth.resend(
+        type: OtpType.signup,
+        email: email,
+      );
+      state = state.copyWith(isLoading: false);
+    } on AuthException catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.message);
+      rethrow;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+      rethrow;
+    }
+  }
+
+  bool get isEmailVerified => state.user?.emailConfirmedAt != null;
 }
