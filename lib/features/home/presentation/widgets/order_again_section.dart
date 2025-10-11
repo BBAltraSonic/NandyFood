@@ -9,7 +9,7 @@ import 'package:food_delivery_app/shared/models/restaurant.dart';
 final recentRestaurantsProvider = FutureProvider<List<Restaurant>>((ref) async {
   try {
     final authService = AuthService();
-    final currentUser = authService.currentUser;
+    final currentUser = authService.auth.currentUser;
 
     if (currentUser == null) {
       return [];
