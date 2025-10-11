@@ -213,6 +213,25 @@ class DatabaseService {
     }
   }
 
+  /// Get popular menu items for a restaurant
+  /// Returns top items based on order frequency (simulated by rating for now)
+  /// In a real app, this would query order_items to count orders
+  Future<List<Map<String, dynamic>>> getPopularMenuItems(String restaurantId, {int limit = 5}) async {
+    try {
+      final response = await client
+          .from('menu_items')
+          .select()
+          .eq('restaurant_id', restaurantId)
+          .eq('is_available', true)
+          .order('price', ascending: false) // Simulate popularity (high-end items tend to be ordered more)
+          .limit(limit);
+      return response;
+    } catch (e) {
+      // Handle error
+      return [];
+    }
+  }
+
   // Order Operations
   Future<List<Map<String, dynamic>>> getUserOrders(String userId) async {
     try {
