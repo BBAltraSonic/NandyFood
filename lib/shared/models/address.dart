@@ -130,16 +130,16 @@ class Address {
 
   @override
   int get hashCode => Object.hash(
-        id,
-        userId,
-        type,
-        street,
-        city,
-        state,
-        zipCode,
-        country,
-        isDefault,
-        apartment,
-        deliveryInstructions,
-      );
+    id,
+    userId,
+    type,
+    street,
+    city,
+    state,
+    zipCode,
+    country,
+    isDefault,
+    apartment,
+    deliveryInstructions,
+  );
 }

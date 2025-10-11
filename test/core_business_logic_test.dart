@@ -110,10 +110,7 @@ void main() {
         updatedAt: DateTime.now(),
       );
 
-      final cartItem = CartItem(
-        orderItem: orderItem,
-        menuItem: menuItem,
-      );
+      final cartItem = CartItem(orderItem: orderItem, menuItem: menuItem);
 
       final total = cartItem.totalPrice;
       expect(total, 31.00); // 15.50 * 2

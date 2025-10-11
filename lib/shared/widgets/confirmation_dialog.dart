@@ -59,17 +59,18 @@ class ConfirmationDialog extends StatelessWidget {
     VoidCallback? onCancel,
   }) async {
     return await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return ConfirmationDialog(
-          title: title,
-          message: message,
-          confirmText: confirmText,
-          cancelText: cancelText,
-          onConfirm: onConfirm,
-          onCancel: onCancel,
-        );
-      },
-    ) ?? false;
+          context: context,
+          builder: (BuildContext context) {
+            return ConfirmationDialog(
+              title: title,
+              message: message,
+              confirmText: confirmText,
+              cancelText: cancelText,
+              onConfirm: onConfirm,
+              onCancel: onCancel,
+            );
+          },
+        ) ??
+        false;
   }
 }

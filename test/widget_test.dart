@@ -16,20 +16,20 @@ void main() {
   testWidgets('App loads correctly', (WidgetTester tester) async {
     // Enable test mode for DatabaseService to avoid pending timers
     DatabaseService.enableTestMode();
-    
+
     // Initialize the DatabaseService before running the test
     final dbService = DatabaseService();
     await dbService.initialize();
-    
+
     // Build our app and trigger a frame.
     await tester.pumpWidget(ProviderScope(child: const FoodDeliveryApp()));
 
     // Verify that the app loads without errors
     expect(find.byType(Scaffold), findsOneWidget);
-    
+
     // Dispose of the DatabaseService after the test
     await dbService.dispose();
-    
+
     // Disable test mode after the test
     DatabaseService.disableTestMode();
   });

@@ -52,11 +52,7 @@ class NotificationBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(
-            icon,
-            color: textColor,
-            size: 24,
-          ),
+          Icon(icon, color: textColor, size: 24),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -70,11 +66,7 @@ class NotificationBanner extends StatelessWidget {
           ),
           if (onClose != null)
             IconButton(
-              icon: Icon(
-                Icons.close,
-                color: textColor,
-                size: 20,
-              ),
+              icon: Icon(Icons.close, color: textColor, size: 20),
               onPressed: onClose,
             ),
         ],

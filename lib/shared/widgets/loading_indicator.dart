@@ -5,12 +5,7 @@ class LoadingIndicator extends StatelessWidget {
   final double size;
   final Color? color;
 
-  const LoadingIndicator({
-    super.key,
-    this.message,
-    this.size = 30,
-    this.color,
-  });
+  const LoadingIndicator({super.key, this.message, this.size = 30, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -31,10 +26,7 @@ class LoadingIndicator extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               message!,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
           ],
         ],

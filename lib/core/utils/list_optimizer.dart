@@ -48,16 +48,18 @@ class ListOptimizer {
     return ListView(
       children: items
           .asMap()
-          .map((index, item) => MapEntry(
-                index,
-                _wrapItem(
-                  item: item,
-                  index: index,
-                  addAutomaticKeepAlives: addAutomaticKeepAlives,
-                  addRepaintBoundaries: addRepaintBoundaries,
-                  addSemanticIndexes: addSemanticIndexes,
-                ),
-              ))
+          .map(
+            (index, item) => MapEntry(
+              index,
+              _wrapItem(
+                item: item,
+                index: index,
+                addAutomaticKeepAlives: addAutomaticKeepAlives,
+                addRepaintBoundaries: addRepaintBoundaries,
+                addSemanticIndexes: addSemanticIndexes,
+              ),
+            ),
+          )
           .values
           .toList(),
       controller: scrollController,
@@ -130,10 +132,7 @@ class ListOptimizer {
 
     // Add semantic indexes for better accessibility
     if (addSemanticIndexes) {
-      wrappedItem = IndexedSemantics(
-        index: index,
-        child: wrappedItem,
-      );
+      wrappedItem = IndexedSemantics(index: index, child: wrappedItem);
     }
 
     return wrappedItem;
@@ -169,16 +168,18 @@ class ListOptimizer {
       physics: physics,
       children: items
           .asMap()
-          .map((index, item) => MapEntry(
-                index,
-                _wrapGridItem(
-                  item: item,
-                  index: index,
-                  addAutomaticKeepAlives: addAutomaticKeepAlives,
-                  addRepaintBoundaries: addRepaintBoundaries,
-                  addSemanticIndexes: addSemanticIndexes,
-                ),
-              ))
+          .map(
+            (index, item) => MapEntry(
+              index,
+              _wrapGridItem(
+                item: item,
+                index: index,
+                addAutomaticKeepAlives: addAutomaticKeepAlives,
+                addRepaintBoundaries: addRepaintBoundaries,
+                addSemanticIndexes: addSemanticIndexes,
+              ),
+            ),
+          )
           .values
           .toList(),
     );
@@ -209,10 +210,7 @@ class ListOptimizer {
 
     // Add semantic indexes for better accessibility
     if (addSemanticIndexes) {
-      wrappedItem = IndexedSemantics(
-        index: index,
-        child: wrappedItem,
-      );
+      wrappedItem = IndexedSemantics(index: index, child: wrappedItem);
     }
 
     return wrappedItem;
@@ -320,7 +318,7 @@ class _LazyLoadingListViewState extends State<_LazyLoadingListView> {
 
     try {
       final newItems = await widget.onLoadMore(_currentPage + 1);
-      
+
       if (newItems.isEmpty) {
         setState(() {
           _hasMoreData = false;
@@ -362,8 +360,7 @@ class _LazyLoadingListViewState extends State<_LazyLoadingListView> {
             addSemanticIndexes: widget.addSemanticIndexes,
           );
         }).toList(),
-        if (_isLoading || _hasMoreData)
-          widget.loadingIndicator(_isLoading),
+        if (_isLoading || _hasMoreData) widget.loadingIndicator(_isLoading),
       ],
     );
   }

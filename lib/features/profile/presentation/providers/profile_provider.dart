@@ -7,11 +7,7 @@ class ProfileState {
   final bool isLoading;
   final String? errorMessage;
 
-  const ProfileState({
-    this.profile,
-    this.isLoading = false,
-    this.errorMessage,
-  });
+  const ProfileState({this.profile, this.isLoading = false, this.errorMessage});
 
   ProfileState copyWith({
     UserProfile? profile,
@@ -63,10 +59,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
 
       state = state.copyWith(isLoading: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
 
@@ -108,10 +101,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
         errorMessage: null,
       );
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
       final isInitializationError =
           e is StateError || e.toString().contains('not initialized');
       if (!isInitializationError) {
@@ -168,10 +158,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
 
       state = const ProfileState(isLoading: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
 

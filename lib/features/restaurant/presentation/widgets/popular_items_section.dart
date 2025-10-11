@@ -34,10 +34,7 @@ class PopularItemsSection extends StatelessWidget {
               const SizedBox(width: 8),
               const Text(
                 'Popular Items',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -76,10 +73,7 @@ class _PopularItemCard extends StatelessWidget {
   final MenuItem menuItem;
   final VoidCallback onAddToCart;
 
-  const _PopularItemCard({
-    required this.menuItem,
-    required this.onAddToCart,
-  });
+  const _PopularItemCard({required this.menuItem, required this.onAddToCart});
 
   @override
   Widget build(BuildContext context) {
@@ -141,10 +135,7 @@ class _PopularItemCard extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withOpacity(0.7),
-                  ],
+                  colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
                   stops: const [0.5, 1.0],
                 ),
               ),
@@ -154,7 +145,10 @@ class _PopularItemCard extends StatelessWidget {
               top: 12,
               right: 12,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.deepOrange,
                   borderRadius: BorderRadius.circular(20),

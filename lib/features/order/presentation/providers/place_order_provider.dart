@@ -54,13 +54,14 @@ class PlaceOrderState {
 }
 
 // Place order provider to manage placing orders
-final placeOrderProvider = StateNotifierProvider<PlaceOrderNotifier, PlaceOrderState>(
-  (ref) => PlaceOrderNotifier(ref),
-);
+final placeOrderProvider =
+    StateNotifierProvider<PlaceOrderNotifier, PlaceOrderState>(
+      (ref) => PlaceOrderNotifier(ref),
+    );
 
 class PlaceOrderNotifier extends StateNotifier<PlaceOrderState> {
   final Ref _ref;
-  
+
   PlaceOrderNotifier(this._ref) : super(PlaceOrderState());
 
   /// Place order with items in cart
@@ -74,26 +75,26 @@ class PlaceOrderNotifier extends StateNotifier<PlaceOrderState> {
     String? specialInstructions,
   }) async {
     state = state.copyWith(isLoading: true);
-    
+
     try {
       // Simulate network delay
       await Future.delayed(const Duration(milliseconds: 500));
-      
+
       // Get cart items
       final cartState = _ref.read(cartProvider);
       final cartItems = cartState.items;
-      
+
       if (cartItems.isEmpty) {
         throw Exception('Cannot place order with empty cart');
       }
-      
+
       // Calculate order totals
       final subtotal = cartState.subtotal;
       final taxAmount = cartState.taxAmount;
       final deliveryFee = cartState.deliveryFee;
       final discountAmount = cartState.discountAmount;
       final totalAmount = cartState.totalAmount;
-      
+
       // Create order data
       final order = Order(
         id: '', // Will be set by the database
@@ -115,23 +116,17 @@ class PlaceOrderNotifier extends StateNotifier<PlaceOrderState> {
         updatedAt: DateTime.now(),
         specialInstructions: specialInstructions,
       );
-      
+
       // Create order using order provider
       await _ref.read(orderProvider.notifier).createOrder(order);
-      
+
       // Update state with placed order
-      state = state.copyWith(
-        placedOrder: order,
-        isLoading: false,
-      );
-      
+      state = state.copyWith(placedOrder: order, isLoading: false);
+
       // Clear the cart after successful order placement
       _ref.read(cartProvider.notifier).clearCart();
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
 
@@ -148,16 +143,16 @@ class PlaceOrderNotifier extends StateNotifier<PlaceOrderState> {
   /// Apply promo code
   Future<void> applyPromoCode(String code) async {
     state = state.copyWith(isLoading: true);
-    
+
     try {
       // Simulate network delay
       await Future.delayed(const Duration(milliseconds: 300));
-      
+
       // In a real app, this would validate the promo code with the backend
       // For now, we'll simulate a 10% discount
       final cartState = _ref.read(cartProvider);
       final discount = cartState.subtotal * 0.1;
-      
+
       state = state.copyWith(
         promoCode: code.toUpperCase(),
         discountAmount: discount,

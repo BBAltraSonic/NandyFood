@@ -7,14 +7,8 @@ class WidgetOptimizer {
   static const Widget empty = SizedBox.shrink();
 
   /// Create a cached widget with equality check
-  static Widget cached({
-    required Widget child,
-    List<Object?> keys = const [],
-  }) {
-    return _CachedWidget(
-      child: child,
-      keys: keys,
-    );
+  static Widget cached({required Widget child, List<Object?> keys = const []}) {
+    return _CachedWidget(child: child, keys: keys);
   }
 
   /// Create a widget that only rebuilds when specific conditions change
@@ -58,13 +52,15 @@ class WidgetOptimizer {
       padding: padding,
       children: children
           .asMap()
-          .map((index, child) => MapEntry(
-                index,
-                KeyedSubtree(
-                  key: ValueKey('$index-${child.hashCode}'),
-                  child: child,
-                ),
-              ))
+          .map(
+            (index, child) => MapEntry(
+              index,
+              KeyedSubtree(
+                key: ValueKey('$index-${child.hashCode}'),
+                child: child,
+              ),
+            ),
+          )
           .values
           .toList(),
     );
@@ -89,10 +85,7 @@ class _CachedWidget extends StatefulWidget {
   final Widget child;
   final List<Object?> keys;
 
-  const _CachedWidget({
-    required this.child,
-    required this.keys,
-  });
+  const _CachedWidget({required this.child, required this.keys});
 
   @override
   State<_CachedWidget> createState() => _CachedWidgetState();
@@ -135,7 +128,8 @@ class _ConditionalRebuildWidget extends StatefulWidget {
   });
 
   @override
-  State<_ConditionalRebuildWidget> createState() => _ConditionalRebuildWidgetState();
+  State<_ConditionalRebuildWidget> createState() =>
+      _ConditionalRebuildWidgetState();
 }
 
 class _ConditionalRebuildWidgetState extends State<_ConditionalRebuildWidget> {
@@ -150,7 +144,7 @@ class _ConditionalRebuildWidgetState extends State<_ConditionalRebuildWidget> {
   @override
   void didUpdateWidget(covariant _ConditionalRebuildWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
+
     // Check if we should rebuild based on the condition
     if (widget.shouldRebuild()) {
       _cachedChild = widget.child;
@@ -176,7 +170,8 @@ class _DebouncedRebuildWidget extends StatefulWidget {
   });
 
   @override
-  State<_DebouncedRebuildWidget> createState() => _DebouncedRebuildWidgetState();
+  State<_DebouncedRebuildWidget> createState() =>
+      _DebouncedRebuildWidgetState();
 }
 
 class _DebouncedRebuildWidgetState extends State<_DebouncedRebuildWidget> {
@@ -192,10 +187,10 @@ class _DebouncedRebuildWidgetState extends State<_DebouncedRebuildWidget> {
   @override
   void didUpdateWidget(covariant _DebouncedRebuildWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
+
     final now = DateTime.now();
     final timeSinceLastUpdate = now.difference(_lastUpdate);
-    
+
     // Only update if enough time has passed
     if (timeSinceLastUpdate >= widget.debounceDuration) {
       // Check if keys have changed
@@ -225,7 +220,8 @@ class _ProgressiveRenderWidget extends StatefulWidget {
   });
 
   @override
-  State<_ProgressiveRenderWidget> createState() => _ProgressiveRenderWidgetState();
+  State<_ProgressiveRenderWidget> createState() =>
+      _ProgressiveRenderWidgetState();
 }
 
 class _ProgressiveRenderWidgetState extends State<_ProgressiveRenderWidget> {
@@ -241,15 +237,18 @@ class _ProgressiveRenderWidgetState extends State<_ProgressiveRenderWidget> {
 
   void _renderNextBatch() {
     if (_isRendering || _currentIndex >= widget.items.length) return;
-    
+
     setState(() {
       _isRendering = true;
     });
 
     // Render next batch
-    final endIndex = (_currentIndex + widget.batchSize).clamp(0, widget.items.length);
+    final endIndex = (_currentIndex + widget.batchSize).clamp(
+      0,
+      widget.items.length,
+    );
     final newItems = widget.items.sublist(_currentIndex, endIndex);
-    
+
     setState(() {
       _renderedItems = [..._renderedItems, ...newItems];
       _currentIndex = endIndex;
@@ -270,9 +269,7 @@ class _ProgressiveRenderWidgetState extends State<_ProgressiveRenderWidget> {
         if (_currentIndex < widget.items.length)
           const Padding(
             padding: EdgeInsets.all(16),
-            child: Center(
-              child: CircularProgressIndicator(),
-            ),
+            child: Center(child: CircularProgressIndicator()),
           ),
       ],
     );

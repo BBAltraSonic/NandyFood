@@ -19,13 +19,11 @@ void main() {
       DatabaseService.disableTestMode();
     });
 
-    testWidgets('displays checkout form correctly', (WidgetTester tester) async {
+    testWidgets('displays checkout form correctly', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: CheckoutScreen(),
-          ),
-        ),
+        ProviderScope(child: MaterialApp(home: CheckoutScreen())),
       );
 
       // Verify that title is displayed
@@ -44,17 +42,18 @@ void main() {
       expect(find.text('Place Order'), findsOneWidget);
     });
 
-    testWidgets('displays delivery address fields', (WidgetTester tester) async {
+    testWidgets('displays delivery address fields', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: CheckoutScreen(),
-          ),
-        ),
+        ProviderScope(child: MaterialApp(home: CheckoutScreen())),
       );
 
       // Verify that address fields are displayed
-      expect(find.byType(TextField), findsNWidgets(5)); // street, city, zip, etc.
+      expect(
+        find.byType(TextField),
+        findsNWidgets(5),
+      ); // street, city, zip, etc.
 
       // Verify that edit address button is displayed
       expect(find.byIcon(Icons.edit), findsOneWidget);
@@ -62,11 +61,7 @@ void main() {
 
     testWidgets('displays payment method options', (WidgetTester tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: CheckoutScreen(),
-          ),
-        ),
+        ProviderScope(child: MaterialApp(home: CheckoutScreen())),
       );
 
       // Wait for payment methods to load
@@ -79,15 +74,13 @@ void main() {
 
     testWidgets('displays promo code input field', (WidgetTester tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: CheckoutScreen(),
-          ),
-        ),
+        ProviderScope(child: MaterialApp(home: CheckoutScreen())),
       );
 
       // Find promo code field
-      final promoCodeFields = find.byType(TextField).evaluate().where((element) {
+      final promoCodeFields = find.byType(TextField).evaluate().where((
+        element,
+      ) {
         final textField = element.widget as TextField;
         return textField.decoration?.labelText == 'Promo Code';
       });
@@ -96,21 +89,21 @@ void main() {
       expect(promoCodeFields.length, 1);
     });
 
-    testWidgets('applies promo code when apply button is tapped', (WidgetTester tester) async {
+    testWidgets('applies promo code when apply button is tapped', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: CheckoutScreen(),
-          ),
-        ),
+        ProviderScope(child: MaterialApp(home: CheckoutScreen())),
       );
 
       // Find promo code field and enter code
-      final promoCodeField = find.byType(TextField).evaluate().firstWhere((element) {
+      final promoCodeField = find.byType(TextField).evaluate().firstWhere((
+        element,
+      ) {
         final textField = element.widget as TextField;
         return textField.decoration?.labelText == 'Promo Code';
       });
-      
+
       await tester.enterText(promoCodeField, 'SAVE10');
 
       // Find apply button and tap it
@@ -121,7 +114,9 @@ void main() {
       // Note: Actual verification would depend on state management
     });
 
-    testWidgets('places order when place order button is tapped', (WidgetTester tester) async {
+    testWidgets('places order when place order button is tapped', (
+      WidgetTester tester,
+    ) async {
       bool orderPlaced = false;
 
       await tester.pumpWidget(
@@ -154,13 +149,11 @@ void main() {
       expect(orderPlaced, isTrue);
     });
 
-    testWidgets('displays order summary correctly', (WidgetTester tester) async {
+    testWidgets('displays order summary correctly', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: CheckoutScreen(),
-          ),
-        ),
+        ProviderScope(child: MaterialApp(home: CheckoutScreen())),
       );
 
       // Wait for checkout data to load
@@ -185,13 +178,11 @@ void main() {
       expect(find.text('Total'), findsOneWidget);
     });
 
-    testWidgets('updates tip amount when tip slider is moved', (WidgetTester tester) async {
+    testWidgets('updates tip amount when tip slider is moved', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: CheckoutScreen(),
-          ),
-        ),
+        ProviderScope(child: MaterialApp(home: CheckoutScreen())),
       );
 
       // Wait for checkout data to load

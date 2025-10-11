@@ -43,7 +43,7 @@ class Restaurant {
 
   Map<String, dynamic> toJson() => _$RestaurantToJson(this);
 
- Restaurant copyWith({
+  Restaurant copyWith({
     String? id,
     String? name,
     String? description,
@@ -71,7 +71,8 @@ class Restaurant {
       openingHours: openingHours ?? this.openingHours,
       rating: rating ?? this.rating,
       deliveryRadius: deliveryRadius ?? this.deliveryRadius,
-      estimatedDeliveryTime: estimatedDeliveryTime ?? this.estimatedDeliveryTime,
+      estimatedDeliveryTime:
+          estimatedDeliveryTime ?? this.estimatedDeliveryTime,
       isActive: isActive ?? this.isActive,
       dietaryOptions: dietaryOptions ?? this.dietaryOptions,
       createdAt: createdAt ?? this.createdAt,

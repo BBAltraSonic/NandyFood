@@ -30,7 +30,9 @@ class AppLogger {
       debugPrint('$_red   └─ Error: $error$_reset');
     }
     if (stack != null) {
-      debugPrint('$_red   └─ Stack: ${stack.toString().split('\n').take(5).join('\n       ')}$_reset');
+      debugPrint(
+        '$_red   └─ Stack: ${stack.toString().split('\n').take(5).join('\n       ')}$_reset',
+      );
     }
   }
 
@@ -56,9 +58,17 @@ class AppLogger {
     }
   }
 
-  static void function(String functionName, String action, {Map<String, dynamic>? params, dynamic result}) {
-    final timestamp = DateTime.now().toIso8601String().split('T')[1].split('.')[0];
-    
+  static void function(
+    String functionName,
+    String action, {
+    Map<String, dynamic>? params,
+    dynamic result,
+  }) {
+    final timestamp = DateTime.now()
+        .toIso8601String()
+        .split('T')[1]
+        .split('.')[0];
+
     if (action == 'ENTER') {
       debugPrint('$_cyan━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━$_reset');
       debugPrint('$_cyan[$timestamp] 🔵 ENTER → $functionName$_reset');
@@ -90,7 +100,12 @@ class AppLogger {
     debugPrint('$_magenta└─$_reset');
   }
 
-  static void database(String operation, String table, {dynamic data, int? count}) {
+  static void database(
+    String operation,
+    String table, {
+    dynamic data,
+    int? count,
+  }) {
     debugPrint('$_yellow┌─ 🗄️  DATABASE $operation$_reset');
     debugPrint('$_yellow│  Table: $table$_reset');
     if (count != null) {
@@ -109,7 +124,12 @@ class AppLogger {
     debugPrint('$_blue└─$_reset');
   }
 
-  static void state(String provider, String action, {dynamic oldValue, dynamic newValue}) {
+  static void state(
+    String provider,
+    String action, {
+    dynamic oldValue,
+    dynamic newValue,
+  }) {
     debugPrint('$_magenta┌─ 🔄 STATE CHANGE$_reset');
     debugPrint('$_magenta│  Provider: $provider$_reset');
     debugPrint('$_magenta│  Action: $action$_reset');
@@ -124,30 +144,39 @@ class AppLogger {
 
   static void performance(String operation, Duration duration) {
     final ms = duration.inMilliseconds;
-    final color = ms < 100 ? _green : ms < 500 ? _yellow : _red;
+    final color = ms < 100
+        ? _green
+        : ms < 500
+        ? _yellow
+        : _red;
     debugPrint('$color⏱️  PERFORMANCE: $operation took ${ms}ms$_reset');
   }
 
   static void separator() {
-    debugPrint('$_white═══════════════════════════════════════════════════════$_reset');
+    debugPrint(
+      '$_white═══════════════════════════════════════════════════════$_reset',
+    );
   }
 
   static void section(String title) {
-    debugPrint('\n$_bold$_cyan╔═══════════════════════════════════════════════════════╗$_reset');
+    debugPrint(
+      '\n$_bold$_cyan╔═══════════════════════════════════════════════════════╗$_reset',
+    );
     debugPrint('$_bold$_cyan║  $title$_reset');
-    debugPrint('$_bold$_cyan╚═══════════════════════════════════════════════════════╝$_reset\n');
+    debugPrint(
+      '$_bold$_cyan╚═══════════════════════════════════════════════════════╝$_reset\n',
+    );
   }
 
   static void _log(String level, String message, String color) {
-    final timestamp = DateTime.now().toIso8601String().split('T')[1].split('.')[0];
+    final timestamp = DateTime.now()
+        .toIso8601String()
+        .split('T')[1]
+        .split('.')[0];
     debugPrint('$color[$timestamp] $level: $message$_reset');
-    
+
     // Also log to developer console for better debugging
-    developer.log(
-      message,
-      name: level,
-      time: DateTime.now(),
-    );
+    developer.log(message, name: level, time: DateTime.now());
   }
 
   /// Log app lifecycle events
@@ -173,7 +202,9 @@ class AppLogger {
   /// Log widget builds
   static void widgetBuild(String widgetName, {String? reason}) {
     if (kDebugMode) {
-      debugPrint('$_magenta🎨 BUILD: $widgetName${reason != null ? ' (Reason: $reason)' : ''}$_reset');
+      debugPrint(
+        '$_magenta🎨 BUILD: $widgetName${reason != null ? ' (Reason: $reason)' : ''}$_reset',
+      );
     }
   }
 }

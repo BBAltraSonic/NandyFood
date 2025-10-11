@@ -31,7 +31,7 @@ class _LocationMapWidgetState extends State<LocationMapWidget> {
   void initState() {
     super.initState();
     mapController = MapController();
-    
+
     // Get user's current position
     _getUserLocation();
   }
@@ -40,11 +40,11 @@ class _LocationMapWidgetState extends State<LocationMapWidget> {
     try {
       final locationService = LocationService();
       final position = await locationService.getCurrentPosition();
-      
+
       setState(() {
         userPosition = position;
       });
-      
+
       // Center the map on user's location
       mapController.move(
         LatLng(position.latitude, position.longitude),
@@ -67,11 +67,7 @@ class _LocationMapWidgetState extends State<LocationMapWidget> {
           width: 80,
           height: 80,
           point: LatLng(userPosition!.latitude, userPosition!.longitude),
-          child: const Icon(
-            Icons.person_pin,
-            size: 30,
-            color: Colors.blue,
-          ),
+          child: const Icon(Icons.person_pin, size: 30, color: Colors.blue),
         ),
       );
     }
@@ -81,7 +77,8 @@ class _LocationMapWidgetState extends State<LocationMapWidget> {
       try {
         // Assuming restaurant address contains lat/lng coordinates
         // This is a simplified approach - in real app, we'd geocode the address
-        if (restaurant.address['lat'] != null && restaurant.address['lng'] != null) {
+        if (restaurant.address['lat'] != null &&
+            restaurant.address['lng'] != null) {
           double lat = restaurant.address['lat'];
           double lng = restaurant.address['lng'];
 
@@ -136,9 +133,7 @@ class _LocationMapWidgetState extends State<LocationMapWidget> {
           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           userAgentPackageName: 'com.example.food_delivery_app',
         ),
-        MarkerLayer(
-          markers: markers,
-        ),
+        MarkerLayer(markers: markers),
       ],
     );
   }

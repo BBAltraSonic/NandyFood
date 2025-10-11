@@ -8,7 +8,8 @@ class ProfileSettingsScreen extends ConsumerStatefulWidget {
   const ProfileSettingsScreen({super.key});
 
   @override
-  ConsumerState<ProfileSettingsScreen> createState() => _ProfileSettingsScreenState();
+  ConsumerState<ProfileSettingsScreen> createState() =>
+      _ProfileSettingsScreenState();
 }
 
 class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
@@ -16,7 +17,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
-  
+
   bool _isLoading = false;
 
   @override
@@ -30,8 +31,10 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
     // For now, we'll simulate by getting the current user from auth state
     final authState = ref.read(authStateProvider);
     if (authState.user != null) {
-      _nameController.text = authState.user!.userMetadata?['full_name'] ?? 
-          authState.user!.email?.split('@')[0] ?? '';
+      _nameController.text =
+          authState.user!.userMetadata?['full_name'] ??
+          authState.user!.email?.split('@')[0] ??
+          '';
       _emailController.text = authState.user!.email ?? '';
     }
   }
@@ -46,11 +49,13 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
         centerTitle: true,
         actions: [
           TextButton(
-            onPressed: _isLoading ? null : () async {
-              if (_formKey.currentState!.validate()) {
-                await _updateProfile();
-              }
-            },
+            onPressed: _isLoading
+                ? null
+                : () async {
+                    if (_formKey.currentState!.validate()) {
+                      await _updateProfile();
+                    }
+                  },
             child: const Text('Save'),
           ),
         ],
@@ -88,10 +93,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: Colors.deepOrange,
-                              border: Border.all(
-                                color: Colors.white,
-                                width: 3,
-                              ),
+                              border: Border.all(color: Colors.white, width: 3),
                             ),
                             child: const Icon(
                               Icons.camera_alt,
@@ -103,7 +105,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Name field
                     TextFormField(
                       controller: _nameController,
@@ -120,7 +122,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                       },
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Email field
                     TextFormField(
                       controller: _emailController,
@@ -134,14 +136,16 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your email';
                         }
-                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                        if (!RegExp(
+                          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                        ).hasMatch(value)) {
                           return 'Please enter a valid email';
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Phone field
                     TextFormField(
                       controller: _phoneController,
@@ -153,7 +157,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Bio field
                     TextFormField(
                       maxLines: 3,
@@ -165,17 +169,19 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Save button
                     SizedBox(
                       width: double.infinity,
                       height: 50,
                       child: ElevatedButton(
-                        onPressed: _isLoading ? null : () async {
-                          if (_formKey.currentState!.validate()) {
-                            await _updateProfile();
-                          }
-                        },
+                        onPressed: _isLoading
+                            ? null
+                            : () async {
+                                if (_formKey.currentState!.validate()) {
+                                  await _updateProfile();
+                                }
+                              },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.deepOrange,
                           foregroundColor: Colors.white,
@@ -211,14 +217,14 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
         // In a real implementation, this would update the user profile in the database
         // For now, we'll just show a success message
         await Future.delayed(const Duration(seconds: 1));
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Profile updated successfully'),
             backgroundColor: Colors.green,
           ),
         );
-        
+
         // Navigate back to the profile screen
         if (context.mounted) {
           Navigator.of(context).pop();

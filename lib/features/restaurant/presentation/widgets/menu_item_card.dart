@@ -1,23 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:food_delivery_app/shared/models/menu_item.dart';
+import 'package:food_delivery_app/features/restaurant/presentation/widgets/dish_customization_modal.dart';
 
-class MenuItemCard extends StatelessWidget {
+class MenuItemCard extends ConsumerWidget {
   final MenuItem menuItem;
   final VoidCallback? onAddToCart;
 
-  const MenuItemCard({
-    Key? key,
-    required this.menuItem,
-    this.onAddToCart,
-  }) : super(key: key);
+  const MenuItemCard({Key? key, required this.menuItem, this.onAddToCart})
+    : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
       child: Column(
         children: [
@@ -41,7 +38,7 @@ class MenuItemCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                
+
                 // Menu item details
                 Expanded(
                   child: Column(
@@ -70,15 +67,18 @@ class MenuItemCard extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      
+
                       // Dietary restrictions badges
-                      if (menuItem.dietaryRestrictions != null && menuItem.dietaryRestrictions!.isNotEmpty)
+                      if (menuItem.dietaryRestrictions != null &&
+                          menuItem.dietaryRestrictions!.isNotEmpty)
                         Wrap(
                           spacing: 8,
-                          children: menuItem.dietaryRestrictions!.map<Widget>((restriction) {
+                          children: menuItem.dietaryRestrictions!.map<Widget>((
+                            restriction,
+                          ) {
                             Color badgeColor;
                             String badgeText;
-                            
+
                             switch (restriction.toLowerCase()) {
                               case 'vegetarian':
                                 badgeColor = Colors.green;
@@ -96,9 +96,12 @@ class MenuItemCard extends StatelessWidget {
                                 badgeColor = Colors.grey;
                                 badgeText = restriction;
                             }
-                            
+
                             return Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: badgeColor.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(12),
@@ -115,9 +118,9 @@ class MenuItemCard extends StatelessWidget {
                             );
                           }).toList(),
                         ),
-                      
+
                       const SizedBox(height: 8),
-                      
+
                       Text(
                         menuItem.description ?? 'No description available',
                         style: const TextStyle(
@@ -137,7 +140,11 @@ class MenuItemCard extends StatelessWidget {
               width: double.infinity,
               height: 40,
               child: ElevatedButton(
-                onPressed: onAddToCart,
+                onPressed: () => showDishCustomizationModal(
+                  context: context,
+                  menuItem: menuItem,
+                  ref: ref,
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.deepOrange,
                   foregroundColor: Colors.white,
@@ -152,5 +159,5 @@ class MenuItemCard extends StatelessWidget {
         ],
       ),
     );
- }
+  }
 }

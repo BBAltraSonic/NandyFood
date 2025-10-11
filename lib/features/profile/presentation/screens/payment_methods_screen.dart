@@ -14,24 +14,28 @@ class PaymentMethodsScreen extends ConsumerWidget {
 
     // Load payment methods when the screen is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (paymentMethodsState.paymentMethods.isEmpty && !paymentMethodsState.isLoading) {
+      if (paymentMethodsState.paymentMethods.isEmpty &&
+          !paymentMethodsState.isLoading) {
         paymentMethodsNotifier.loadPaymentMethods();
       }
     });
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Payment Methods'),
-        centerTitle: true,
-      ),
-      body: paymentMethodsState.isLoading && paymentMethodsState.paymentMethods.isEmpty
+      appBar: AppBar(title: const Text('Payment Methods'), centerTitle: true),
+      body:
+          paymentMethodsState.isLoading &&
+              paymentMethodsState.paymentMethods.isEmpty
           ? const Center(child: LoadingIndicator())
           : paymentMethodsState.errorMessage != null
-              ? ErrorMessageWidget(
-                  message: paymentMethodsState.errorMessage!,
-                  onRetry: () => paymentMethodsNotifier.loadPaymentMethods(),
-                )
-              : _buildPaymentMethodsList(paymentMethodsState, paymentMethodsNotifier, context),
+          ? ErrorMessageWidget(
+              message: paymentMethodsState.errorMessage!,
+              onRetry: () => paymentMethodsNotifier.loadPaymentMethods(),
+            )
+          : _buildPaymentMethodsList(
+              paymentMethodsState,
+              paymentMethodsNotifier,
+              context,
+            ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.of(context).pushNamed('/profile/add-payment');
@@ -51,11 +55,7 @@ class PaymentMethodsScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.payment,
-              size: 80,
-              color: Colors.grey,
-            ),
+            Icon(Icons.payment, size: 80, color: Colors.grey),
             SizedBox(height: 16),
             Text(
               'No payment methods',
@@ -127,10 +127,7 @@ class PaymentMethodsScreen extends ConsumerWidget {
                   const SizedBox(height: 4),
                   Text(
                     'Expires ${method.expiryMonth}/${method.expiryYear.toString().padLeft(2, '0')}',
-                    style: const TextStyle(
-                      color: Colors.grey,
-                      fontSize: 14,
-                    ),
+                    style: const TextStyle(color: Colors.grey, fontSize: 14),
                   ),
                   if (method.isDefault)
                     const Text(
@@ -149,7 +146,10 @@ class PaymentMethodsScreen extends ConsumerWidget {
                 if (value == 'set_default') {
                   await notifier.setDefaultPaymentMethod(method.id);
                 } else if (value == 'remove') {
-                  final confirmed = await _showDeleteConfirmationDialog(context, method);
+                  final confirmed = await _showDeleteConfirmationDialog(
+                    context,
+                    method,
+                  );
                   if (confirmed) {
                     await notifier.removePaymentMethod(method.id);
                   }
@@ -199,13 +199,18 @@ class PaymentMethodsScreen extends ConsumerWidget {
     }
   }
 
-  Future<bool> _showDeleteConfirmationDialog(BuildContext context, PaymentMethodInfo method) {
+  Future<bool> _showDeleteConfirmationDialog(
+    BuildContext context,
+    PaymentMethodInfo method,
+  ) {
     return showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Remove Payment Method'),
-          content: Text('Are you sure you want to remove your ${method.brand} ending in ${method.last4}?'),
+          content: Text(
+            'Are you sure you want to remove your ${method.brand} ending in ${method.last4}?',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),

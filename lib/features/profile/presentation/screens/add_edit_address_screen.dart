@@ -8,7 +8,8 @@ class AddEditAddressScreen extends ConsumerStatefulWidget {
   const AddEditAddressScreen({super.key, this.address});
 
   @override
-  ConsumerState<AddEditAddressScreen> createState() => _AddEditAddressScreenState();
+  ConsumerState<AddEditAddressScreen> createState() =>
+      _AddEditAddressScreenState();
 }
 
 class _AddEditAddressScreenState extends ConsumerState<AddEditAddressScreen> {
@@ -89,7 +90,7 @@ class _AddEditAddressScreenState extends ConsumerState<AddEditAddressScreen> {
                       },
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Street address
                     TextFormField(
                       controller: _streetController,
@@ -106,7 +107,7 @@ class _AddEditAddressScreenState extends ConsumerState<AddEditAddressScreen> {
                       },
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Apartment/Suite
                     TextFormField(
                       controller: _apartmentController,
@@ -117,7 +118,7 @@ class _AddEditAddressScreenState extends ConsumerState<AddEditAddressScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // City
                     TextFormField(
                       controller: _cityController,
@@ -134,7 +135,7 @@ class _AddEditAddressScreenState extends ConsumerState<AddEditAddressScreen> {
                       },
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // State
                     TextFormField(
                       controller: _stateController,
@@ -151,7 +152,7 @@ class _AddEditAddressScreenState extends ConsumerState<AddEditAddressScreen> {
                       },
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // ZIP Code
                     TextFormField(
                       controller: _zipCodeController,
@@ -169,20 +170,21 @@ class _AddEditAddressScreenState extends ConsumerState<AddEditAddressScreen> {
                       },
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Delivery instructions
                     TextFormField(
                       controller: _instructionsController,
                       maxLines: 3,
                       decoration: const InputDecoration(
                         labelText: 'Delivery Instructions (Optional)',
-                        hintText: 'e.g., Ring doorbell twice, leave at front desk',
+                        hintText:
+                            'e.g., Ring doorbell twice, leave at front desk',
                         prefixIcon: Icon(Icons.note),
                         border: OutlineInputBorder(),
                       ),
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Set as default address
                     CheckboxListTile(
                       title: const Text('Set as default delivery address'),
@@ -195,7 +197,7 @@ class _AddEditAddressScreenState extends ConsumerState<AddEditAddressScreen> {
                       controlAffinity: ListTileControlAffinity.leading,
                     ),
                     const SizedBox(height: 20),
-                    
+
                     // Save button
                     SizedBox(
                       width: double.infinity,
@@ -210,7 +212,9 @@ class _AddEditAddressScreenState extends ConsumerState<AddEditAddressScreen> {
                           ),
                         ),
                         child: Text(
-                          widget.address == null ? 'Add Address' : 'Update Address',
+                          widget.address == null
+                              ? 'Add Address'
+                              : 'Update Address',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -218,7 +222,7 @@ class _AddEditAddressScreenState extends ConsumerState<AddEditAddressScreen> {
                         ),
                       ),
                     ),
-                    
+
                     // Delete button (only for edit mode)
                     if (widget.address != null) ...[
                       const SizedBox(height: 16),
@@ -226,7 +230,9 @@ class _AddEditAddressScreenState extends ConsumerState<AddEditAddressScreen> {
                         width: double.infinity,
                         height: 50,
                         child: OutlinedButton(
-                          onPressed: _isLoading ? null : () => _deleteAddress(context),
+                          onPressed: _isLoading
+                              ? null
+                              : () => _deleteAddress(context),
                           style: OutlinedButton.styleFrom(
                             side: const BorderSide(color: Colors.red),
                             shape: RoundedRectangleBorder(
@@ -260,18 +266,18 @@ class _AddEditAddressScreenState extends ConsumerState<AddEditAddressScreen> {
       try {
         // In a real implementation, this would save the address to the database
         await Future.delayed(const Duration(seconds: 1));
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              widget.address == null 
-                  ? 'Address added successfully' 
-                  : 'Address updated successfully'
+              widget.address == null
+                  ? 'Address added successfully'
+                  : 'Address updated successfully',
             ),
             backgroundColor: Colors.green,
           ),
         );
-        
+
         // Navigate back to the address screen
         if (context.mounted) {
           Navigator.of(context).pop();
@@ -305,22 +311,22 @@ class _AddEditAddressScreenState extends ConsumerState<AddEditAddressScreen> {
           TextButton(
             onPressed: () async {
               Navigator.of(context).pop(); // Close dialog
-              
+
               setState(() {
                 _isLoading = true;
               });
-              
+
               try {
                 // In a real implementation, this would delete the address from the database
                 await Future.delayed(const Duration(seconds: 1));
-                
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Address deleted successfully'),
                     backgroundColor: Colors.green,
                   ),
                 );
-                
+
                 // Navigate back to the address screen
                 if (context.mounted) {
                   Navigator.of(context).pop(); // Close edit screen

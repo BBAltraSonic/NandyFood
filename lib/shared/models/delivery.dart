@@ -31,7 +31,7 @@ class Delivery {
 
   Map<String, dynamic> toJson() => _$DeliveryToJson(this);
 
- Delivery copyWith({
+  Delivery copyWith({
     String? id,
     String? orderId,
     String? driverId,

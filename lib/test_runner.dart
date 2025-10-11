@@ -89,11 +89,11 @@ class TestLogger {
   void _addLog(LogEntry entry) {
     _logs.add(entry);
     _logStream.add(entry);
-    
+
     // Print to console
     final icon = _getIcon(entry.level);
     final timestamp = entry.timestamp.toIso8601String();
-    
+
     if (kDebugMode) {
       print('$icon [$timestamp] [${entry.function}] ${entry.message}');
       if (entry.params != null) {
@@ -163,20 +163,20 @@ class TestLogger {
       buffer.writeln('Function: ${log.function}');
       buffer.writeln('Level: ${log.level.name.toUpperCase()}');
       buffer.writeln('Message: ${log.message}');
-      
+
       if (log.params != null) {
         buffer.writeln('Parameters: ${log.params}');
       }
-      
+
       if (log.result != null) {
         buffer.writeln('Result: ${log.result}');
       }
-      
+
       if (log.stackTrace != null) {
         buffer.writeln('Stack Trace:');
         buffer.writeln(log.stackTrace.toString());
       }
-      
+
       buffer.writeln('-' * 80);
     }
 
@@ -210,13 +210,7 @@ class TestLogger {
   }
 }
 
-enum LogLevel {
-  info,
-  success,
-  warning,
-  error,
-  debug,
-}
+enum LogLevel { info, success, warning, error, debug }
 
 class LogEntry {
   final DateTime timestamp;
@@ -305,7 +299,7 @@ class LogViewerWidget extends StatelessWidget {
         stream: logger.logStream,
         builder: (context, snapshot) {
           final logs = logger.logs;
-          
+
           if (logs.isEmpty) {
             return const Center(
               child: Text('No logs yet. Use the app to generate logs.'),
@@ -316,7 +310,7 @@ class LogViewerWidget extends StatelessWidget {
             children: [
               // Statistics
               _buildStatistics(logger.getStatistics()),
-              
+
               // Log list
               Expanded(
                 child: ListView.builder(
@@ -341,18 +335,38 @@ class LogViewerWidget extends StatelessWidget {
 
   Widget _buildStatistics(Map<String, dynamic> stats) {
     final byLevel = stats['byLevel'] as Map<String, int>;
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       color: Colors.grey[200],
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _StatChip(label: 'Total', value: stats['totalLogs'], color: Colors.blue),
-          _StatChip(label: 'Info', value: byLevel['info'] ?? 0, color: Colors.blue),
-          _StatChip(label: 'Success', value: byLevel['success'] ?? 0, color: Colors.green),
-          _StatChip(label: 'Warnings', value: byLevel['warning'] ?? 0, color: Colors.orange),
-          _StatChip(label: 'Errors', value: byLevel['error'] ?? 0, color: Colors.red),
+          _StatChip(
+            label: 'Total',
+            value: stats['totalLogs'],
+            color: Colors.blue,
+          ),
+          _StatChip(
+            label: 'Info',
+            value: byLevel['info'] ?? 0,
+            color: Colors.blue,
+          ),
+          _StatChip(
+            label: 'Success',
+            value: byLevel['success'] ?? 0,
+            color: Colors.green,
+          ),
+          _StatChip(
+            label: 'Warnings',
+            value: byLevel['warning'] ?? 0,
+            color: Colors.orange,
+          ),
+          _StatChip(
+            label: 'Errors',
+            value: byLevel['error'] ?? 0,
+            color: Colors.red,
+          ),
         ],
       ),
     );
@@ -405,7 +419,10 @@ class LogViewerWidget extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Parameters:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Parameters:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 8),
                   Text(log.params.toString()),
                 ],
@@ -417,7 +434,10 @@ class LogViewerWidget extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Result:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Result:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 8),
                   Text(log.result.toString()),
                 ],
@@ -429,14 +449,23 @@ class LogViewerWidget extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Stack Trace:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
+                  const Text(
+                    'Stack Trace:',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.all(8),
                     color: Colors.red[50],
                     child: Text(
                       log.stackTrace.toString(),
-                      style: const TextStyle(fontSize: 10, fontFamily: 'monospace'),
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontFamily: 'monospace',
+                      ),
                     ),
                   ),
                 ],
@@ -449,23 +478,21 @@ class LogViewerWidget extends StatelessWidget {
 
   String _formatTime(DateTime time) {
     return '${time.hour.toString().padLeft(2, '0')}:'
-           '${time.minute.toString().padLeft(2, '0')}:'
-           '${time.second.toString().padLeft(2, '0')}';
+        '${time.minute.toString().padLeft(2, '0')}:'
+        '${time.second.toString().padLeft(2, '0')}';
   }
 
   void _exportLogs(BuildContext context) {
     final logger = TestLogger();
     final logs = logger.exportLogs();
-    
+
     // In a real app, this would save to file
     // For now, just show a dialog
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Logs Exported'),
-        content: SingleChildScrollView(
-          child: Text(logs),
-        ),
+        content: SingleChildScrollView(child: Text(logs)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -479,7 +506,7 @@ class LogViewerWidget extends StatelessWidget {
   void _showStatistics(BuildContext context) {
     final logger = TestLogger();
     final stats = logger.getStatistics();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -491,15 +518,21 @@ class LogViewerWidget extends StatelessWidget {
             children: [
               Text('Total Logs: ${stats['totalLogs']}'),
               const SizedBox(height: 16),
-              const Text('By Level:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                'By Level:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               ...(stats['byLevel'] as Map<String, int>).entries.map(
                 (e) => Text('  ${e.key}: ${e.value}'),
               ),
               const SizedBox(height: 16),
-              const Text('Function Calls:', style: TextStyle(fontWeight: FontWeight.bold)),
-              ...(stats['functionCalls'] as Map<String, int>).entries.take(10).map(
-                (e) => Text('  ${e.key}: ${e.value}'),
+              const Text(
+                'Function Calls:',
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
+              ...(stats['functionCalls'] as Map<String, int>).entries
+                  .take(10)
+                  .map((e) => Text('  ${e.key}: ${e.value}')),
             ],
           ),
         ),
@@ -538,10 +571,7 @@ class _StatChip extends StatelessWidget {
             color: color,
           ),
         ),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 12),
-        ),
+        Text(label, style: const TextStyle(fontSize: 12)),
       ],
     );
   }

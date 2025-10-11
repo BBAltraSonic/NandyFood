@@ -4,27 +4,29 @@ import 'package:food_delivery_app/core/constants/config.dart';
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
   factory DatabaseService() => _instance;
-  
+
   // Test mode flag to disable client initialization in tests
   static bool _isTestMode = false;
-  
+
   // Method to enable test mode
   static void enableTestMode() {
     _isTestMode = true;
   }
-  
+
   // Method to disable test mode
   static void disableTestMode() {
     _isTestMode = false;
   }
-  
+
   DatabaseService._internal();
 
   bool _initialized = false;
 
   SupabaseClient get client {
     if (!_initialized && !_isTestMode) {
-      throw StateError('DatabaseService not initialized. Call initialize() first.');
+      throw StateError(
+        'DatabaseService not initialized. Call initialize() first.',
+      );
     }
     return Supabase.instance.client;
   }
@@ -34,22 +36,26 @@ class DatabaseService {
     if (_isTestMode) {
       return;
     }
-    
+
     if (_initialized) {
       return; // Already initialized
     }
-    
+
     try {
       final url = Config.supabaseUrl;
       final key = Config.supabaseAnonKey;
-      
+
       // Validate URL format
-      if (url.contains('your-project') || url.isEmpty || !url.startsWith('http')) {
-        print('WARNING: Invalid Supabase URL. Please configure .env file with valid credentials.');
+      if (url.contains('your-project') ||
+          url.isEmpty ||
+          !url.startsWith('http')) {
+        print(
+          'WARNING: Invalid Supabase URL. Please configure .env file with valid credentials.',
+        );
         print('Current URL: $url');
         throw Exception('Invalid Supabase configuration');
       }
-      
+
       await Supabase.initialize(
         url: url,
         anonKey: key,
@@ -57,7 +63,7 @@ class DatabaseService {
           authFlowType: AuthFlowType.pkce,
         ),
       );
-      
+
       _initialized = true;
       print('✅ Supabase initialized successfully');
       print('📡 Connected to: $url');
@@ -82,7 +88,9 @@ class DatabaseService {
     }
   }
 
-  Future<Map<String, dynamic>> createUserProfile(Map<String, dynamic> data) async {
+  Future<Map<String, dynamic>> createUserProfile(
+    Map<String, dynamic> data,
+  ) async {
     try {
       final response = await client
           .from('user_profiles')
@@ -96,12 +104,12 @@ class DatabaseService {
     }
   }
 
-  Future<void> updateUserProfile(String userId, Map<String, dynamic> data) async {
+  Future<void> updateUserProfile(
+    String userId,
+    Map<String, dynamic> data,
+  ) async {
     try {
-      await client
-          .from('user_profiles')
-          .update(data)
-          .eq('id', userId);
+      await client.from('user_profiles').update(data).eq('id', userId);
     } catch (e) {
       // Handle error
       rethrow;
@@ -109,7 +117,11 @@ class DatabaseService {
   }
 
   // Restaurant Operations
-  Future<List<Map<String, dynamic>>> getRestaurants({String? cuisineType, double? minRating, int? maxDeliveryTime}) async {
+  Future<List<Map<String, dynamic>>> getRestaurants({
+    String? cuisineType,
+    double? minRating,
+    int? maxDeliveryTime,
+  }) async {
     try {
       var query = client.from('restaurants').select().eq('is_active', true);
 
@@ -164,12 +176,14 @@ class DatabaseService {
   }
 
   /// Filter restaurants by category (cuisine type)
-  Future<List<Map<String, dynamic>>> getRestaurantsByCategory(String category) async {
+  Future<List<Map<String, dynamic>>> getRestaurantsByCategory(
+    String category,
+  ) async {
     try {
       if (category == 'all') {
         return getRestaurants();
       }
-      
+
       final response = await client
           .from('restaurants')
           .select()
@@ -198,7 +212,10 @@ class DatabaseService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getMenuItemsByCategory(String restaurantId, String category) async {
+  Future<List<Map<String, dynamic>>> getMenuItemsByCategory(
+    String restaurantId,
+    String category,
+  ) async {
     try {
       final response = await client
           .from('menu_items')
@@ -216,14 +233,20 @@ class DatabaseService {
   /// Get popular menu items for a restaurant
   /// Returns top items based on order frequency (simulated by rating for now)
   /// In a real app, this would query order_items to count orders
-  Future<List<Map<String, dynamic>>> getPopularMenuItems(String restaurantId, {int limit = 5}) async {
+  Future<List<Map<String, dynamic>>> getPopularMenuItems(
+    String restaurantId, {
+    int limit = 5,
+  }) async {
     try {
       final response = await client
           .from('menu_items')
           .select()
           .eq('restaurant_id', restaurantId)
           .eq('is_available', true)
-          .order('price', ascending: false) // Simulate popularity (high-end items tend to be ordered more)
+          .order(
+            'price',
+            ascending: false,
+          ) // Simulate popularity (high-end items tend to be ordered more)
           .limit(limit);
       return response;
     } catch (e) {
@@ -277,39 +300,43 @@ class DatabaseService {
 
   /// Get restaurants the user has ordered from recently (for Order Again section)
   /// Returns up to 10 unique restaurants ordered by most recent order
-  Future<List<Map<String, dynamic>>> getUserRecentRestaurants(String userId) async {
+  Future<List<Map<String, dynamic>>> getUserRecentRestaurants(
+    String userId,
+  ) async {
     try {
       // Get recent orders with restaurant data
       final orders = await client
           .from('orders')
-          .select('restaurant_id, placed_at, restaurants(id, name, cuisine_type, rating, estimated_delivery_time, is_active)')
+          .select(
+            'restaurant_id, placed_at, restaurants(id, name, cuisine_type, rating, estimated_delivery_time, is_active)',
+          )
           .eq('user_id', userId)
           .order('placed_at', ascending: false)
           .limit(50); // Get more orders to ensure variety after filtering
-      
+
       // Extract unique restaurants (most recent first)
       final Map<String, Map<String, dynamic>> uniqueRestaurants = {};
-      
+
       for (var order in orders) {
         final restaurantId = order['restaurant_id'] as String;
         final restaurantData = order['restaurants'] as Map<String, dynamic>?;
-        
+
         // Skip if restaurant data is missing or restaurant is inactive
         if (restaurantData == null || restaurantData['is_active'] != true) {
           continue;
         }
-        
+
         // Add if not already in map (keeps most recent)
         if (!uniqueRestaurants.containsKey(restaurantId)) {
           uniqueRestaurants[restaurantId] = restaurantData;
         }
-        
+
         // Stop once we have 10 unique restaurants
         if (uniqueRestaurants.length >= 10) {
           break;
         }
       }
-      
+
       return uniqueRestaurants.values.toList();
     } catch (e) {
       print('Error getting recent restaurants: $e');
@@ -369,14 +396,14 @@ class DatabaseService {
 
   // Auth Operations
   GoTrueClient get auth => client.auth;
-  
+
   // Dispose method to clean up resources
   Future<void> dispose() async {
     // In test mode, there's nothing to dispose
     if (_isTestMode || !_initialized) {
       return;
     }
-    
+
     // Sign out to clean up auth resources and stop auto-refresh timers
     await client.auth.signOut();
     // Note: Supabase client doesn't have a direct dispose method

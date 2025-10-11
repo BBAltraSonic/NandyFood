@@ -32,7 +32,7 @@ void main() {
 
     test('addItem should add item to cart', () async {
       final notifier = container.read(cartProvider.notifier);
-      
+
       final menuItem = MenuItem(
         id: 'item1',
         restaurantId: 'restaurant1',
@@ -58,7 +58,7 @@ void main() {
 
     test('addItem should increment quantity for existing item', () async {
       final notifier = container.read(cartProvider.notifier);
-      
+
       final menuItem = MenuItem(
         id: 'item1',
         restaurantId: 'restaurant1',
@@ -84,7 +84,7 @@ void main() {
 
     test('removeItem should remove item from cart', () async {
       final notifier = container.read(cartProvider.notifier);
-      
+
       final menuItem = MenuItem(
         id: 'item1',
         restaurantId: 'restaurant1',
@@ -109,7 +109,7 @@ void main() {
 
     test('updateItemQuantity should update quantity', () async {
       final notifier = container.read(cartProvider.notifier);
-      
+
       final menuItem = MenuItem(
         id: 'item1',
         restaurantId: 'restaurant1',
@@ -126,7 +126,7 @@ void main() {
 
       await notifier.addItem(menuItem);
       final itemId = container.read(cartProvider).items[0].orderItem.id;
-      
+
       await notifier.updateItemQuantity(itemId, 3);
 
       final state = container.read(cartProvider);
@@ -135,7 +135,7 @@ void main() {
 
     test('updateItemQuantity should remove item when quantity is 0', () async {
       final notifier = container.read(cartProvider.notifier);
-      
+
       final menuItem = MenuItem(
         id: 'item1',
         restaurantId: 'restaurant1',
@@ -152,7 +152,7 @@ void main() {
 
       await notifier.addItem(menuItem);
       final itemId = container.read(cartProvider).items[0].orderItem.id;
-      
+
       await notifier.updateItemQuantity(itemId, 0);
 
       final state = container.read(cartProvider);
@@ -161,7 +161,7 @@ void main() {
 
     test('clearCart should clear all items', () async {
       final notifier = container.read(cartProvider.notifier);
-      
+
       final menuItem = MenuItem(
         id: 'item1',
         restaurantId: 'restaurant1',
@@ -190,7 +190,7 @@ void main() {
 
     test('subtotal should be calculated correctly', () async {
       final notifier = container.read(cartProvider.notifier);
-      
+
       final menuItem = MenuItem(
         id: 'item1',
         restaurantId: 'restaurant1',
@@ -206,47 +206,56 @@ void main() {
       );
 
       await notifier.addItem(menuItem);
-      await notifier.addItem(menuItem); // Add same item again to make quantity 2
+      await notifier.addItem(
+        menuItem,
+      ); // Add same item again to make quantity 2
 
       final state = container.read(cartProvider);
       expect(state.subtotal, 20.0); // 10.0 * 2
     });
 
-    test('totalAmount should be calculated correctly with tax, fees, and discount', () async {
-      final notifier = container.read(cartProvider.notifier);
-      
-      final menuItem = MenuItem(
-        id: 'item1',
-        restaurantId: 'restaurant1',
-        name: 'Burger',
-        description: 'Delicious burger',
-        price: 10.0,
-        category: 'Main Course',
-        isAvailable: true,
-        dietaryRestrictions: ['gluten-free'],
-        preparationTime: 15,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
+    test(
+      'totalAmount should be calculated correctly with tax, fees, and discount',
+      () async {
+        final notifier = container.read(cartProvider.notifier);
 
-      await notifier.addItem(menuItem);
-      await notifier.addItem(menuItem); // Add same item again to make quantity 2
-      
-      // Set delivery fee
-      notifier.setDeliveryFee(2.0);
-      // Set tip amount
-      notifier.setTipAmount(1.0);
-      // Apply discount
-      await notifier.applyPromoCode('TEST10'); // Assuming this gives a $2 discount
+        final menuItem = MenuItem(
+          id: 'item1',
+          restaurantId: 'restaurant1',
+          name: 'Burger',
+          description: 'Delicious burger',
+          price: 10.0,
+          category: 'Main Course',
+          isAvailable: true,
+          dietaryRestrictions: ['gluten-free'],
+          preparationTime: 15,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
 
-      final state = container.read(cartProvider);
-      // Subtotal: 20.0 (10.0 * 2)
-      // Tax: 20.0 * 0.085 = 1.7
-      // Delivery fee: 2.0
-      // Tip: 1.0
-      // Discount: 2.0 (from mock)
-      // Total: 20.0 + 1.7 + 2.0 + 1.0 - 2.0 = 22.7
-      expect(state.totalAmount, closeTo(22.7, 0.01));
-    });
+        await notifier.addItem(menuItem);
+        await notifier.addItem(
+          menuItem,
+        ); // Add same item again to make quantity 2
+
+        // Set delivery fee
+        notifier.setDeliveryFee(2.0);
+        // Set tip amount
+        notifier.setTipAmount(1.0);
+        // Apply discount
+        await notifier.applyPromoCode(
+          'TEST10',
+        ); // Assuming this gives a $2 discount
+
+        final state = container.read(cartProvider);
+        // Subtotal: 20.0 (10.0 * 2)
+        // Tax: 20.0 * 0.085 = 1.7
+        // Delivery fee: 2.0
+        // Tip: 1.0
+        // Discount: 2.0 (from mock)
+        // Total: 20.0 + 1.7 + 2.0 + 1.0 - 2.0 = 22.7
+        expect(state.totalAmount, closeTo(22.7, 0.01));
+      },
+    );
   });
 }

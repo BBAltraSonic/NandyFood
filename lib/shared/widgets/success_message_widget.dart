@@ -16,19 +16,12 @@ class SuccessMessageWidget extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.check_circle,
-            color: Colors.green,
-            size: 60,
-          ),
+          const Icon(Icons.check_circle, color: Colors.green, size: 60),
           const SizedBox(height: 16),
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Colors.green,
-            ),
+            style: const TextStyle(fontSize: 16, color: Colors.green),
           ),
           if (onContinue != null) ...[
             const SizedBox(height: 16),

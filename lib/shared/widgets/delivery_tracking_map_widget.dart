@@ -15,7 +15,8 @@ class DeliveryTrackingMapWidget extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<DeliveryTrackingMapWidget> createState() => _DeliveryTrackingMapWidgetState();
+  State<DeliveryTrackingMapWidget> createState() =>
+      _DeliveryTrackingMapWidgetState();
 }
 
 class _DeliveryTrackingMapWidgetState extends State<DeliveryTrackingMapWidget> {
@@ -25,7 +26,7 @@ class _DeliveryTrackingMapWidgetState extends State<DeliveryTrackingMapWidget> {
   void initState() {
     super.initState();
     mapController = MapController();
-    
+
     // Center the map on the estimated delivery location or restaurant
     _centerMap();
   }
@@ -35,20 +36,20 @@ class _DeliveryTrackingMapWidgetState extends State<DeliveryTrackingMapWidget> {
     // For now, using placeholder coordinates
     double lat = 40.7128; // Default to New York coordinates
     double lng = -74.0060;
-    
+
     // Try to get restaurant location if available
     if (orderHasRestaurantLocation()) {
       // Use restaurant coordinates
       lat = 40.7228; // Placeholder
       lng = -74.0160; // Placeholder
     }
-    
+
     // If delivery has location, center on that
     if (widget.delivery?.currentLocation != null) {
       lat = widget.delivery!.currentLocation!['lat'] ?? lat;
       lng = widget.delivery!.currentLocation!['lng'] ?? lng;
     }
-    
+
     mapController.move(
       LatLng(lat, lng),
       13.0, // Zoom level
@@ -77,11 +78,7 @@ class _DeliveryTrackingMapWidgetState extends State<DeliveryTrackingMapWidget> {
             shape: BoxShape.circle,
             border: Border.all(color: Colors.white, width: 2),
           ),
-          child: const Icon(
-            Icons.restaurant,
-            color: Colors.white,
-            size: 20,
-          ),
+          child: const Icon(Icons.restaurant, color: Colors.white, size: 20),
         ),
       ),
     );
@@ -124,11 +121,7 @@ class _DeliveryTrackingMapWidgetState extends State<DeliveryTrackingMapWidget> {
             shape: BoxShape.circle,
             border: Border.all(color: Colors.white, width: 2),
           ),
-          child: const Icon(
-            Icons.home,
-            color: Colors.white,
-            size: 20,
-          ),
+          child: const Icon(Icons.home, color: Colors.white, size: 20),
         ),
       ),
     );
@@ -148,9 +141,7 @@ class _DeliveryTrackingMapWidgetState extends State<DeliveryTrackingMapWidget> {
             urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
             userAgentPackageName: 'com.example.food_delivery_app',
           ),
-          MarkerLayer(
-            markers: markers,
-          ),
+          MarkerLayer(markers: markers),
         ],
       ),
     );

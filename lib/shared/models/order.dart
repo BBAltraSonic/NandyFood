@@ -6,16 +6,16 @@ part 'order.g.dart';
 class Order {
   final String id;
   final String userId;
- final String restaurantId;
+  final String restaurantId;
   final Map<String, dynamic> deliveryAddress;
   final OrderStatus status;
   final double totalAmount;
   final double? subtotal;
   final double deliveryFee;
   final double taxAmount;
- final double? tipAmount;
+  final double? tipAmount;
   final double? discountAmount;
- final String? promoCode;
+  final String? promoCode;
   final String paymentMethod;
   final PaymentStatus paymentStatus;
   final DateTime placedAt;
@@ -48,8 +48,8 @@ class Order {
     this.specialInstructions,
     DateTime? createdAt,
     DateTime? updatedAt,
-  })  : createdAt = createdAt ?? DateTime.now(),
-        updatedAt = updatedAt ?? DateTime.now();
+  }) : createdAt = createdAt ?? DateTime.now(),
+       updatedAt = updatedAt ?? DateTime.now();
 
   factory Order.fromJson(Map<String, dynamic> json) => _$OrderFromJson(json);
 
@@ -100,14 +100,14 @@ class Order {
   }
 }
 
-enum OrderStatus { 
-  placed, 
-  confirmed, 
-  preparing, 
-  ready_for_pickup, 
-  out_for_delivery, 
-  delivered, 
-  cancelled 
+enum OrderStatus {
+  placed,
+  confirmed,
+  preparing,
+  ready_for_pickup,
+  out_for_delivery,
+  delivered,
+  cancelled,
 }
 
 enum PaymentStatus { pending, completed, failed, refunded }

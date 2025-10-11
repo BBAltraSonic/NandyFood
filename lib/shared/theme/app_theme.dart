@@ -13,7 +13,7 @@ class AppTheme {
       elevatedButtonTheme: _buildElevatedButtonTheme(),
       inputDecorationTheme: _buildInputDecorationTheme(),
     );
- }
+  }
 
   static ThemeData get darkTheme {
     return ThemeData(
@@ -58,24 +58,19 @@ class AppTheme {
     );
   }
 
- static ElevatedButtonThemeData _buildElevatedButtonTheme() {
+  static ElevatedButtonThemeData _buildElevatedButtonTheme() {
     return ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         foregroundColor: Colors.white,
         backgroundColor: Colors.deepOrange,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         padding: const EdgeInsets.symmetric(vertical: 16),
-        textStyle: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-        ),
+        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
     );
   }
 
- static InputDecorationTheme _buildInputDecorationTheme() {
+  static InputDecorationTheme _buildInputDecorationTheme() {
     return InputDecorationTheme(
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),

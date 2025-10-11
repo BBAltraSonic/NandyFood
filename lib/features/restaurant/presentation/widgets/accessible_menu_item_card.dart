@@ -25,7 +25,8 @@ class AccessibleMenuItemCard extends StatelessWidget {
     return Semantics(
       container: true,
       button: onAddToCart != null,
-      label: '${menuItem.name}, '
+      label:
+          '${menuItem.name}, '
           'Price: \$${menuItem.price.toStringAsFixed(2)}, '
           '${menuItem.description ?? 'No description'}'
           '${isInCart ? ', $quantityInCart in cart' : ''}',
@@ -59,7 +60,7 @@ class AccessibleMenuItemCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 16),
-                    
+
                     // Menu item details
                     Expanded(
                       child: Column(
@@ -74,7 +75,7 @@ class AccessibleMenuItemCard extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 4),
-                          
+
                           // Menu item description
                           if (menuItem.description != null)
                             Text(
@@ -84,7 +85,7 @@ class AccessibleMenuItemCard extends StatelessWidget {
                               ),
                             ),
                           const SizedBox(height: 8),
-                          
+
                           // Menu item price
                           Text(
                             '\$${menuItem.price.toStringAsFixed(2)}',
@@ -93,16 +94,18 @@ class AccessibleMenuItemCard extends StatelessWidget {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          
+
                           // Dietary restrictions badges
                           if (menuItem.dietaryRestrictions.isNotEmpty) ...[
                             const SizedBox(height: 8),
                             Wrap(
                               spacing: 8,
-                              children: menuItem.dietaryRestrictions.map((restriction) {
+                              children: menuItem.dietaryRestrictions.map((
+                                restriction,
+                              ) {
                                 Color badgeColor;
                                 String badgeText;
-                                
+
                                 switch (restriction.toLowerCase()) {
                                   case 'vegetarian':
                                     badgeColor = Colors.green;
@@ -120,7 +123,7 @@ class AccessibleMenuItemCard extends StatelessWidget {
                                     badgeColor = Colors.grey;
                                     badgeText = restriction;
                                 }
-                                
+
                                 return Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 8,
@@ -146,7 +149,7 @@ class AccessibleMenuItemCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    
+
                     // Add to cart button or quantity indicator
                     if (isInCart)
                       Container(
@@ -171,7 +174,7 @@ class AccessibleMenuItemCard extends StatelessWidget {
                       ),
                   ],
                 ),
-                
+
                 // Preparation time
                 if (menuItem.preparationTime > 0) ...[
                   const SizedBox(height: 12),

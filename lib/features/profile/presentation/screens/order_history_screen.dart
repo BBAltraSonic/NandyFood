@@ -66,10 +66,7 @@ class OrderHistoryScreen extends ConsumerWidget {
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Order History'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Order History'), centerTitle: true),
       body: RefreshIndicator(
         onRefresh: () async {
           // In a real implementation, this would refresh the order history
@@ -93,19 +90,14 @@ class OrderHistoryScreen extends ConsumerWidget {
                     color: Colors.grey.shade300,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(
-                    Icons.restaurant,
-                    color: Colors.grey,
-                  ),
+                  child: const Icon(Icons.restaurant, color: Colors.grey),
                 ),
                 title: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       'Order #${order.id.substring(0, 8)}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     Text(
                       '\$${order.totalAmount.toStringAsFixed(2)}',
@@ -122,18 +114,20 @@ class OrderHistoryScreen extends ConsumerWidget {
                     const SizedBox(height: 4),
                     Text(
                       _formatDate(order.placedAt),
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
+                      style: const TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                     const SizedBox(height: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: _getStatusColor(order.status).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: _getStatusColor(order.status)),
+                        border: Border.all(
+                          color: _getStatusColor(order.status),
+                        ),
                       ),
                       child: Text(
                         _getStatusText(order.status),
@@ -149,7 +143,9 @@ class OrderHistoryScreen extends ConsumerWidget {
                 onTap: () {
                   // Navigate to order details screen
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Order details functionality coming soon')),
+                    const SnackBar(
+                      content: Text('Order details functionality coming soon'),
+                    ),
                   );
                 },
               ),

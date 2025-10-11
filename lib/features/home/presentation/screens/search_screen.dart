@@ -15,7 +15,7 @@ class SearchScreen extends ConsumerStatefulWidget {
 class _SearchScreenState extends ConsumerState<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   final DatabaseService _databaseService = DatabaseService();
-  
+
   List<Restaurant> _searchResults = [];
   bool _isSearching = false;
   bool _hasSearched = false;
@@ -40,7 +40,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     if (_debounceTimer?.isActive ?? false) {
       _debounceTimer!.cancel();
     }
-    
+
     _debounceTimer = Timer(const Duration(milliseconds: 300), () {
       _performSearch(_searchController.text);
     });
@@ -64,10 +64,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
     try {
       final results = await _databaseService.searchRestaurants(query);
-      
+
       if (mounted) {
         setState(() {
-          _searchResults = results.map((data) => Restaurant.fromJson(data)).toList();
+          _searchResults = results
+              .map((data) => Restaurant.fromJson(data))
+              .toList();
           _isSearching = false;
         });
       }
@@ -84,7 +86,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
@@ -152,11 +154,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               ),
             ),
           ),
-          
+
           // Search results
-          Expanded(
-            child: _buildSearchResults(theme),
-          ),
+          Expanded(child: _buildSearchResults(theme)),
         ],
       ),
     );
@@ -164,9 +164,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   Widget _buildSearchResults(ThemeData theme) {
     if (_isSearching) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (!_hasSearched) {
@@ -220,11 +218,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 color: theme.colorScheme.primary.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon,
-                size: 64,
-                color: theme.colorScheme.primary,
-              ),
+              child: Icon(icon, size: 64, color: theme.colorScheme.primary),
             ),
             const SizedBox(height: 24),
             Text(
@@ -262,7 +256,7 @@ class _RestaurantSearchResultCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -300,7 +294,7 @@ class _RestaurantSearchResultCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 16),
-                
+
                 // Restaurant info
                 Expanded(
                   child: Column(
@@ -324,11 +318,7 @@ class _RestaurantSearchResultCard extends StatelessWidget {
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          Icon(
-                            Icons.star,
-                            size: 16,
-                            color: Colors.amber,
-                          ),
+                          Icon(Icons.star, size: 16, color: Colors.amber),
                           const SizedBox(width: 4),
                           Text(
                             restaurant.rating.toStringAsFixed(1),
@@ -346,7 +336,9 @@ class _RestaurantSearchResultCard extends StatelessWidget {
                           Text(
                             '${restaurant.estimatedDeliveryTime} min',
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withOpacity(0.6),
+                              color: theme.colorScheme.onSurface.withOpacity(
+                                0.6,
+                              ),
                             ),
                           ),
                         ],
@@ -354,7 +346,7 @@ class _RestaurantSearchResultCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                
+
                 // Arrow icon
                 Icon(
                   Icons.arrow_forward_ios,

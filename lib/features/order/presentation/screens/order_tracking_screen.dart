@@ -12,24 +12,25 @@ class OrderTrackingScreen extends ConsumerStatefulWidget {
   const OrderTrackingScreen({Key? key, this.order}) : super(key: key);
 
   @override
-  ConsumerState<OrderTrackingScreen> createState() => _OrderTrackingScreenState();
+  ConsumerState<OrderTrackingScreen> createState() =>
+      _OrderTrackingScreenState();
 }
 
 class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
   late DeliveryTrackingService _deliveryService;
   Stream<Delivery>? _deliveryStream;
- Delivery? _currentDelivery;
+  Delivery? _currentDelivery;
 
   @override
   void initState() {
     super.initState();
     _deliveryService = DeliveryTrackingService();
-    
+
     // Start tracking the delivery
     if (widget.order != null) {
       _deliveryService.startTrackingDelivery(widget.order!.id);
       _deliveryStream = _deliveryService.getDeliveryStream(widget.order!.id);
-      
+
       // Get initial delivery status
       _deliveryService.getDeliveryStatus(widget.order!.id).then((delivery) {
         setState(() {
@@ -48,10 +49,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Track Order'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Track Order'), centerTitle: true),
       body: widget.order == null
           ? const Center(child: Text('No order to track'))
           : _buildOrderTrackingContent(context),
@@ -127,25 +125,27 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Delivery progress
             if (_currentDelivery != null)
               DeliveryTrackingWidget(
                 delivery: _currentDelivery!,
-                progress: _deliveryService.getDeliveryProgress(widget.order!.id),
+                progress: _deliveryService.getDeliveryProgress(
+                  widget.order!.id,
+                ),
               )
             else
               const Center(child: LoadingIndicator()),
-            
+
             const SizedBox(height: 24),
-            
+
             // Driver info
             _buildDriverInfo(),
-            
+
             const SizedBox(height: 24),
-            
+
             // Restaurant info
             _buildRestaurantInfo(),
           ],
@@ -156,7 +156,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
 
   Widget _buildDriverInfo() {
     final driverInfo = _deliveryService.getDriverInfo(widget.order!.id);
-    
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -177,11 +177,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
                     shape: BoxShape.circle,
                     color: Colors.grey.shade300,
                   ),
-                  child: const Icon(
-                    Icons.person,
-                    size: 30,
-                    color: Colors.grey,
-                  ),
+                  child: const Icon(Icons.person, size: 30, color: Colors.grey),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -197,11 +193,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
                       ),
                       Row(
                         children: [
-                          const Icon(
-                            Icons.star,
-                            color: Colors.amber,
-                            size: 16,
-                          ),
+                          const Icon(Icons.star, color: Colors.amber, size: 16),
                           const SizedBox(width: 4),
                           Text(
                             driverInfo['rating'].toString(),
@@ -271,16 +263,9 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          const Icon(
-                            Icons.star,
-                            color: Colors.amber,
-                            size: 16,
-                          ),
+                          const Icon(Icons.star, color: Colors.amber, size: 16),
                           const SizedBox(width: 4),
-                          const Text(
-                            '4.5',
-                            style: TextStyle(fontSize: 14),
-                          ),
+                          const Text('4.5', style: TextStyle(fontSize: 14)),
                           const SizedBox(width: 8),
                           const Icon(
                             Icons.location_on,

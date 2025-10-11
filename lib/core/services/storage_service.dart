@@ -25,23 +25,25 @@ class StorageService {
     return fullPath;
   }
 
- // Download a file from a bucket
- Future<Uint8List> downloadFile({
-   required String bucketName,
-   required String filePath,
- }) async {
-   final response = await _client.storage.from(bucketName).download(filePath);
-   return response;
- }
+  // Download a file from a bucket
+  Future<Uint8List> downloadFile({
+    required String bucketName,
+    required String filePath,
+  }) async {
+    final response = await _client.storage.from(bucketName).download(filePath);
+    return response;
+  }
 
- // Get public URL for a file
- Future<String> getFileUrl({
-   required String bucketName,
-   required String filePath,
- }) async {
-   final response = await _client.storage.from(bucketName).getPublicUrl(filePath);
-   return response;
- }
+  // Get public URL for a file
+  Future<String> getFileUrl({
+    required String bucketName,
+    required String filePath,
+  }) async {
+    final response = await _client.storage
+        .from(bucketName)
+        .getPublicUrl(filePath);
+    return response;
+  }
 
   // List files in a path
   Future<List<Map<String, dynamic>>> listFiles({
@@ -49,14 +51,18 @@ class StorageService {
     required String path,
   }) async {
     final files = await _client.storage.from(bucketName).list(path: path);
-    return files.map((file) => {
-      'name': file.name,
-      'id': file.id,
-      'updated_at': file.updatedAt,
-      'created_at': file.createdAt,
-      'last_accessed_at': file.lastAccessedAt,
-      'metadata': file.metadata,
-    }).toList();
+    return files
+        .map(
+          (file) => {
+            'name': file.name,
+            'id': file.id,
+            'updated_at': file.updatedAt,
+            'created_at': file.createdAt,
+            'last_accessed_at': file.lastAccessedAt,
+            'metadata': file.metadata,
+          },
+        )
+        .toList();
   }
 
   // Delete a file

@@ -19,7 +19,7 @@ class PaymentMethodSelectorWidget extends ConsumerWidget {
     final paymentMethodsNotifier = ref.read(paymentMethodsProvider.notifier);
 
     // Set initial selected payment method
-    if (paymentMethodsState.selectedPaymentMethod == null && 
+    if (paymentMethodsState.selectedPaymentMethod == null &&
         paymentMethodsState.paymentMethods.isNotEmpty) {
       final initialMethod = initialPaymentMethodId != null
           ? paymentMethodsState.paymentMethods.firstWhere(
@@ -38,10 +38,7 @@ class PaymentMethodSelectorWidget extends ConsumerWidget {
       children: [
         const Text(
           'Payment Method',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         if (paymentMethodsState.isLoading)
@@ -69,20 +66,19 @@ class PaymentMethodSelectorWidget extends ConsumerWidget {
               onChanged: (value) {
                 if (value != null) {
                   paymentMethodsNotifier.selectPaymentMethod(value);
-                  
+
                   // Update the cart's selected payment method
-                  ref.read(cartProvider.notifier).updateSelectedPaymentMethod(value);
-                  
+                  ref
+                      .read(cartProvider.notifier)
+                      .updateSelectedPaymentMethod(value);
+
                   if (onPaymentMethodSelected != null) {
                     onPaymentMethodSelected!(value);
                   }
                 }
               },
               secondary: method.isDefault
-                  ? const Icon(
-                      Icons.star,
-                      color: Colors.amber,
-                    )
+                  ? const Icon(Icons.star, color: Colors.amber)
                   : null,
             ),
           ),

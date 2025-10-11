@@ -47,120 +47,98 @@ class OrderNotifier extends StateNotifier<OrderState> {
   // Load user orders from the database
   Future<void> loadOrders(String userId) async {
     state = state.copyWith(isLoading: true);
-    
+
     try {
       final dbService = DatabaseService();
       final orderData = await dbService.getUserOrders(userId);
-      
+
       final orders = orderData.map((data) => Order.fromJson(data)).toList();
-      
-      state = state.copyWith(
-        orders: orders,
-        isLoading: false,
-      );
+
+      state = state.copyWith(orders: orders, isLoading: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
 
   // Create a new order
   Future<void> createOrder(Order order) async {
     state = state.copyWith(isLoading: true);
-    
+
     try {
       final dbService = DatabaseService();
       final orderData = order.toJson();
       final orderId = await dbService.createOrder(orderData);
-      
+
       final newOrder = order.copyWith(id: orderId);
-      
+
       state = state.copyWith(
         currentOrder: newOrder,
         orders: [...state.orders, newOrder],
         isLoading: false,
       );
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
 
   // Add an item to the current order
   Future<void> addItemToOrder(OrderItem item) async {
     state = state.copyWith(isLoading: true);
-    
+
     try {
       // Simulate network delay
       await Future.delayed(const Duration(milliseconds: 100));
-      
+
       final updatedItems = [...state.orderItems, item];
-      state = state.copyWith(
-        orderItems: updatedItems,
-        isLoading: false,
-      );
+      state = state.copyWith(orderItems: updatedItems, isLoading: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
 
   // Remove an item from the current order
   Future<void> removeItemFromOrder(String itemId) async {
     state = state.copyWith(isLoading: true);
-    
+
     try {
       // Simulate network delay
       await Future.delayed(const Duration(milliseconds: 100));
-      
-      final updatedItems = state.orderItems.where((item) => item.id != itemId).toList();
-      state = state.copyWith(
-        orderItems: updatedItems,
-        isLoading: false,
-      );
+
+      final updatedItems = state.orderItems
+          .where((item) => item.id != itemId)
+          .toList();
+      state = state.copyWith(orderItems: updatedItems, isLoading: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
 
   // Update order status
   Future<void> updateOrderStatus(String orderId, OrderStatus status) async {
     state = state.copyWith(isLoading: true);
-    
+
     try {
       // Simulate network delay
       await Future.delayed(const Duration(milliseconds: 200));
-      
+
       final updatedOrders = state.orders.map((order) {
         if (order.id == orderId) {
           return order.copyWith(status: status);
         }
         return order;
       }).toList();
-      
-      final updatedCurrentOrder = state.currentOrder?.id == orderId 
+
+      final updatedCurrentOrder = state.currentOrder?.id == orderId
           ? state.currentOrder!.copyWith(status: status)
           : state.currentOrder;
-      
+
       state = state.copyWith(
         orders: updatedOrders,
         currentOrder: updatedCurrentOrder,
         isLoading: false,
       );
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
 

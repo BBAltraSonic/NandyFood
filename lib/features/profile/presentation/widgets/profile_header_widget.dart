@@ -15,9 +15,7 @@ class ProfileHeaderWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.all(16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -27,29 +25,19 @@ class ProfileHeaderWidget extends StatelessWidget {
             CircleAvatar(
               radius: 50,
               backgroundColor: Colors.deepOrange.withOpacity(0.1),
-              child: Icon(
-                Icons.person,
-                size: 50,
-                color: Colors.deepOrange,
-              ),
+              child: Icon(Icons.person, size: 50, color: Colors.deepOrange),
             ),
             const SizedBox(height: 16),
             // User name
             Text(
               userProfile.fullName ?? 'User',
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             // User email
             Text(
               userProfile.email,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
+              style: const TextStyle(fontSize: 16, color: Colors.grey),
             ),
             const SizedBox(height: 16),
             // Edit profile button
@@ -58,7 +46,10 @@ class ProfileHeaderWidget extends StatelessWidget {
               icon: const Icon(Icons.edit),
               label: const Text('Edit Profile'),
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
               ),
             ),
           ],

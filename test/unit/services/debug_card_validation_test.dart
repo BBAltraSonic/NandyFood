@@ -13,9 +13,9 @@ void main() {
       // Test the valid card numbers we found earlier
       final validCards = [
         '4532015112830366', // Visa
-        '378282246310005',  // American Express
+        '378282246310005', // American Express
         '4000056655665556', // Another Visa
-        '371449635398431',  // Another Amex
+        '371449635398431', // Another Amex
       ];
 
       print('Testing valid card numbers:');
@@ -24,8 +24,10 @@ void main() {
         final cleanCardNumber = card.replaceAll(RegExp(r'\s+'), '');
         print('Card: $card');
         print('Clean: $cleanCardNumber');
-        print('Length check: ${RegExp(r'^\d{13,19}$').hasMatch(cleanCardNumber)}');
-        
+        print(
+          'Length check: ${RegExp(r'^\d{13,19}$').hasMatch(cleanCardNumber)}',
+        );
+
         if (RegExp(r'^\d{13,19}$').hasMatch(cleanCardNumber)) {
           final luhnResult = paymentService.validateCardNumber(card);
           print('Luhn result: $luhnResult');

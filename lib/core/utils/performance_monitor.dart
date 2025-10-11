@@ -15,7 +15,10 @@ class PerformanceMonitor {
     if (!_isEnabled) return Stopwatch();
 
     final stopwatch = Stopwatch()..start();
-    developer.log('Starting operation: $operationName', name: 'PerformanceMonitor');
+    developer.log(
+      'Starting operation: $operationName',
+      name: 'PerformanceMonitor',
+    );
     return stopwatch;
   }
 
@@ -28,7 +31,9 @@ class PerformanceMonitor {
     developer.log(
       'Operation completed: $operationName took ${milliseconds}ms',
       name: 'PerformanceMonitor',
-      level: milliseconds > 100 ? 900 : 800, // Warning level for slow operations
+      level: milliseconds > 100
+          ? 900
+          : 800, // Warning level for slow operations
     );
 
     // Send warning for operations that take too long
@@ -60,10 +65,7 @@ class PerformanceMonitor {
   }
 
   /// Measure the execution time of a synchronous function
-  static T measureSync<T>(
-    T Function() operation,
-    String operationName,
-  ) {
+  static T measureSync<T>(T Function() operation, String operationName) {
     if (!_isEnabled) return operation();
 
     final stopwatch = startTiming(operationName);

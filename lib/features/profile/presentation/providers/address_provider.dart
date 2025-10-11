@@ -52,10 +52,7 @@ class AddressNotifier extends StateNotifier<AddressState> {
         errorMessage: null,
       );
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
 
@@ -74,8 +71,8 @@ class AddressNotifier extends StateNotifier<AddressState> {
 
       final normalizedAddresses = shouldBeDefault
           ? updatedAddresses
-              .map((addr) => addr.copyWith(isDefault: false))
-              .toList()
+                .map((addr) => addr.copyWith(isDefault: false))
+                .toList()
           : updatedAddresses;
 
       normalizedAddresses.add(newAddress);
@@ -87,10 +84,7 @@ class AddressNotifier extends StateNotifier<AddressState> {
         errorMessage: null,
       );
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
 
@@ -104,9 +98,7 @@ class AddressNotifier extends StateNotifier<AddressState> {
         if (address.id == updated.id) {
           return updated;
         }
-        return updated.isDefault
-            ? address.copyWith(isDefault: false)
-            : address;
+        return updated.isDefault ? address.copyWith(isDefault: false) : address;
       }).toList();
 
       state = state.copyWith(
@@ -116,10 +108,7 @@ class AddressNotifier extends StateNotifier<AddressState> {
         errorMessage: null,
       );
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
 
@@ -147,10 +136,7 @@ class AddressNotifier extends StateNotifier<AddressState> {
         errorMessage: null,
       );
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
 
@@ -169,10 +155,7 @@ class AddressNotifier extends StateNotifier<AddressState> {
         errorMessage: null,
       );
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
 

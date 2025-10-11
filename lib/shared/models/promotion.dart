@@ -35,7 +35,7 @@ class Promotion {
 
   Map<String, dynamic> toJson() => _$PromotionToJson(this);
 
- Promotion copyWith({
+  Promotion copyWith({
     String? id,
     String? code,
     String? description,

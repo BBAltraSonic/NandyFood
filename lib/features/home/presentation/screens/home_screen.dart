@@ -57,7 +57,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final restaurantState = ref.watch(restaurantProvider);
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -112,7 +112,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ],
                           ),
                           child: IconButton(
-                            icon: Icon(Icons.shopping_cart_outlined, color: theme.colorScheme.primary),
+                            icon: Icon(
+                              Icons.shopping_cart_outlined,
+                              color: theme.colorScheme.primary,
+                            ),
                             onPressed: () => context.push('/cart'),
                           ),
                         ),
@@ -128,7 +131,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
-                                color: theme.colorScheme.primary.withOpacity(0.3),
+                                color: theme.colorScheme.primary.withOpacity(
+                                  0.3,
+                                ),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               ),
@@ -146,162 +151,178 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               Expanded(
                 child: RefreshIndicator(
-        onRefresh: () async {
-          await _loadRestaurants();
-          await _loadUserLocation();
-        },
-        child: CustomScrollView(
-          slivers: [
-            // Map View (40% of screen)
-            SliverToBoxAdapter(
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.4,
-                child: _isLoadingLocation
-                    ? const Center(child: CircularProgressIndicator())
-                    : HomeMapViewWidget(
-                        restaurants: restaurantState.restaurants,
-                        userLocation: _userLocation,
-                        onRestaurantTapped: (restaurant) {
-                          context.push('/restaurant/${restaurant.id}');
-                        },
-                      ),
-              ),
-            ),
-
-            // Search Bar
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
-                        blurRadius: 20,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search restaurants, dishes...',
-                      hintStyle: TextStyle(
-                        color: theme.colorScheme.onSurface.withOpacity(0.4),
-                        fontSize: 15,
-                      ),
-                      prefixIcon: Icon(
-                        Icons.search_rounded,
-                        color: theme.colorScheme.primary,
-                        size: 24,
-                      ),
-                      suffixIcon: Container(
-                        margin: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              theme.colorScheme.primary,
-                              theme.colorScheme.secondary,
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(Icons.tune_rounded, color: Colors.white, size: 20),
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-                    ),
-                    onTap: () => context.push('/search'),
-                    readOnly: true,
-                  ),
-                ),
-              ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
-
-            // Featured Restaurants Carousel
-            SliverToBoxAdapter(
-              child: FeaturedRestaurantsCarousel(
-                restaurants: restaurantState.restaurants
-                    .where((r) => r.rating >= 4.5)
-                    .take(5)
-                    .toList(),
-              ),
-            ),
-
-            // Order Again Section (only visible if user has past orders)
-            const SliverToBoxAdapter(
-              child: OrderAgainSection(),
-            ),
-
-            // Categories
-            SliverToBoxAdapter(
-              child: CategoriesHorizontalList(
-                selectedCategoryId: restaurantState.selectedCategory ?? 'all',
-                onCategorySelected: (categoryId) {
-                  ref.read(restaurantProvider.notifier).filterByCategory(categoryId);
-                },
-              ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 20)),
-
-            // Popular Restaurants Header
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text(
-                  'Popular Restaurants',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 12)),
-
-            // Restaurant List
-            if (restaurantState.isLoading)
-              const SliverToBoxAdapter(
-                child: Center(child: CircularProgressIndicator()),
-              )
-            else if (restaurantState.errorMessage != null)
-              SliverToBoxAdapter(
-                child: Center(
-                  child: Column(
-                    children: [
-                      Text(restaurantState.errorMessage!),
-                      ElevatedButton(
-                        onPressed: _loadRestaurants,
-                        child: const Text('Retry'),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            else
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final restaurant = restaurantState.filteredRestaurants[index];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                        vertical: 8.0,
-                      ),
-                      child: _buildRestaurantCard(restaurant),
-                    );
+                  onRefresh: () async {
+                    await _loadRestaurants();
+                    await _loadUserLocation();
                   },
-                  childCount: restaurantState.filteredRestaurants.length,
+                  child: CustomScrollView(
+                    slivers: [
+                      // Map View (40% of screen)
+                      SliverToBoxAdapter(
+                        child: SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.4,
+                          child: _isLoadingLocation
+                              ? const Center(child: CircularProgressIndicator())
+                              : HomeMapViewWidget(
+                                  restaurants: restaurantState.restaurants,
+                                  userLocation: _userLocation,
+                                  onRestaurantTapped: (restaurant) {
+                                    context.push(
+                                      '/restaurant/${restaurant.id}',
+                                    );
+                                  },
+                                ),
+                        ),
+                      ),
+
+                      // Search Bar
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20.0,
+                            vertical: 8.0,
+                          ),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.08),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: TextField(
+                              decoration: InputDecoration(
+                                hintText: 'Search restaurants, dishes...',
+                                hintStyle: TextStyle(
+                                  color: theme.colorScheme.onSurface
+                                      .withOpacity(0.4),
+                                  fontSize: 15,
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.search_rounded,
+                                  color: theme.colorScheme.primary,
+                                  size: 24,
+                                ),
+                                suffixIcon: Container(
+                                  margin: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        theme.colorScheme.primary,
+                                        theme.colorScheme.secondary,
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(
+                                    Icons.tune_rounded,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 18,
+                                ),
+                              ),
+                              onTap: () => context.push('/search'),
+                              readOnly: true,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
+                      // Featured Restaurants Carousel
+                      SliverToBoxAdapter(
+                        child: FeaturedRestaurantsCarousel(
+                          restaurants: restaurantState.restaurants
+                              .where((r) => r.rating >= 4.5)
+                              .take(5)
+                              .toList(),
+                        ),
+                      ),
+
+                      // Order Again Section (only visible if user has past orders)
+                      const SliverToBoxAdapter(child: OrderAgainSection()),
+
+                      // Categories
+                      SliverToBoxAdapter(
+                        child: CategoriesHorizontalList(
+                          selectedCategoryId:
+                              restaurantState.selectedCategory ?? 'all',
+                          onCategorySelected: (categoryId) {
+                            ref
+                                .read(restaurantProvider.notifier)
+                                .filterByCategory(categoryId);
+                          },
+                        ),
+                      ),
+
+                      const SliverToBoxAdapter(child: SizedBox(height: 20)),
+
+                      // Popular Restaurants Header
+                      const SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Text(
+                            'Popular Restaurants',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SliverToBoxAdapter(child: SizedBox(height: 12)),
+
+                      // Restaurant List
+                      if (restaurantState.isLoading)
+                        const SliverToBoxAdapter(
+                          child: Center(child: CircularProgressIndicator()),
+                        )
+                      else if (restaurantState.errorMessage != null)
+                        SliverToBoxAdapter(
+                          child: Center(
+                            child: Column(
+                              children: [
+                                Text(restaurantState.errorMessage!),
+                                ElevatedButton(
+                                  onPressed: _loadRestaurants,
+                                  child: const Text('Retry'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else
+                        SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              final restaurant =
+                                  restaurantState.filteredRestaurants[index];
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16.0,
+                                  vertical: 8.0,
+                                ),
+                                child: _buildRestaurantCard(restaurant),
+                              );
+                            },
+                            childCount:
+                                restaurantState.filteredRestaurants.length,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-          ],
-        ),
-      ),
               ),
             ],
           ),
@@ -339,11 +360,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ],
             ),
-            child: Icon(
-              icon,
-              color: theme.colorScheme.primary,
-              size: 32,
-            ),
+            child: Icon(icon, color: theme.colorScheme.primary, size: 32),
           ),
           const SizedBox(height: 8),
           Flexible(
@@ -419,7 +436,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     top: 12,
                     right: 12,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -434,7 +454,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
+                          const Icon(
+                            Icons.star_rounded,
+                            color: Colors.amber,
+                            size: 16,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             '${restaurant.rating}',
@@ -449,7 +473,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ],
               ),
-              
+
               // Restaurant details
               Padding(
                 padding: const EdgeInsets.all(16),
@@ -477,7 +501,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           child: Text(
                             restaurant.cuisineType,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurface.withOpacity(0.6),
+                              color: theme.colorScheme.onSurface.withOpacity(
+                                0.6,
+                              ),
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -489,7 +515,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
                             color: theme.colorScheme.primary.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(8),

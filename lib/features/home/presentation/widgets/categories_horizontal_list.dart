@@ -95,7 +95,7 @@ class CategoriesHorizontalList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Container(
       height: 56,
       margin: const EdgeInsets.symmetric(vertical: 12),
@@ -107,7 +107,7 @@ class CategoriesHorizontalList extends StatelessWidget {
         itemBuilder: (context, index) {
           final category = RestaurantCategories.all[index];
           final isSelected = selectedCategoryId == category.id;
-          
+
           return _CategoryChip(
             category: category,
             isSelected: isSelected,
@@ -180,18 +180,14 @@ class _CategoryChip extends StatelessWidget {
             Icon(
               category.icon,
               size: 20,
-              color: isSelected
-                  ? Colors.white
-                  : category.color,
+              color: isSelected ? Colors.white : category.color,
             ),
             const SizedBox(width: 8),
             Text(
               category.name,
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected
-                    ? Colors.white
-                    : theme.colorScheme.onSurface,
+                color: isSelected ? Colors.white : theme.colorScheme.onSurface,
               ),
             ),
           ],

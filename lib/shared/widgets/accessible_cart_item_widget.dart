@@ -28,7 +28,8 @@ class AccessibleCartItemWidget extends StatelessWidget {
 
     return Semantics(
       container: true,
-      label: '$itemName, '
+      label:
+          '$itemName, '
           'Quantity: ${orderItem.quantity}, '
           'Price: \$${(orderItem.unitPrice * orderItem.quantity).toStringAsFixed(2)}'
           '${orderItem.specialInstructions != null ? ', Special instructions: ${orderItem.specialInstructions}' : ''}',
@@ -53,7 +54,7 @@ class AccessibleCartItemWidget extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    
+
                     // Customizations
                     if (orderItem.customizations != null &&
                         orderItem.customizations!.isNotEmpty) ...[
@@ -65,7 +66,7 @@ class AccessibleCartItemWidget extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                     ],
-                    
+
                     // Special instructions
                     if (orderItem.specialInstructions != null) ...[
                       Text(
@@ -76,7 +77,7 @@ class AccessibleCartItemWidget extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                     ],
-                    
+
                     // Price
                     Text(
                       '\$${(orderItem.unitPrice * orderItem.quantity).toStringAsFixed(2)}',
@@ -88,7 +89,7 @@ class AccessibleCartItemWidget extends StatelessWidget {
                   ],
                 ),
               ),
-              
+
               // Quantity controls
               if (showControls) ...[
                 Row(
@@ -99,7 +100,7 @@ class AccessibleCartItemWidget extends StatelessWidget {
                       onPressed: onDecrement,
                       tooltip: 'Decrease quantity',
                     ),
-                    
+
                     // Quantity display
                     Container(
                       width: 40,
@@ -117,7 +118,7 @@ class AccessibleCartItemWidget extends StatelessWidget {
                         ),
                       ),
                     ),
-                    
+
                     // Increment button
                     IconButton(
                       icon: const Icon(Icons.add),
@@ -126,7 +127,7 @@ class AccessibleCartItemWidget extends StatelessWidget {
                     ),
                   ],
                 ),
-                
+
                 // Remove button
                 IconButton(
                   icon: const Icon(Icons.delete, color: Colors.red),
@@ -135,10 +136,7 @@ class AccessibleCartItemWidget extends StatelessWidget {
                 ),
               ] else ...[
                 // Quantity display without controls
-                Text(
-                  'Qty: ${orderItem.quantity}',
-                  style: textTheme.bodyMedium,
-                ),
+                Text('Qty: ${orderItem.quantity}', style: textTheme.bodyMedium),
               ],
             ],
           ),

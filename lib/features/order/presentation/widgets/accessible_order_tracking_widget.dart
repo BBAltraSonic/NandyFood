@@ -22,7 +22,8 @@ class AccessibleOrderTrackingWidget extends StatelessWidget {
 
     return Semantics(
       container: true,
-      label: 'Order tracking for order ${order.id}, '
+      label:
+          'Order tracking for order ${order.id}, '
           'Status: ${_getStatusText(order.status)}, '
           'Total: \$${order.totalAmount.toStringAsFixed(2)}',
       focusable: true,
@@ -75,19 +76,19 @@ class AccessibleOrderTrackingWidget extends StatelessWidget {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Progress tracker
               _buildProgressTracker(context),
-              
+
               const SizedBox(height: 24),
-              
+
               // Order details
               _buildOrderDetails(context),
-              
+
               const SizedBox(height: 24),
-              
+
               // Action buttons
               _buildActionButtons(context),
             ],
@@ -116,12 +117,18 @@ class AccessibleOrderTrackingWidget extends StatelessWidget {
       ),
       StepProgress(
         title: 'Ready for Pickup',
-        isCompleted: _isStepCompleted(OrderStatus.ready_for_pickup, order.status),
+        isCompleted: _isStepCompleted(
+          OrderStatus.ready_for_pickup,
+          order.status,
+        ),
         isActive: order.status == OrderStatus.ready_for_pickup,
       ),
       StepProgress(
         title: 'Out for Delivery',
-        isCompleted: _isStepCompleted(OrderStatus.out_for_delivery, order.status),
+        isCompleted: _isStepCompleted(
+          OrderStatus.out_for_delivery,
+          order.status,
+        ),
         isActive: order.status == OrderStatus.out_for_delivery,
       ),
       StepProgress(
@@ -133,10 +140,7 @@ class AccessibleOrderTrackingWidget extends StatelessWidget {
 
     return Column(
       children: [
-        Accessibility.accessibleHeading(
-          'Order Progress',
-          level: 4,
-        ),
+        Accessibility.accessibleHeading('Order Progress', level: 4),
         const SizedBox(height: 16),
         ...steps.asMap().entries.expand((entry) {
           final index = entry.key;
@@ -151,14 +155,12 @@ class AccessibleOrderTrackingWidget extends StatelessWidget {
                     shape: BoxShape.circle,
                     color: step.isCompleted
                         ? Colors.green
-                        : (step.isActive ? Colors.orange : Colors.grey.shade300),
+                        : (step.isActive
+                              ? Colors.orange
+                              : Colors.grey.shade300),
                   ),
                   child: step.isCompleted
-                      ? const Icon(
-                          Icons.check,
-                          color: Colors.white,
-                          size: 20,
-                        )
+                      ? const Icon(Icons.check, color: Colors.white, size: 20)
                       : null,
                 ),
                 const SizedBox(width: 12),
@@ -166,7 +168,9 @@ class AccessibleOrderTrackingWidget extends StatelessWidget {
                   child: Text(
                     step.title,
                     style: TextStyle(
-                      fontWeight: step.isActive ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: step.isActive
+                          ? FontWeight.bold
+                          : FontWeight.normal,
                       color: step.isCompleted || step.isActive
                           ? Colors.black
                           : Colors.grey,
@@ -180,7 +184,9 @@ class AccessibleOrderTrackingWidget extends StatelessWidget {
                 width: 2,
                 height: 20,
                 margin: const EdgeInsets.only(left: 15),
-                color: steps[index].isCompleted ? Colors.green : Colors.grey.shade300,
+                color: steps[index].isCompleted
+                    ? Colors.green
+                    : Colors.grey.shade300,
               ),
           ];
         }).toList(),
@@ -195,10 +201,7 @@ class AccessibleOrderTrackingWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Accessibility.accessibleHeading(
-          'Order Details',
-          level: 4,
-        ),
+        Accessibility.accessibleHeading('Order Details', level: 4),
         const SizedBox(height: 12),
         Container(
           padding: const EdgeInsets.all(12),

@@ -21,18 +21,17 @@ void main() {
 
     testWidgets('displays signup form correctly', (WidgetTester tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: SignupScreen(),
-          ),
-        ),
+        ProviderScope(child: MaterialApp(home: SignupScreen())),
       );
 
       // Verify that the title is displayed
       expect(find.text('Create Account'), findsOneWidget);
 
       // Verify that form fields are displayed
-      expect(find.byType(TextField), findsNWidgets(4)); // Name, email, password, confirm password
+      expect(
+        find.byType(TextField),
+        findsNWidgets(4),
+      ); // Name, email, password, confirm password
 
       // Verify that signup button is displayed
       expect(find.text('Sign Up'), findsOneWidget);
@@ -41,13 +40,11 @@ void main() {
       expect(find.text('Sign In'), findsOneWidget);
     });
 
-    testWidgets('shows error message for invalid email', (WidgetTester tester) async {
+    testWidgets('shows error message for invalid email', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: SignupScreen(),
-          ),
-        ),
+        ProviderScope(child: MaterialApp(home: SignupScreen())),
       );
 
       // Enter invalid email
@@ -63,13 +60,11 @@ void main() {
       expect(find.text('Please enter a valid email'), findsWidgets);
     });
 
-    testWidgets('shows error message for short password', (WidgetTester tester) async {
+    testWidgets('shows error message for short password', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: SignupScreen(),
-          ),
-        ),
+        ProviderScope(child: MaterialApp(home: SignupScreen())),
       );
 
       // Enter valid info with short password
@@ -86,13 +81,11 @@ void main() {
       expect(find.text('Password must be at least 6 characters'), findsWidgets);
     });
 
-    testWidgets('shows error message for password mismatch', (WidgetTester tester) async {
+    testWidgets('shows error message for password mismatch', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: SignupScreen(),
-          ),
-        ),
+        ProviderScope(child: MaterialApp(home: SignupScreen())),
       );
 
       // Enter passwords that don't match
@@ -109,7 +102,9 @@ void main() {
       expect(find.text('Passwords do not match'), findsWidgets);
     });
 
-    testWidgets('navigates to login screen when sign in is tapped', (WidgetTester tester) async {
+    testWidgets('navigates to login screen when sign in is tapped', (
+      WidgetTester tester,
+    ) async {
       bool navigatedToLogin = false;
 
       await tester.pumpWidget(
@@ -120,9 +115,8 @@ void main() {
               if (settings.name == '/auth/login') {
                 navigatedToLogin = true;
                 return MaterialPageRoute(
-                  builder: (context) => Scaffold(
-                    appBar: AppBar(title: Text('Login Screen')),
-                  ),
+                  builder: (context) =>
+                      Scaffold(appBar: AppBar(title: Text('Login Screen'))),
                 );
               }
               return null;
@@ -141,16 +135,12 @@ void main() {
 
     testWidgets('toggles password visibility', (WidgetTester tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: SignupScreen(),
-          ),
-        ),
+        ProviderScope(child: MaterialApp(home: SignupScreen())),
       );
 
       // Find the password visibility toggle buttons
       final visibilityButtons = find.byIcon(Icons.visibility_outlined);
-      
+
       // Should have two visibility buttons (for password and confirm password)
       expect(visibilityButtons, findsNWidgets(2));
 

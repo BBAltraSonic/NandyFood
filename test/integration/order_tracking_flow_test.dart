@@ -16,10 +16,10 @@ void main() {
       // Enable test mode for DatabaseService to avoid pending timers
       DatabaseService.enableTestMode();
       dbService = DatabaseService();
-      
+
       // Initialize delivery tracking service
       deliveryService = DeliveryTrackingService();
-      
+
       // Create a provider container for testing
       container = ProviderContainer();
     });
@@ -27,7 +27,7 @@ void main() {
     tearDown(() {
       // Dispose of the provider container
       container.dispose();
-      
+
       // Disable test mode after tests
       DatabaseService.disableTestMode();
     });
@@ -58,37 +58,52 @@ void main() {
 
       // Create order provider and add the test order
       final orderNotifier = container.read(orderProvider.notifier);
-      
+
       // Simulate creating an order in the system
       await orderNotifier.createOrder(testOrder);
-      
+
       // Verify initial order state
       var orderState = container.read(orderProvider);
       expect(orderState.orders.length, 1);
       expect(orderState.orders[0].status, OrderStatus.placed);
-      
+
       // Simulate order confirmation
-      await orderNotifier.updateOrderStatus('order_tracking_1', OrderStatus.confirmed);
+      await orderNotifier.updateOrderStatus(
+        'order_tracking_1',
+        OrderStatus.confirmed,
+      );
       orderState = container.read(orderProvider);
       expect(orderState.orders[0].status, OrderStatus.confirmed);
-      
+
       // Simulate order preparation
-      await orderNotifier.updateOrderStatus('order_tracking_1', OrderStatus.preparing);
+      await orderNotifier.updateOrderStatus(
+        'order_tracking_1',
+        OrderStatus.preparing,
+      );
       orderState = container.read(orderProvider);
       expect(orderState.orders[0].status, OrderStatus.preparing);
-      
+
       // Simulate order ready for pickup
-      await orderNotifier.updateOrderStatus('order_tracking_1', OrderStatus.ready_for_pickup);
+      await orderNotifier.updateOrderStatus(
+        'order_tracking_1',
+        OrderStatus.ready_for_pickup,
+      );
       orderState = container.read(orderProvider);
       expect(orderState.orders[0].status, OrderStatus.ready_for_pickup);
-      
+
       // Simulate order out for delivery
-      await orderNotifier.updateOrderStatus('order_tracking_1', OrderStatus.out_for_delivery);
+      await orderNotifier.updateOrderStatus(
+        'order_tracking_1',
+        OrderStatus.out_for_delivery,
+      );
       orderState = container.read(orderProvider);
       expect(orderState.orders[0].status, OrderStatus.out_for_delivery);
-      
+
       // Simulate order delivered
-      await orderNotifier.updateOrderStatus('order_tracking_1', OrderStatus.delivered);
+      await orderNotifier.updateOrderStatus(
+        'order_tracking_1',
+        OrderStatus.delivered,
+      );
       orderState = container.read(orderProvider);
       expect(orderState.orders[0].status, OrderStatus.delivered);
     });
@@ -120,36 +135,38 @@ void main() {
       // Create order provider and add the test order
       final orderNotifier = container.read(orderProvider.notifier);
       await orderNotifier.createOrder(testOrder);
-      
+
       // Start tracking the delivery
       deliveryService.startTrackingDelivery('order_tracking_2');
-      
+
       // Get the delivery stream
-      final deliveryStream = deliveryService.getDeliveryStream('order_tracking_2');
+      final deliveryStream = deliveryService.getDeliveryStream(
+        'order_tracking_2',
+      );
       expect(deliveryStream, isNotNull);
-      
+
       // Listen to delivery updates
       var deliveryUpdatesReceived = 0;
       deliveryStream!.listen((delivery) {
         deliveryUpdatesReceived++;
-        
+
         // Verify delivery object properties
         expect(delivery.orderId, 'order_tracking_2');
         expect(delivery.status, isNotNull);
         expect(delivery.createdAt, isNotNull);
         expect(delivery.updatedAt, isNotNull);
       });
-      
+
       // Simulate delivery updates (in a real app, these would come from a backend service)
       // For testing, we'll manually call the update method a few times
       deliveryService.updateDeliveryFromDatabase('order_tracking_2');
       deliveryService.updateDeliveryFromDatabase('order_tracking_2');
       deliveryService.updateDeliveryFromDatabase('order_tracking_2');
-      
+
       // Verify that delivery updates were received
       // Note: In a real test, we would wait for the stream events
       expect(deliveryUpdatesReceived, greaterThanOrEqualTo(0));
-      
+
       // Stop tracking
       deliveryService.stopTrackingDelivery();
     });
@@ -181,32 +198,60 @@ void main() {
       // Create order provider and add the test order
       final orderNotifier = container.read(orderProvider.notifier);
       await orderNotifier.createOrder(testOrder);
-      
+
       // Listen for order state changes
       var orderUpdatesReceived = 0;
       container.listen<OrderState>(orderProvider, (previous, next) {
         orderUpdatesReceived++;
       });
-      
+
       // Simulate real-time order status updates
-      await orderNotifier.updateOrderStatus('order_tracking_3', OrderStatus.confirmed);
-      await Future.delayed(Duration(milliseconds: 100)); // Simulate network delay
-      
-      await orderNotifier.updateOrderStatus('order_tracking_3', OrderStatus.preparing);
-      await Future.delayed(Duration(milliseconds: 100)); // Simulate network delay
-      
-      await orderNotifier.updateOrderStatus('order_tracking_3', OrderStatus.ready_for_pickup);
-      await Future.delayed(Duration(milliseconds: 100)); // Simulate network delay
-      
-      await orderNotifier.updateOrderStatus('order_tracking_3', OrderStatus.out_for_delivery);
-      await Future.delayed(Duration(milliseconds: 100)); // Simulate network delay
-      
-      await orderNotifier.updateOrderStatus('order_tracking_3', OrderStatus.delivered);
-      await Future.delayed(Duration(milliseconds: 100)); // Simulate network delay
-      
+      await orderNotifier.updateOrderStatus(
+        'order_tracking_3',
+        OrderStatus.confirmed,
+      );
+      await Future.delayed(
+        Duration(milliseconds: 100),
+      ); // Simulate network delay
+
+      await orderNotifier.updateOrderStatus(
+        'order_tracking_3',
+        OrderStatus.preparing,
+      );
+      await Future.delayed(
+        Duration(milliseconds: 100),
+      ); // Simulate network delay
+
+      await orderNotifier.updateOrderStatus(
+        'order_tracking_3',
+        OrderStatus.ready_for_pickup,
+      );
+      await Future.delayed(
+        Duration(milliseconds: 100),
+      ); // Simulate network delay
+
+      await orderNotifier.updateOrderStatus(
+        'order_tracking_3',
+        OrderStatus.out_for_delivery,
+      );
+      await Future.delayed(
+        Duration(milliseconds: 100),
+      ); // Simulate network delay
+
+      await orderNotifier.updateOrderStatus(
+        'order_tracking_3',
+        OrderStatus.delivered,
+      );
+      await Future.delayed(
+        Duration(milliseconds: 100),
+      ); // Simulate network delay
+
       // Verify that order updates were received
-      expect(orderUpdatesReceived, greaterThanOrEqualTo(5)); // At least 5 updates
-      
+      expect(
+        orderUpdatesReceived,
+        greaterThanOrEqualTo(5),
+      ); // At least 5 updates
+
       // Verify final order state
       final orderState = container.read(orderProvider);
       expect(orderState.orders[0].status, OrderStatus.delivered);
@@ -239,20 +284,22 @@ void main() {
       // Create order provider and add the test order
       final orderNotifier = container.read(orderProvider.notifier);
       await orderNotifier.createOrder(testOrder);
-      
+
       // Get the delivery tracking service
       final deliveryService = DeliveryTrackingService();
-      
+
       // Start tracking the delivery
       deliveryService.startTrackingDelivery('order_tracking_4');
-      
+
       // Get delivery progress
-      final progress = await deliveryService.getDeliveryProgress('order_tracking_4');
-      
+      final progress = await deliveryService.getDeliveryProgress(
+        'order_tracking_4',
+      );
+
       // Verify that progress is within valid range
       expect(progress, greaterThanOrEqualTo(0));
       expect(progress, lessThanOrEqualTo(100));
-      
+
       // Stop tracking
       deliveryService.stopTrackingDelivery();
     });
@@ -284,13 +331,15 @@ void main() {
       // Create order provider and add the test order
       final orderNotifier = container.read(orderProvider.notifier);
       await orderNotifier.createOrder(testOrder);
-      
+
       // Get the delivery tracking service
       final deliveryService = DeliveryTrackingService();
-      
+
       // Get driver information
-      final driverInfo = await deliveryService.getDriverInfo('order_tracking_5');
-      
+      final driverInfo = await deliveryService.getDriverInfo(
+        'order_tracking_5',
+      );
+
       // Verify that driver information is returned
       expect(driverInfo, isNotNull);
       expect(driverInfo['id'], isNotNull);
@@ -329,16 +378,18 @@ void main() {
       // Create order provider and add the test order
       final orderNotifier = container.read(orderProvider.notifier);
       await orderNotifier.createOrder(testOrder);
-      
+
       // Get the delivery tracking service
       final deliveryService = DeliveryTrackingService();
-      
+
       // Get estimated arrival time
-      final estimatedArrival = await deliveryService.getEstimatedArrivalTime('order_tracking_6');
-      
+      final estimatedArrival = await deliveryService.getEstimatedArrivalTime(
+        'order_tracking_6',
+      );
+
       // Verify that estimated arrival time is returned
       expect(estimatedArrival, isNotNull);
-      
+
       // Verify that estimated arrival time is in the future
       if (estimatedArrival != null) {
         expect(estimatedArrival.isAfter(DateTime.now()), isTrue);
@@ -372,18 +423,21 @@ void main() {
       // Create order provider and add the test order
       final orderNotifier = container.read(orderProvider.notifier);
       await orderNotifier.createOrder(testOrder);
-      
+
       // Verify initial order state
       var orderState = container.read(orderProvider);
       expect(orderState.orders[0].status, OrderStatus.out_for_delivery);
-      
+
       // Cancel the order
-      await orderNotifier.updateOrderStatus('order_tracking_7', OrderStatus.cancelled);
-      
+      await orderNotifier.updateOrderStatus(
+        'order_tracking_7',
+        OrderStatus.cancelled,
+      );
+
       // Verify order was cancelled
       orderState = container.read(orderProvider);
       expect(orderState.orders[0].status, OrderStatus.cancelled);
-      
+
       // Verify that delivery tracking is stopped
       final deliveryService = DeliveryTrackingService();
       // In a real implementation, we would verify that tracking was stopped

@@ -50,10 +50,7 @@ class SocialLoginButton extends StatelessWidget {
                     child: Icon(icon, color: iconColor, size: 16),
                   ),
                   const SizedBox(width: 12),
-                  Text(
-                    text,
-                    style: const TextStyle(fontSize: 16),
-                  ),
+                  Text(text, style: const TextStyle(fontSize: 16)),
                 ],
               ),
       ),

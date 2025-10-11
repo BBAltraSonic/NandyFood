@@ -17,9 +17,7 @@ class MenuItemCardWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
       child: InkWell(
         onTap: onTap,
@@ -84,10 +82,15 @@ class MenuItemCardWidget extends StatelessWidget {
                         ),
                         if (menuItem.dietaryRestrictions.isNotEmpty)
                           Row(
-                            children: menuItem.dietaryRestrictions.map((restriction) {
+                            children: menuItem.dietaryRestrictions.map((
+                              restriction,
+                            ) {
                               return Container(
                                 margin: const EdgeInsets.only(left: 4),
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: Colors.deepOrange.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(4),

@@ -2,25 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-enum AppThemeMode {
-  light,
-  dark,
-  system,
-}
+enum AppThemeMode { light, dark, system }
 
 class ThemeState {
   final AppThemeMode themeMode;
   final ThemeMode flutterThemeMode;
 
-  ThemeState({
-    required this.themeMode,
-    required this.flutterThemeMode,
-  });
+  ThemeState({required this.themeMode, required this.flutterThemeMode});
 
-  ThemeState copyWith({
-    AppThemeMode? themeMode,
-    ThemeMode? flutterThemeMode,
-  }) {
+  ThemeState copyWith({AppThemeMode? themeMode, ThemeMode? flutterThemeMode}) {
     return ThemeState(
       themeMode: themeMode ?? this.themeMode,
       flutterThemeMode: flutterThemeMode ?? this.flutterThemeMode,
@@ -31,10 +21,13 @@ class ThemeState {
 class ThemeNotifier extends StateNotifier<ThemeState> {
   static const String _themeKey = 'app_theme_mode';
 
-  ThemeNotifier() : super(ThemeState(
-    themeMode: AppThemeMode.system,
-    flutterThemeMode: ThemeMode.system,
-  )) {
+  ThemeNotifier()
+    : super(
+        ThemeState(
+          themeMode: AppThemeMode.system,
+          flutterThemeMode: ThemeMode.system,
+        ),
+      ) {
     _loadTheme();
   }
 
@@ -43,7 +36,7 @@ class ThemeNotifier extends StateNotifier<ThemeState> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final themeName = prefs.getString(_themeKey) ?? 'system';
-      
+
       final themeMode = AppThemeMode.values.firstWhere(
         (e) => e.name == themeName,
         orElse: () => AppThemeMode.system,

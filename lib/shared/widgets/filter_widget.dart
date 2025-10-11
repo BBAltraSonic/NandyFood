@@ -4,11 +4,7 @@ class FilterWidget extends StatefulWidget {
   final List<FilterOption> options;
   final ValueChanged<List<FilterOption>>? onFiltersChanged;
 
-  const FilterWidget({
-    super.key,
-    required this.options,
-    this.onFiltersChanged,
-  });
+  const FilterWidget({super.key, required this.options, this.onFiltersChanged});
 
   @override
   State<FilterWidget> createState() => _FilterWidgetState();
@@ -20,7 +16,9 @@ class _FilterWidgetState extends State<FilterWidget> {
   @override
   void initState() {
     super.initState();
-    _selectedOptions = widget.options.where((option) => option.isSelected).toList();
+    _selectedOptions = widget.options
+        .where((option) => option.isSelected)
+        .toList();
   }
 
   void _toggleOption(FilterOption option) {
@@ -56,13 +54,19 @@ class _FilterWidgetState extends State<FilterWidget> {
               selectedColor: Colors.deepOrange.withOpacity(0.2),
               backgroundColor: Colors.grey.shade100,
               labelStyle: TextStyle(
-                color: option.isSelected ? Colors.deepOrange : Colors.grey.shade700,
-                fontWeight: option.isSelected ? FontWeight.bold : FontWeight.normal,
+                color: option.isSelected
+                    ? Colors.deepOrange
+                    : Colors.grey.shade700,
+                fontWeight: option.isSelected
+                    ? FontWeight.bold
+                    : FontWeight.normal,
               ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
                 side: BorderSide(
-                  color: option.isSelected ? Colors.deepOrange : Colors.grey.shade300,
+                  color: option.isSelected
+                      ? Colors.deepOrange
+                      : Colors.grey.shade300,
                 ),
               ),
             ),

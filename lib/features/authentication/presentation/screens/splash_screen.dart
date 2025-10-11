@@ -10,7 +10,8 @@ class SplashScreen extends ConsumerStatefulWidget {
   ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerProviderStateMixin {
+class _SplashScreenState extends ConsumerState<SplashScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
@@ -25,19 +26,26 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
     );
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.6, curve: Curves.easeIn)),
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeIn),
+      ),
     );
 
     _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.6, curve: Curves.elasticOut)),
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.6, curve: Curves.elasticOut),
+      ),
     );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.3, 1.0, curve: Curves.easeOut)),
-    );
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: const Interval(0.3, 1.0, curve: Curves.easeOut),
+          ),
+        );
 
     _controller.forward();
     _checkAuthStatus();
@@ -52,24 +60,28 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
   Future<void> _checkAuthStatus() async {
     // Show splash animation
     await Future.delayed(const Duration(seconds: 2));
-    
+
     if (!mounted) return;
-    
+
     try {
       // Check auth status with timeout
-      final authState = await Future.microtask(() => ref.read(authStateProvider))
-          .timeout(
+      final authState =
+          await Future.microtask(() => ref.read(authStateProvider)).timeout(
             const Duration(seconds: 3),
             onTimeout: () {
-              print('WARNING: Auth provider initialization timed out. Using default state.');
+              print(
+                'WARNING: Auth provider initialization timed out. Using default state.',
+              );
               return AuthState(isAuthenticated: false);
             },
           );
-      
+
       if (mounted) {
         // Always navigate to home - authentication is optional
         // Users can browse as guests
-        print('INFO: Navigating to home (authenticated: ${authState.isAuthenticated})');
+        print(
+          'INFO: Navigating to home (authenticated: ${authState.isAuthenticated})',
+        );
         context.go('/home');
       }
     } catch (e) {
@@ -90,11 +102,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFFF6B35),
-              Color(0xFFF7931E),
-              Color(0xFFFFB84D),
-            ],
+            colors: [Color(0xFFFF6B35), Color(0xFFF7931E), Color(0xFFFFB84D)],
             stops: [0.0, 0.5, 1.0],
           ),
         ),

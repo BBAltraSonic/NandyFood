@@ -9,11 +9,7 @@ class AddItemState {
   final String? errorMessage;
   final OrderItem? addedItem;
 
-  AddItemState({
-    this.isLoading = false,
-    this.errorMessage,
-    this.addedItem,
-  });
+  AddItemState({this.isLoading = false, this.errorMessage, this.addedItem});
 
   AddItemState copyWith({
     bool? isLoading,
@@ -35,7 +31,7 @@ final addItemProvider = StateNotifierProvider<AddItemNotifier, AddItemState>(
 
 class AddItemNotifier extends StateNotifier<AddItemState> {
   final Ref _ref;
-  
+
   AddItemNotifier(this._ref) : super(AddItemState());
 
   /// Add item to cart
@@ -46,19 +42,21 @@ class AddItemNotifier extends StateNotifier<AddItemState> {
     String? specialInstructions,
   }) async {
     state = state.copyWith(isLoading: true);
-    
+
     try {
       // Simulate network delay
       await Future.delayed(const Duration(milliseconds: 100));
-      
+
       // Add item to cart using cart provider
-      await _ref.read(cartProvider.notifier).addItem(
-        menuItem,
-        quantity: quantity,
-        customizations: customizations,
-        specialInstructions: specialInstructions,
-      );
-      
+      await _ref
+          .read(cartProvider.notifier)
+          .addItem(
+            menuItem,
+            quantity: quantity,
+            customizations: customizations,
+            specialInstructions: specialInstructions,
+          );
+
       // Create order item for state
       final orderItem = OrderItem(
         id: '${menuItem.id}_${DateTime.now().millisecondsSinceEpoch}',
@@ -69,60 +67,46 @@ class AddItemNotifier extends StateNotifier<AddItemState> {
         customizations: customizations,
         specialInstructions: specialInstructions,
       );
-      
-      state = state.copyWith(
-        addedItem: orderItem,
-        isLoading: false,
-      );
+
+      state = state.copyWith(addedItem: orderItem, isLoading: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
 
   /// Remove item from cart
   Future<void> removeItemFromCart(String itemId) async {
     state = state.copyWith(isLoading: true);
-    
+
     try {
       // Simulate network delay
       await Future.delayed(const Duration(milliseconds: 100));
-      
+
       // Remove item from cart using cart provider
       await _ref.read(cartProvider.notifier).removeItem(itemId);
-      
-      state = state.copyWith(
-        isLoading: false,
-      );
+
+      state = state.copyWith(isLoading: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
 
   /// Update item quantity in cart
   Future<void> updateItemQuantity(String itemId, int quantity) async {
     state = state.copyWith(isLoading: true);
-    
+
     try {
       // Simulate network delay
       await Future.delayed(const Duration(milliseconds: 100));
-      
+
       // Update item quantity using cart provider
-      await _ref.read(cartProvider.notifier).updateItemQuantity(itemId, quantity);
-      
-      state = state.copyWith(
-        isLoading: false,
-      );
+      await _ref
+          .read(cartProvider.notifier)
+          .updateItemQuantity(itemId, quantity);
+
+      state = state.copyWith(isLoading: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
 

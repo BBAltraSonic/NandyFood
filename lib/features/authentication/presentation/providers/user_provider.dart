@@ -41,11 +41,11 @@ class UserNotifier extends StateNotifier<UserState> {
   /// Load user profile from the database
   Future<void> loadUserProfile(String userId) async {
     state = state.copyWith(isLoading: true);
-    
+
     try {
       // Simulate network delay
       await Future.delayed(const Duration(milliseconds: 500));
-      
+
       // Sample data - in a real app, this would come from the database
       final userProfile = UserProfile(
         id: userId,
@@ -58,54 +58,45 @@ class UserNotifier extends StateNotifier<UserState> {
         defaultAddress: {
           'street': '123 Main St',
           'city': 'New York',
-          'zipCode': '10001'
+          'zipCode': '10001',
         },
       );
-      
+
       state = state.copyWith(
         userProfile: userProfile,
         isAuthenticated: true,
         isLoading: false,
       );
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
 
   /// Update user profile
   Future<void> updateUserProfile(UserProfile profile) async {
     state = state.copyWith(isLoading: true);
-    
+
     try {
       // Simulate network delay
       await Future.delayed(const Duration(milliseconds: 300));
-      
+
       // In a real app, this would update the database
       final updatedProfile = profile.copyWith(updatedAt: DateTime.now());
-      
-      state = state.copyWith(
-        userProfile: updatedProfile,
-        isLoading: false,
-      );
+
+      state = state.copyWith(userProfile: updatedProfile, isLoading: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
 
   /// Sign in user
   Future<void> signIn(String email, String password) async {
     state = state.copyWith(isLoading: true);
-    
+
     try {
       // Simulate network delay
       await Future.delayed(const Duration(milliseconds: 800));
-      
+
       // Sample data - in a real app, this would come from authentication
       final userProfile = UserProfile(
         id: 'user_${DateTime.now().millisecondsSinceEpoch}',
@@ -114,7 +105,7 @@ class UserNotifier extends StateNotifier<UserState> {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
-      
+
       state = state.copyWith(
         userProfile: userProfile,
         isAuthenticated: true,
@@ -131,11 +122,11 @@ class UserNotifier extends StateNotifier<UserState> {
   /// Sign up user
   Future<void> signUp(String email, String password, String fullName) async {
     state = state.copyWith(isLoading: true);
-    
+
     try {
       // Simulate network delay
       await Future.delayed(const Duration(milliseconds: 800));
-      
+
       // Sample data - in a real app, this would create a new user
       final userProfile = UserProfile(
         id: 'user_${DateTime.now().millisecondsSinceEpoch}',
@@ -144,7 +135,7 @@ class UserNotifier extends StateNotifier<UserState> {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
-      
+
       state = state.copyWith(
         userProfile: userProfile,
         isAuthenticated: true,
@@ -161,21 +152,18 @@ class UserNotifier extends StateNotifier<UserState> {
   /// Sign out user
   Future<void> signOut() async {
     state = state.copyWith(isLoading: true);
-    
+
     try {
       // Simulate network delay
       await Future.delayed(const Duration(milliseconds: 300));
-      
+
       state = state.copyWith(
         userProfile: null,
         isAuthenticated: false,
         isLoading: false,
       );
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
 

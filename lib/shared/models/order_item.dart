@@ -27,7 +27,7 @@ class OrderItem {
 
   Map<String, dynamic> toJson() => _$OrderItemToJson(this);
 
- OrderItem copyWith({
+  OrderItem copyWith({
     String? id,
     String? orderId,
     String? menuItemId,

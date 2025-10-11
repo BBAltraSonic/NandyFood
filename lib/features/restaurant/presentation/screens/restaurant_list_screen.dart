@@ -10,33 +10,36 @@ class RestaurantListScreen extends ConsumerWidget {
   const RestaurantListScreen({super.key});
 
   @override
- Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final restaurantState = ref.watch(restaurantProvider);
-    
+
     // Define dietary restriction options
     final dietaryOptions = [
       FilterOption(
         id: 'vegetarian',
         label: 'Vegetarian',
-        isSelected: restaurantState.selectedDietaryRestrictions.contains('vegetarian'),
+        isSelected: restaurantState.selectedDietaryRestrictions.contains(
+          'vegetarian',
+        ),
       ),
       FilterOption(
         id: 'vegan',
         label: 'Vegan',
-        isSelected: restaurantState.selectedDietaryRestrictions.contains('vegan'),
+        isSelected: restaurantState.selectedDietaryRestrictions.contains(
+          'vegan',
+        ),
       ),
       FilterOption(
         id: 'gluten-free',
         label: 'Gluten-Free',
-        isSelected: restaurantState.selectedDietaryRestrictions.contains('gluten-free'),
+        isSelected: restaurantState.selectedDietaryRestrictions.contains(
+          'gluten-free',
+        ),
       ),
     ];
-    
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Restaurants'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Restaurants'), centerTitle: true),
       body: Column(
         children: [
           // Filter widget for dietary restrictions
@@ -44,25 +47,34 @@ class RestaurantListScreen extends ConsumerWidget {
             options: dietaryOptions,
             onFiltersChanged: (selectedOptions) {
               // Extract the selected dietary restrictions
-              final selectedRestrictions = selectedOptions.map((option) => option.id).toList();
-              
+              final selectedRestrictions = selectedOptions
+                  .map((option) => option.id)
+                  .toList();
+
               // Update the provider with the selected dietary restrictions
               // For this, we need to update the provider to handle multiple restrictions at once
               // For now, let's handle each change individually
-              final currentRestrictions = restaurantState.selectedDietaryRestrictions;
-              final newRestrictions = selectedOptions.map((option) => option.id).toList();
-              
+              final currentRestrictions =
+                  restaurantState.selectedDietaryRestrictions;
+              final newRestrictions = selectedOptions
+                  .map((option) => option.id)
+                  .toList();
+
               // Find added restrictions
               for (final restriction in newRestrictions) {
                 if (!currentRestrictions.contains(restriction)) {
-                  ref.read(restaurantProvider.notifier).toggleDietaryRestriction(restriction);
+                  ref
+                      .read(restaurantProvider.notifier)
+                      .toggleDietaryRestriction(restriction);
                 }
               }
-              
+
               // Find removed restrictions
               for (final restriction in currentRestrictions) {
                 if (!newRestrictions.contains(restriction)) {
-                  ref.read(restaurantProvider.notifier).toggleDietaryRestriction(restriction);
+                  ref
+                      .read(restaurantProvider.notifier)
+                      .toggleDietaryRestriction(restriction);
                 }
               }
             },
@@ -73,11 +85,12 @@ class RestaurantListScreen extends ConsumerWidget {
             child: restaurantState.isLoading
                 ? const LoadingIndicator()
                 : restaurantState.errorMessage != null
-                    ? ErrorMessageWidget(
-                        message: restaurantState.errorMessage!,
-                        onRetry: () => ref.read(restaurantProvider.notifier).loadRestaurants(),
-                      )
-                    : _buildRestaurantList(restaurantState, context),
+                ? ErrorMessageWidget(
+                    message: restaurantState.errorMessage!,
+                    onRetry: () =>
+                        ref.read(restaurantProvider.notifier).loadRestaurants(),
+                  )
+                : _buildRestaurantList(restaurantState, context),
           ),
         ],
       ),
@@ -86,26 +99,31 @@ class RestaurantListScreen extends ConsumerWidget {
 
   Widget _buildRestaurantList(restaurantState, BuildContext context) {
     // Use filtered restaurants from state
-    final restaurants = restaurantState.filteredRestaurants.isEmpty && restaurantState.selectedDietaryRestrictions.isNotEmpty
+    final restaurants =
+        restaurantState.filteredRestaurants.isEmpty &&
+            restaurantState.selectedDietaryRestrictions.isNotEmpty
         ? [] // If filters are active but no results, show empty
         : restaurantState.filteredRestaurants.isEmpty
-            ? restaurantState.restaurants // If no filters, show all
-            : restaurantState.filteredRestaurants; // If filters and results, show filtered
+        ? restaurantState
+              .restaurants // If no filters, show all
+        : restaurantState
+              .filteredRestaurants; // If filters and results, show filtered
 
     if (restaurants.isEmpty) {
       return const Center(
-        child: Text(
-          'No restaurants found',
-          style: TextStyle(fontSize: 18),
-        ),
+        child: Text('No restaurants found', style: TextStyle(fontSize: 18)),
       );
     }
 
     return RefreshIndicator(
       onRefresh: () async {
-        await Future.delayed(const Duration(milliseconds: 500)); // Simulate network delay
-        await Future.microtask(() =>
-          ProviderScope.containerOf(context).read(restaurantProvider.notifier).loadRestaurants()
+        await Future.delayed(
+          const Duration(milliseconds: 500),
+        ); // Simulate network delay
+        await Future.microtask(
+          () => ProviderScope.containerOf(
+            context,
+          ).read(restaurantProvider.notifier).loadRestaurants(),
         );
       },
       child: ListView.builder(

@@ -9,14 +9,14 @@ import 'main.dart' as app;
 /// Test version of main.dart with comprehensive logging
 Future<void> main() async {
   final logger = TestLogger();
-  
+
   logger.logFunctionEntry('main', {'mode': 'TEST'});
-  
+
   try {
     logger.logDebug('main', 'Initializing Flutter bindings');
     WidgetsFlutterBinding.ensureInitialized();
     logger.logSuccess('main', 'Flutter bindings initialized');
-    
+
     // Load environment variables
     logger.logDebug('main', 'Loading environment variables');
     try {
@@ -25,7 +25,7 @@ Future<void> main() async {
     } catch (e) {
       logger.logWarning('main', '.env file not found, using defaults');
     }
-    
+
     // Initialize DatabaseService
     logger.logDebug('main', 'Initializing DatabaseService');
     try {
@@ -33,14 +33,17 @@ Future<void> main() async {
       await dbService.initialize();
       logger.logSuccess('main', 'DatabaseService initialized');
     } catch (e, stack) {
-      logger.logError('main', 'DatabaseService initialization failed: $e', stack);
+      logger.logError(
+        'main',
+        'DatabaseService initialization failed: $e',
+        stack,
+      );
     }
-    
+
     // Run app
     logger.logDebug('main', 'Starting app');
     runApp(const ProviderScope(child: TestApp()));
     logger.logSuccess('main', 'App started');
-    
   } catch (e, stack) {
     logger.logError('main', e, stack);
     rethrow;
@@ -64,21 +67,21 @@ class _TestAppState extends ConsumerState<TestApp> with LoggableMixin {
   void initState() {
     super.initState();
     logEntry('initState');
-    
+
     try {
       _router = app.createRouter();
       logSuccess('initState', 'Router created');
     } catch (e, stack) {
       logError('initState', e, stack);
     }
-    
+
     logExit('initState');
   }
 
   @override
   Widget build(BuildContext context) {
     logEntry('build');
-    
+
     final themeState = ref.watch(themeProvider);
     logDebug('build', 'Theme mode: ${themeState.themeMode}');
 
@@ -93,7 +96,7 @@ class _TestAppState extends ConsumerState<TestApp> with LoggableMixin {
         return Stack(
           children: [
             child ?? const SizedBox(),
-            
+
             // Test mode indicator
             Positioned(
               top: MediaQuery.of(context).padding.top,
@@ -105,7 +108,10 @@ class _TestAppState extends ConsumerState<TestApp> with LoggableMixin {
                   });
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.red,
                     borderRadius: BorderRadius.circular(4),
@@ -113,7 +119,11 @@ class _TestAppState extends ConsumerState<TestApp> with LoggableMixin {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.bug_report, size: 16, color: Colors.white),
+                      const Icon(
+                        Icons.bug_report,
+                        size: 16,
+                        color: Colors.white,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         'TEST MODE',
@@ -128,7 +138,7 @@ class _TestAppState extends ConsumerState<TestApp> with LoggableMixin {
                 ),
               ),
             ),
-            
+
             // Floating log button
             if (!_showLogs)
               Positioned(
@@ -147,7 +157,7 @@ class _TestAppState extends ConsumerState<TestApp> with LoggableMixin {
                   child: const Icon(Icons.list_alt),
                 ),
               ),
-            
+
             // Inline log viewer
             if (_showLogs)
               Positioned(
@@ -158,7 +168,9 @@ class _TestAppState extends ConsumerState<TestApp> with LoggableMixin {
                 child: Container(
                   decoration: BoxDecoration(
                     color: Colors.black87,
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(16),
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.3),
@@ -173,7 +185,9 @@ class _TestAppState extends ConsumerState<TestApp> with LoggableMixin {
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: Colors.purple,
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(16),
+                          ),
                         ),
                         child: Row(
                           children: [
@@ -188,7 +202,10 @@ class _TestAppState extends ConsumerState<TestApp> with LoggableMixin {
                             ),
                             const Spacer(),
                             IconButton(
-                              icon: const Icon(Icons.close, color: Colors.white),
+                              icon: const Icon(
+                                Icons.close,
+                                color: Colors.white,
+                              ),
                               onPressed: () {
                                 setState(() {
                                   _showLogs = false;
@@ -203,7 +220,7 @@ class _TestAppState extends ConsumerState<TestApp> with LoggableMixin {
                           stream: TestLogger().logStream,
                           builder: (context, snapshot) {
                             final logs = TestLogger().logs;
-                            
+
                             return ListView.builder(
                               reverse: true,
                               padding: const EdgeInsets.all(8),
@@ -283,20 +300,14 @@ class _TestAppState extends ConsumerState<TestApp> with LoggableMixin {
                 ),
                 Text(
                   log.message,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                  ),
+                  style: const TextStyle(color: Colors.white, fontSize: 11),
                 ),
               ],
             ),
           ),
           Text(
             _formatTime(log.timestamp),
-            style: const TextStyle(
-              color: Colors.white54,
-              fontSize: 10,
-            ),
+            style: const TextStyle(color: Colors.white54, fontSize: 10),
           ),
         ],
       ),
@@ -305,8 +316,8 @@ class _TestAppState extends ConsumerState<TestApp> with LoggableMixin {
 
   String _formatTime(DateTime time) {
     return '${time.hour.toString().padLeft(2, '0')}:'
-           '${time.minute.toString().padLeft(2, '0')}:'
-           '${time.second.toString().padLeft(2, '0')}';
+        '${time.minute.toString().padLeft(2, '0')}:'
+        '${time.second.toString().padLeft(2, '0')}';
   }
 
   ThemeData _buildLightTheme() {
@@ -317,10 +328,7 @@ class _TestAppState extends ConsumerState<TestApp> with LoggableMixin {
         brightness: Brightness.light,
       ),
       textTheme: Typography.blackCupertino,
-      appBarTheme: const AppBarTheme(
-        centerTitle: true,
-        elevation: 0,
-      ),
+      appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           foregroundColor: Colors.white,
@@ -332,9 +340,7 @@ class _TestAppState extends ConsumerState<TestApp> with LoggableMixin {
       ),
       cardTheme: CardThemeData(
         elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -363,9 +369,7 @@ class _TestAppState extends ConsumerState<TestApp> with LoggableMixin {
       ),
       cardTheme: CardThemeData(
         elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         color: Colors.grey[850],
       ),
       scaffoldBackgroundColor: Colors.grey[900],

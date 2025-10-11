@@ -15,9 +15,7 @@ class DeliveryTrackingWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.all(16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -30,13 +28,13 @@ class DeliveryTrackingWidget extends StatelessWidget {
               children: [
                 const Text(
                   'Delivery Tracking',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: _getStatusColor(delivery.status),
                     borderRadius: BorderRadius.circular(12),
@@ -55,13 +53,10 @@ class DeliveryTrackingWidget extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Estimated arrival: ${_formatTime(delivery.estimatedArrival ?? DateTime.now().add(const Duration(minutes: 20)))}',
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-              ),
+              style: const TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 16),
-            
+
             // Progress bar
             Row(
               children: [
@@ -77,13 +72,15 @@ class DeliveryTrackingWidget extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: progress / 100,
                     backgroundColor: Colors.grey.shade300,
-                    valueColor: AlwaysStoppedAnimation<Color>(_getStatusColor(delivery.status)),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      _getStatusColor(delivery.status),
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            
+
             // Delivery status timeline
             _buildStatusTimeline(delivery.status),
           ],
@@ -107,7 +104,7 @@ class DeliveryTrackingWidget extends StatelessWidget {
         final stepStatus = step['status'] as DeliveryStatus;
         final isCompleted = _isStepCompleted(status, stepStatus);
         final isCurrent = status == stepStatus;
-        
+
         return Column(
           children: [
             Row(
@@ -117,8 +114,8 @@ class DeliveryTrackingWidget extends StatelessWidget {
                   width: 30,
                   height: 30,
                   decoration: BoxDecoration(
-                    color: isCompleted 
-                        ? Colors.deepOrange 
+                    color: isCompleted
+                        ? Colors.deepOrange
                         : (isCurrent ? Colors.orange : Colors.grey.shade300),
                     shape: BoxShape.circle,
                   ),
@@ -133,17 +130,16 @@ class DeliveryTrackingWidget extends StatelessWidget {
                     step['title'] as String,
                     style: TextStyle(
                       fontSize: 16,
-                      fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: isCurrent
+                          ? FontWeight.bold
+                          : FontWeight.normal,
                       color: isCurrent ? Colors.deepOrange : Colors.black,
                     ),
                   ),
                 ),
                 // Checkmark for completed steps
                 if (isCompleted)
-                  Icon(
-                    Icons.check_circle,
-                    color: Colors.deepOrange,
-                  ),
+                  Icon(Icons.check_circle, color: Colors.deepOrange),
               ],
             ),
             // Connector line (except for last step)
@@ -164,17 +160,20 @@ class DeliveryTrackingWidget extends StatelessWidget {
   }
 
   /// Check if step is completed based on current delivery status
-  bool _isStepCompleted(DeliveryStatus currentStatus, DeliveryStatus stepStatus) {
+  bool _isStepCompleted(
+    DeliveryStatus currentStatus,
+    DeliveryStatus stepStatus,
+  ) {
     final statusOrder = [
       DeliveryStatus.assigned,
       DeliveryStatus.pickedUp,
       DeliveryStatus.inTransit,
       DeliveryStatus.delivered,
     ];
-    
+
     final currentIndex = statusOrder.indexOf(currentStatus);
     final stepIndex = statusOrder.indexOf(stepStatus);
-    
+
     return stepIndex <= currentIndex;
   }
 
