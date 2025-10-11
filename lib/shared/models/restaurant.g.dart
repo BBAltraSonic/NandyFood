@@ -19,6 +19,9 @@ Restaurant _$RestaurantFromJson(Map<String, dynamic> json) => Restaurant(
   deliveryRadius: (json['deliveryRadius'] as num).toDouble(),
   estimatedDeliveryTime: (json['estimatedDeliveryTime'] as num).toInt(),
   isActive: json['isActive'] as bool,
+  dietaryOptions: (json['dietaryOptions'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: DateTime.parse(json['updatedAt'] as String),
 );
@@ -37,6 +40,7 @@ Map<String, dynamic> _$RestaurantToJson(Restaurant instance) =>
       'deliveryRadius': instance.deliveryRadius,
       'estimatedDeliveryTime': instance.estimatedDeliveryTime,
       'isActive': instance.isActive,
+      'dietaryOptions': instance.dietaryOptions,
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),
     };

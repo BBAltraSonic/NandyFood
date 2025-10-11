@@ -16,6 +16,7 @@ class Restaurant {
   final double deliveryRadius;
   final int estimatedDeliveryTime;
   final bool isActive;
+  final List<String>? dietaryOptions;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -32,6 +33,7 @@ class Restaurant {
     required this.deliveryRadius,
     required this.estimatedDeliveryTime,
     required this.isActive,
+    this.dietaryOptions,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -54,6 +56,7 @@ class Restaurant {
     double? deliveryRadius,
     int? estimatedDeliveryTime,
     bool? isActive,
+    List<String>? dietaryOptions,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -70,8 +73,35 @@ class Restaurant {
       deliveryRadius: deliveryRadius ?? this.deliveryRadius,
       estimatedDeliveryTime: estimatedDeliveryTime ?? this.estimatedDeliveryTime,
       isActive: isActive ?? this.isActive,
+      dietaryOptions: dietaryOptions ?? this.dietaryOptions,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
+  }
+
+  /// Helper method to get latitude from address
+  double get latitude {
+    try {
+      final lat = address['latitude'];
+      if (lat is double) return lat;
+      if (lat is int) return lat.toDouble();
+      if (lat is String) return double.parse(lat);
+      return 0.0;
+    } catch (e) {
+      return 0.0;
+    }
+  }
+
+  /// Helper method to get longitude from address
+  double get longitude {
+    try {
+      final lng = address['longitude'];
+      if (lng is double) return lng;
+      if (lng is int) return lng.toDouble();
+      if (lng is String) return double.parse(lng);
+      return 0.0;
+    } catch (e) {
+      return 0.0;
+    }
   }
 }

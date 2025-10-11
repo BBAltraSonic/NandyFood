@@ -1,4 +1,7 @@
+import 'dart:io' show Platform;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:food_delivery_app/core/services/database_service.dart';
 
 class AuthService {
@@ -6,17 +9,14 @@ class AuthService {
   factory AuthService() => _instance;
   AuthService._internal();
 
-  late GoTrueClient _auth;
-  late SupabaseClient _client;
+  GoogleSignIn? _googleSignIn;
 
-  GoTrueClient get auth => _auth;
+  SupabaseClient get _client => Supabase.instance.client;
+  GoTrueClient get auth => _client.auth;
 
   Future<void> initialize() async {
-    _client = DatabaseService().client;
-    _auth = _client.auth;
-    
     // Listen to auth state changes
-    _auth.onAuthStateChange.listen((data) {
+    auth.onAuthStateChange.listen((data) {
       final session = data.session;
       final user = session?.user;
       
@@ -37,7 +37,7 @@ class AuthService {
     required String password,
     required String fullName,
   }) async {
-    final response = await _auth.signUp(
+    final response = await auth.signUp(
       email: email,
       password: password,
       data: {
@@ -59,7 +59,7 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    final response = await _auth.signInWithPassword(
+    final response = await auth.signInWithPassword(
       email: email,
       password: password,
     );
@@ -67,34 +67,112 @@ class AuthService {
   }
 
   // Sign in with Google
-  Future<void> signInWithGoogle() async {
-    await _auth.signInWithOAuth(
-      OAuthProvider.google,
-      redirectTo: 'io.supabase.flutterdemo://login-callback/',
-    );
+  Future<AuthResponse> signInWithGoogle() async {
+    try {
+      // Initialize Google Sign-In if not already done
+      _googleSignIn ??= GoogleSignIn(
+        serverClientId: Platform.isAndroid 
+            ? 'YOUR_ANDROID_CLIENT_ID.apps.googleusercontent.com'
+            : null,
+      );
+
+      // Trigger Google Sign-In flow
+      final GoogleSignInAccount? googleUser = await _googleSignIn!.signIn();
+      if (googleUser == null) {
+        throw Exception('Google sign in was canceled');
+      }
+
+      // Get authentication details
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final String? accessToken = googleAuth.accessToken;
+      final String? idToken = googleAuth.idToken;
+
+      if (accessToken == null || idToken == null) {
+        throw Exception('Failed to get Google credentials');
+      }
+
+      // Sign in to Supabase with Google credentials
+      final response = await auth.signInWithIdToken(
+        provider: OAuthProvider.google,
+        idToken: idToken,
+        accessToken: accessToken,
+      );
+
+      // Create user profile if first time sign-in
+      if (response.user != null) {
+        await _ensureUserProfileExists(
+          response.user!,
+          googleUser.displayName ?? googleUser.email,
+        );
+      }
+
+      return response;
+    } catch (e) {
+      throw Exception('Google sign in failed: $e');
+    }
   }
 
   // Sign in with Apple
-  Future<void> signInWithApple() async {
-    await _auth.signInWithOAuth(
-      OAuthProvider.apple,
-      redirectTo: 'io.supabase.flutterdemo://login-callback/',
-    );
+  Future<AuthResponse> signInWithApple() async {
+    try {
+      // Check if Apple Sign-In is available (iOS 13+)
+      if (!Platform.isIOS) {
+        throw Exception('Apple Sign-In is only available on iOS');
+      }
+
+      // Trigger Apple Sign-In flow
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
+
+      final idToken = credential.identityToken;
+      if (idToken == null) {
+        throw Exception('Failed to get Apple ID token');
+      }
+
+      // Sign in to Supabase with Apple credentials
+      final response = await auth.signInWithIdToken(
+        provider: OAuthProvider.apple,
+        idToken: idToken,
+      );
+
+      // Create/update user profile with name if available
+      if (response.user != null) {
+        final fullName = '${credential.givenName ?? ''} ${credential.familyName ?? ''}'.trim();
+        await _ensureUserProfileExists(
+          response.user!,
+          fullName.isNotEmpty ? fullName : response.user!.email ?? 'Apple User',
+        );
+      }
+
+      return response;
+    } catch (e) {
+      throw Exception('Apple sign in failed: $e');
+    }
   }
 
   // Sign out
   Future<void> signOut() async {
-    await _auth.signOut();
+    // Sign out from Google if logged in
+    if (_googleSignIn != null && await _googleSignIn!.isSignedIn()) {
+      await _googleSignIn!.signOut();
+    }
+
+    // Sign out from Supabase
+    await auth.signOut();
   }
 
   // Get current user
   User? getCurrentUser() {
-    return _auth.currentUser;
+    return auth.currentUser;
   }
 
   // Get current session
   Session? getCurrentSession() {
-    return _auth.currentSession;
+    return auth.currentSession;
   }
 
   // Update user profile
@@ -103,7 +181,7 @@ class AuthService {
     String? password,
     Map<String, dynamic>? data,
   }) async {
-    final response = await _auth.updateUser(
+    final response = await auth.updateUser(
       UserAttributes(
         email: email,
         password: password,
@@ -115,13 +193,13 @@ class AuthService {
 
   // Send password reset email
   Future<void> sendPasswordResetEmail(String email) async {
-    await _auth.resetPasswordForEmail(email);
+    await auth.resetPasswordForEmail(email);
   }
 
   // Refresh session
   Future<Session?> refreshSession() async {
     try {
-      final response = await _auth.refreshSession();
+      final response = await auth.refreshSession();
       return response.session;
     } catch (e) {
       print('Error refreshing session: $e');
@@ -141,6 +219,25 @@ class AuthService {
       });
     } catch (e) {
       print('Error creating user profile: $e');
+    }
+  }
+
+  // Ensure user profile exists (for social sign-in)
+  Future<void> _ensureUserProfileExists(User user, String fullName) async {
+    try {
+      // Check if profile already exists
+      final existingProfile = await _client
+          .from('user_profiles')
+          .select()
+          .eq('id', user.id)
+          .maybeSingle();
+
+      if (existingProfile == null) {
+        // Create new profile
+        await _createUserProfile(user, fullName);
+      }
+    } catch (e) {
+      print('Error ensuring user profile exists: $e');
     }
   }
 }

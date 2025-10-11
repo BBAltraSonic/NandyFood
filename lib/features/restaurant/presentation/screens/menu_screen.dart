@@ -95,14 +95,14 @@ class MenuScreen extends ConsumerWidget {
                         message: restaurantState.errorMessage!,
                         onRetry: () => ref.read(restaurantProvider.notifier).loadMenuItems(restaurant.id),
                       )
-                    : _buildMenuContent(restaurantState, context),
+                    : _buildMenuContent(restaurantState, context, ref),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildMenuContent(RestaurantState restaurantState, BuildContext context) {
+  Widget _buildMenuContent(RestaurantState restaurantState, BuildContext context, WidgetRef ref) {
     // Use filtered menu items from state
     final menuItems = restaurantState.filteredMenuItems.isEmpty && restaurantState.selectedDietaryRestrictions.isNotEmpty
         ? [] // If filters are active but no results, show empty
@@ -132,9 +132,7 @@ class MenuScreen extends ConsumerWidget {
     return RefreshIndicator(
       onRefresh: () async {
         await Future.delayed(const Duration(milliseconds: 500)); // Simulate network delay
-        await Future.microtask(() =>
-          ProviderScope.containerOf(context).read(restaurantProvider.notifier).loadMenuItems(restaurant.id)
-        );
+        await ref.read(restaurantProvider.notifier).loadMenuItems(restaurant.id);
       },
       child: ListView.builder(
         itemCount: categories.length,

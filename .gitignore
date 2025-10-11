@@ -43,3 +43,39 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# =====================================================
+# SENSITIVE FILES - NEVER COMMIT THESE!
+# =====================================================
+.env
+.env.*
+!.env.example
+*.key
+*.keystore
+*.jks
+*.p12
+*.pem
+*.cer
+google-services.json
+GoogleService-Info.plist
+firebase_options.dart
+
+# Secrets
+**/secrets/
+**/credentials/
+**/*_credentials.json
+**/*_secret.json
+**/*_key.json
+
+# Supabase
+**/supabase/.branches
+**/supabase/.temp
+**/.supabase/
+
+# Windows Flutter ephemeral
+**/windows/flutter/ephemeral/
+
+# Backup files
+*.bak
+*.backup
+*.old

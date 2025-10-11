@@ -18,21 +18,15 @@ class DatabaseService {
     _isTestMode = false;
   }
   
-  DatabaseService._internal() {
-    // Initialize the client immediately to avoid late initialization errors
-    // In test mode, we don't initialize the client to avoid pending timers
-    if (!_isTestMode) {
-      _client = SupabaseClient(Config.supabaseUrl, Config.supabaseAnonKey);
-    }
-  }
+  DatabaseService._internal();
 
-  SupabaseClient? _client;
+  bool _initialized = false;
 
   SupabaseClient get client {
-    if (_client == null) {
+    if (!_initialized && !_isTestMode) {
       throw StateError('DatabaseService not initialized. Call initialize() first.');
     }
-    return _client!;
+    return Supabase.instance.client;
   }
 
   Future<void> initialize() async {
@@ -41,21 +35,42 @@ class DatabaseService {
       return;
     }
     
-    // Already initialized in constructor for non-test mode
-    // This method exists for backward compatibility but does nothing
-    if (_client == null) {
-      _client = SupabaseClient(Config.supabaseUrl, Config.supabaseAnonKey);
+    if (_initialized) {
+      return; // Already initialized
+    }
+    
+    try {
+      final url = Config.supabaseUrl;
+      final key = Config.supabaseAnonKey;
+      
+      // Validate URL format
+      if (url.contains('your-project') || url.isEmpty || !url.startsWith('http')) {
+        print('WARNING: Invalid Supabase URL. Please configure .env file with valid credentials.');
+        print('Current URL: $url');
+        throw Exception('Invalid Supabase configuration');
+      }
+      
+      await Supabase.initialize(
+        url: url,
+        anonKey: key,
+        authOptions: const FlutterAuthClientOptions(
+          authFlowType: AuthFlowType.pkce,
+        ),
+      );
+      
+      _initialized = true;
+      print('✅ Supabase initialized successfully');
+      print('📡 Connected to: $url');
+    } catch (e) {
+      print('ERROR: Failed to initialize Supabase: $e');
+      rethrow;
     }
   }
 
   // User Profile Operations
   Future<Map<String, dynamic>?> getUserProfile(String userId) async {
     try {
-      if (_client == null) {
-        throw StateError('DatabaseService not initialized. Call initialize() first.');
-      }
-      
-      final response = await _client!
+      final response = await client
           .from('user_profiles')
           .select()
           .eq('id', userId)
@@ -69,11 +84,7 @@ class DatabaseService {
 
   Future<Map<String, dynamic>> createUserProfile(Map<String, dynamic> data) async {
     try {
-      if (_client == null) {
-        throw StateError('DatabaseService not initialized. Call initialize() first.');
-      }
-      
-      final response = await _client!
+      final response = await client
           .from('user_profiles')
           .insert(data)
           .select()
@@ -87,11 +98,7 @@ class DatabaseService {
 
   Future<void> updateUserProfile(String userId, Map<String, dynamic> data) async {
     try {
-      if (_client == null) {
-        throw StateError('DatabaseService not initialized. Call initialize() first.');
-      }
-      
-      await _client!
+      await client
           .from('user_profiles')
           .update(data)
           .eq('id', userId);
@@ -104,11 +111,7 @@ class DatabaseService {
   // Restaurant Operations
   Future<List<Map<String, dynamic>>> getRestaurants({String? cuisineType, double? minRating, int? maxDeliveryTime}) async {
     try {
-      if (_client == null) {
-        throw StateError('DatabaseService not initialized. Call initialize() first.');
-      }
-      
-      var query = _client!.from('restaurants').select().eq('is_active', true);
+      var query = client.from('restaurants').select().eq('is_active', true);
 
       if (cuisineType != null) {
         query = query.ilike('cuisine_type', '%$cuisineType%');
@@ -130,11 +133,7 @@ class DatabaseService {
 
   Future<Map<String, dynamic>?> getRestaurant(String restaurantId) async {
     try {
-      if (_client == null) {
-        throw StateError('DatabaseService not initialized. Call initialize() first.');
-      }
-      
-      final response = await _client!
+      final response = await client
           .from('restaurants')
           .select()
           .eq('id', restaurantId)
@@ -146,14 +145,48 @@ class DatabaseService {
     }
   }
 
+  /// Search restaurants by name or cuisine type
+  Future<List<Map<String, dynamic>>> searchRestaurants(String query) async {
+    try {
+      final searchQuery = query.trim().toLowerCase();
+      final response = await client
+          .from('restaurants')
+          .select()
+          .eq('is_active', true)
+          .or('name.ilike.%$searchQuery%,cuisine_type.ilike.%$searchQuery%')
+          .order('rating', ascending: false)
+          .limit(50);
+      return response;
+    } catch (e) {
+      // Handle error
+      return [];
+    }
+  }
+
+  /// Filter restaurants by category (cuisine type)
+  Future<List<Map<String, dynamic>>> getRestaurantsByCategory(String category) async {
+    try {
+      if (category == 'all') {
+        return getRestaurants();
+      }
+      
+      final response = await client
+          .from('restaurants')
+          .select()
+          .eq('is_active', true)
+          .ilike('cuisine_type', '%$category%')
+          .order('rating', ascending: false);
+      return response;
+    } catch (e) {
+      // Handle error
+      return [];
+    }
+  }
+
   // Menu Item Operations
   Future<List<Map<String, dynamic>>> getMenuItems(String restaurantId) async {
     try {
-      if (_client == null) {
-        throw StateError('DatabaseService not initialized. Call initialize() first.');
-      }
-      
-      final response = await _client!
+      final response = await client
           .from('menu_items')
           .select()
           .eq('restaurant_id', restaurantId)
@@ -167,11 +200,7 @@ class DatabaseService {
 
   Future<List<Map<String, dynamic>>> getMenuItemsByCategory(String restaurantId, String category) async {
     try {
-      if (_client == null) {
-        throw StateError('DatabaseService not initialized. Call initialize() first.');
-      }
-      
-      final response = await _client!
+      final response = await client
           .from('menu_items')
           .select()
           .eq('restaurant_id', restaurantId)
@@ -187,11 +216,7 @@ class DatabaseService {
   // Order Operations
   Future<List<Map<String, dynamic>>> getUserOrders(String userId) async {
     try {
-      if (_client == null) {
-        throw StateError('DatabaseService not initialized. Call initialize() first.');
-      }
-      
-      final response = await _client!
+      final response = await client
           .from('orders')
           .select()
           .eq('user_id', userId)
@@ -205,11 +230,7 @@ class DatabaseService {
 
   Future<Map<String, dynamic>?> getOrder(String orderId) async {
     try {
-      if (_client == null) {
-        throw StateError('DatabaseService not initialized. Call initialize() first.');
-      }
-      
-      final response = await _client!
+      final response = await client
           .from('orders')
           .select()
           .eq('id', orderId)
@@ -223,11 +244,7 @@ class DatabaseService {
 
   Future<String> createOrder(Map<String, dynamic> orderData) async {
     try {
-      if (_client == null) {
-        throw StateError('DatabaseService not initialized. Call initialize() first.');
-      }
-      
-      final response = await _client!
+      final response = await client
           .from('orders')
           .insert(orderData)
           .select('id')
@@ -242,11 +259,7 @@ class DatabaseService {
   // Delivery Operations
   Future<Map<String, dynamic>?> getDelivery(String orderId) async {
     try {
-      if (_client == null) {
-        throw StateError('DatabaseService not initialized. Call initialize() first.');
-      }
-      
-      final response = await _client!
+      final response = await client
           .from('deliveries')
           .select()
           .eq('order_id', orderId)
@@ -261,12 +274,8 @@ class DatabaseService {
   // Promotion Operations
   Future<List<Map<String, dynamic>>> getActivePromotions() async {
     try {
-      if (_client == null) {
-        throw StateError('DatabaseService not initialized. Call initialize() first.');
-      }
-      
       final now = DateTime.now().toIso8601String();
-      final response = await _client!
+      final response = await client
           .from('promotions')
           .select()
           .eq('is_active', true)
@@ -281,12 +290,8 @@ class DatabaseService {
 
   Future<Map<String, dynamic>?> getPromotionByCode(String code) async {
     try {
-      if (_client == null) {
-        throw StateError('DatabaseService not initialized. Call initialize() first.');
-      }
-      
       final now = DateTime.now().toIso8601String();
-      final response = await _client!
+      final response = await client
           .from('promotions')
           .select()
           .eq('code', code.toUpperCase())
@@ -302,22 +307,17 @@ class DatabaseService {
   }
 
   // Auth Operations
-  GoTrueClient get auth {
-    if (_client == null) {
-      throw StateError('DatabaseService not initialized. Call initialize() first.');
-    }
-    return _client!.auth;
-  }
+  GoTrueClient get auth => client.auth;
   
   // Dispose method to clean up resources
   Future<void> dispose() async {
     // In test mode, there's nothing to dispose
-    if (_isTestMode || _client == null) {
+    if (_isTestMode || !_initialized) {
       return;
     }
     
     // Sign out to clean up auth resources and stop auto-refresh timers
-    await _client!.auth.signOut();
+    await client.auth.signOut();
     // Note: Supabase client doesn't have a direct dispose method
     // but signing out stops the auto-refresh timers
   }

@@ -42,27 +42,37 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
   }
 
   void _initializeAuthListener() {
-    final auth = DatabaseService().client.auth;
-    
-    // Listen to auth state changes
-    auth.onAuthStateChange.listen((data) {
-      final session = data.session;
-      final user = session?.user;
+    try {
+      final auth = DatabaseService().client.auth;
       
-      if (user != null) {
-        // User is signed in
-        state = AuthState(
-          user: user,
-          isAuthenticated: true,
-        );
-      } else {
-        // User is signed out
-        state = AuthState(
-          user: null,
-          isAuthenticated: false,
-        );
-      }
-    });
+      // Listen to auth state changes
+      auth.onAuthStateChange.listen((data) {
+        final session = data.session;
+        final user = session?.user;
+        
+        if (user != null) {
+          // User is signed in
+          state = AuthState(
+            user: user,
+            isAuthenticated: true,
+          );
+        } else {
+          // User is signed out
+          state = AuthState(
+            user: null,
+            isAuthenticated: false,
+          );
+        }
+      });
+    } catch (e) {
+      print('Error initializing auth listener: $e');
+      // Set default state if initialization fails
+      state = AuthState(
+        user: null,
+        isAuthenticated: false,
+        errorMessage: 'Failed to initialize auth: $e',
+      );
+    }
   }
 
   // Sign up method
