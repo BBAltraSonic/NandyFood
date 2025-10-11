@@ -3,6 +3,13 @@ import 'package:food_delivery_app/core/services/database_service.dart';
 import 'package:food_delivery_app/shared/models/order_item.dart';
 import 'package:food_delivery_app/shared/models/menu_item.dart';
 import 'package:food_delivery_app/shared/models/promotion.dart';
+import 'package:food_delivery_app/shared/models/address.dart';
+
+// Enum for delivery method
+enum DeliveryMethod { delivery, pickup }
+
+// Enum for payment method
+enum PaymentMethod { cash, card }
 
 // Cart state class to represent the cart state
 class CartState {
@@ -16,6 +23,11 @@ class CartState {
   final String? selectedPaymentMethodId;
   final bool isLoading;
   final String? errorMessage;
+  final DeliveryMethod deliveryMethod;
+  final Address? selectedAddress;
+  final String? deliveryNotes;
+  final PaymentMethod paymentMethod;
+  final String? restaurantId;
 
   CartState({
     this.items = const [],
@@ -28,6 +40,11 @@ class CartState {
     this.selectedPaymentMethodId,
     this.isLoading = false,
     this.errorMessage,
+    this.deliveryMethod = DeliveryMethod.delivery,
+    this.selectedAddress,
+    this.deliveryNotes,
+    this.paymentMethod = PaymentMethod.cash,
+    this.restaurantId,
   });
 
   CartState copyWith({
@@ -41,6 +58,11 @@ class CartState {
     String? selectedPaymentMethodId,
     bool? isLoading,
     String? errorMessage,
+    DeliveryMethod? deliveryMethod,
+    Address? selectedAddress,
+    String? deliveryNotes,
+    PaymentMethod? paymentMethod,
+    String? restaurantId,
   }) {
     return CartState(
       items: items ?? this.items,
@@ -54,6 +76,11 @@ class CartState {
           selectedPaymentMethodId ?? this.selectedPaymentMethodId,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage ?? this.errorMessage,
+      deliveryMethod: deliveryMethod ?? this.deliveryMethod,
+      selectedAddress: selectedAddress ?? this.selectedAddress,
+      deliveryNotes: deliveryNotes ?? this.deliveryNotes,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      restaurantId: restaurantId ?? this.restaurantId,
     );
   }
 
@@ -311,6 +338,34 @@ class CartNotifier extends StateNotifier<CartState> {
   /// Update selected payment method
   void updateSelectedPaymentMethod(String paymentMethodId) {
     state = state.copyWith(selectedPaymentMethodId: paymentMethodId);
+  }
+
+  /// Set delivery method
+  void setDeliveryMethod(DeliveryMethod method) {
+    state = state.copyWith(
+      deliveryMethod: method,
+      deliveryFee: method == DeliveryMethod.pickup ? 0.0 : state.deliveryFee,
+    );
+  }
+
+  /// Set selected address
+  void setSelectedAddress(Address? address) {
+    state = state.copyWith(selectedAddress: address);
+  }
+
+  /// Set delivery notes
+  void setDeliveryNotes(String? notes) {
+    state = state.copyWith(deliveryNotes: notes);
+  }
+
+  /// Set payment method
+  void setPaymentMethod(PaymentMethod method) {
+    state = state.copyWith(paymentMethod: method);
+  }
+
+  /// Set restaurant ID
+  void setRestaurantId(String? restaurantId) {
+    state = state.copyWith(restaurantId: restaurantId);
   }
 
   /// Helper method to compare customizations

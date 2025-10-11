@@ -5,8 +5,11 @@ import 'package:food_delivery_app/features/order/presentation/providers/cart_pro
 import 'package:food_delivery_app/features/order/presentation/providers/order_provider.dart';
 import 'package:food_delivery_app/features/order/presentation/providers/place_order_provider.dart';
 import 'package:food_delivery_app/features/profile/presentation/providers/payment_methods_provider.dart';
+import 'package:food_delivery_app/features/profile/presentation/providers/address_provider.dart';
 import 'package:food_delivery_app/shared/widgets/loading_indicator.dart';
-import 'package:food_delivery_app/shared/widgets/payment_method_selector_widget.dart';
+import 'package:food_delivery_app/features/order/presentation/widgets/delivery_method_selector.dart';
+import 'package:food_delivery_app/features/order/presentation/widgets/address_selector.dart';
+import 'package:food_delivery_app/features/order/presentation/widgets/payment_method_selector_cash.dart';
 
 class CheckoutScreen extends ConsumerWidget {
   const CheckoutScreen({super.key});
@@ -15,11 +18,12 @@ class CheckoutScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final cartState = ref.watch(cartProvider);
     final orderNotifier = ref.read(orderProvider.notifier);
-    final paymentMethodsNotifier = ref.read(paymentMethodsProvider.notifier);
+    final addressNotifier = ref.read(addressProvider.notifier);
 
-    // Load payment methods when the screen is built
+    // Load addresses when the screen is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      paymentMethodsNotifier.loadPaymentMethods();
+      // Get user ID from auth - for now using placeholder
+      addressNotifier.loadAddresses('user_123');
     });
 
     return Scaffold(
@@ -32,6 +36,15 @@ class CheckoutScreen extends ConsumerWidget {
             Expanded(
               child: ListView(
                 children: [
+                  // Delivery Method Selector
+                  const DeliveryMethodSelector(),
+                  const SizedBox(height: 24),
+
+                  // Address Selector (only for delivery)
+                  const AddressSelector(),
+                  const SizedBox(height: 24),
+
+                  // Order Summary
                   const Text(
                     'Order Summary',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -73,11 +86,12 @@ class CheckoutScreen extends ConsumerWidget {
                     '\$${cartState.taxAmount.toStringAsFixed(2)}',
                   ),
 
-                  // Delivery fee
-                  _buildSummaryRow(
-                    'Delivery Fee',
-                    '\$${cartState.deliveryFee.toStringAsFixed(2)}',
-                  ),
+                  // Delivery fee (only for delivery)
+                  if (cartState.deliveryMethod == DeliveryMethod.delivery)
+                    _buildSummaryRow(
+                      'Delivery Fee',
+                      '\$${cartState.deliveryFee.toStringAsFixed(2)}',
+                    ),
 
                   // Tip
                   if (cartState.tipAmount > 0)
@@ -104,40 +118,8 @@ class CheckoutScreen extends ConsumerWidget {
 
                   const SizedBox(height: 32),
 
-                  // Delivery address
-                  const Text(
-                    'Delivery Address',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Row(
-                      children: [
-                        Icon(Icons.location_on, color: Colors.deepOrange),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            '123 Main Street, New York, NY 10001',
-                            style: TextStyle(fontSize: 14),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Payment method selector
-                  PaymentMethodSelectorWidget(
-                    onPaymentMethodSelected: (paymentMethodId) {
-                      // Handle payment method selection
-                    },
-                  ),
+                  // Payment method selector (Cash only)
+                  const PaymentMethodSelectorCash(),
                 ],
               ),
             ),
@@ -147,14 +129,12 @@ class CheckoutScreen extends ConsumerWidget {
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
-                onPressed:
-                    cartState.isLoading ||
-                        cartState.selectedPaymentMethodId == null
-                    ? null
-                    : () => _placeOrder(context, ref),
+                onPressed: _canPlaceOrder(cartState)
+                    ? () => _placeOrder(context, ref)
+                    : null,
                 child: cartState.isLoading
                     ? const LoadingIndicator()
-                    : const Text('Place Order'),
+                    : Text(_getPlaceOrderButtonText(cartState)),
               ),
             ),
           ],
@@ -179,6 +159,27 @@ class CheckoutScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  bool _canPlaceOrder(CartState cartState) {
+    if (cartState.isLoading || cartState.items.isEmpty) return false;
+    
+    // For delivery, must have selected address
+    if (cartState.deliveryMethod == DeliveryMethod.delivery &&
+        cartState.selectedAddress == null) {
+      return false;
+    }
+    
+    return true;
+  }
+
+  String _getPlaceOrderButtonText(CartState cartState) {
+    if (cartState.items.isEmpty) return 'Cart is Empty';
+    if (cartState.deliveryMethod == DeliveryMethod.delivery &&
+        cartState.selectedAddress == null) {
+      return 'Select Delivery Address';
+    }
+    return 'Place Order (Cash on ${cartState.deliveryMethod == DeliveryMethod.delivery ? 'Delivery' : 'Pickup'})';
   }
 
   Future<void> _placeOrder(BuildContext context, WidgetRef ref) async {
