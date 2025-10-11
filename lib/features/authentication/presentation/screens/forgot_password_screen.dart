@@ -64,12 +64,26 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     final auth = ref.watch(authStateProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Forgot Password')),
+      appBar: AppBar(
+        title: const Text('Forgot Password'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/auth/login'),
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            if (_sent) ..[
+              Icon(
+                Icons.mark_email_read_rounded,
+                size: 64,
+                color: Colors.green,
+              ),
+              const SizedBox(height: 16),
+            ],
             Text(
               'Reset your password',
               style: theme.textTheme.displaySmall,
@@ -100,9 +114,43 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             ),
             if (_sent) ...[
               const SizedBox(height: 16),
-              Text(
-                'If you don\'t see the email, check your spam folder.',
-                style: theme.textTheme.bodySmall,
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.green.withOpacity(0.3)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.info_outline, size: 20, color: Colors.green),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Check your email',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'We\'ve sent a password reset link to ${_emailController.text.trim()}',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'If you don\'t see it, check your spam folder.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
             const SizedBox(height: 12),

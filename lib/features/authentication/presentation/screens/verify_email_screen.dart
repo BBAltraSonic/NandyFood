@@ -1,13 +1,39 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:food_delivery_app/core/providers/auth_provider.dart';
 import 'package:go_router/go_router.dart';
 
-class VerifyEmailScreen extends ConsumerWidget {
+class VerifyEmailScreen extends ConsumerStatefulWidget {
   const VerifyEmailScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<VerifyEmailScreen> createState() => _VerifyEmailScreenState();
+}
+
+class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
+  int _cooldownSeconds = 0;
+  Timer? _timer;
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _startCooldown() {
+    setState(() => _cooldownSeconds = 60);
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_cooldownSeconds > 0) {
+        setState(() => _cooldownSeconds--);
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final auth = ref.watch(authStateProvider);
     final userEmail = auth.user?.email ?? '';
@@ -28,10 +54,12 @@ class VerifyEmailScreen extends ConsumerWidget {
         // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Verification email sent.'),
+            content: Text('Verification email sent. Check your inbox.'),
             backgroundColor: Colors.green,
+            duration: Duration(seconds: 4),
           ),
         );
+        _startCooldown();
       } catch (e) {
         // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
@@ -63,8 +91,14 @@ class VerifyEmailScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: auth.isLoading ? null : _resend,
-              child: Text(auth.isLoading ? 'Sending…' : 'Resend verification email'),
+              onPressed: (auth.isLoading || _cooldownSeconds > 0) ? null : _resend,
+              child: Text(
+                auth.isLoading
+                    ? 'Sending…'
+                    : _cooldownSeconds > 0
+                        ? 'Resend in ${_cooldownSeconds}s'
+                        : 'Resend verification email',
+              ),
             ),
             const SizedBox(height: 12),
             TextButton(
