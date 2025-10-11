@@ -86,20 +86,18 @@ void main() {
       ];
     });
 
-    testWidgets('Home screen loads successfully with all components', (WidgetTester tester) async {
+    testWidgets('Home screen loads successfully with all components', (
+      WidgetTester tester,
+    ) async {
       // Build the home screen with mock data
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
             restaurantProvider.overrideWith((ref) {
-              return RestaurantNotifier(
-                initialRestaurants: mockRestaurants,
-              );
+              return RestaurantNotifier(initialRestaurants: mockRestaurants);
             }),
           ],
-          child: MaterialApp(
-            home: const HomeScreen(),
-          ),
+          child: MaterialApp(home: const HomeScreen()),
         ),
       );
 
@@ -129,19 +127,17 @@ void main() {
       expect(find.text('Pizza Palace'), findsOneWidget);
     });
 
-    testWidgets('Map view loads and displays restaurant markers', (WidgetTester tester) async {
+    testWidgets('Map view loads and displays restaurant markers', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
             restaurantProvider.overrideWith((ref) {
-              return RestaurantNotifier(
-                initialRestaurants: mockRestaurants,
-              );
+              return RestaurantNotifier(initialRestaurants: mockRestaurants);
             }),
           ],
-          child: MaterialApp(
-            home: const HomeScreen(),
-          ),
+          child: MaterialApp(home: const HomeScreen()),
         ),
       );
 
@@ -152,26 +148,29 @@ void main() {
 
       // The map should occupy approximately 40% of screen height
       final mapWidget = tester.widget<SizedBox>(
-        find.ancestor(
-          of: find.byType(HomeMapViewWidget),
-          matching: find.byType(SizedBox),
-        ).first,
+        find
+            .ancestor(
+              of: find.byType(HomeMapViewWidget),
+              matching: find.byType(SizedBox),
+            )
+            .first,
       );
-      
-      final screenHeight = tester.view.physicalSize.height / tester.view.devicePixelRatio;
+
+      final screenHeight =
+          tester.view.physicalSize.height / tester.view.devicePixelRatio;
       expect(mapWidget.height, closeTo(screenHeight * 0.4, 10));
     });
 
-    testWidgets('Search bar navigates to search screen when tapped', (WidgetTester tester) async {
+    testWidgets('Search bar navigates to search screen when tapped', (
+      WidgetTester tester,
+    ) async {
       bool searchNavigated = false;
 
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
             restaurantProvider.overrideWith((ref) {
-              return RestaurantNotifier(
-                initialRestaurants: mockRestaurants,
-              );
+              return RestaurantNotifier(initialRestaurants: mockRestaurants);
             }),
           ],
           child: MaterialApp(
@@ -198,7 +197,7 @@ void main() {
         of: find.text('Search restaurants, dishes...'),
         matching: find.byType(TextField),
       );
-      
+
       expect(searchField, findsOneWidget);
       await tester.tap(searchField);
       await tester.pumpAndSettle();
@@ -207,19 +206,17 @@ void main() {
       // This is a simplified test
     });
 
-    testWidgets('Category filtering updates restaurant list', (WidgetTester tester) async {
+    testWidgets('Category filtering updates restaurant list', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
             restaurantProvider.overrideWith((ref) {
-              return RestaurantNotifier(
-                initialRestaurants: mockRestaurants,
-              );
+              return RestaurantNotifier(initialRestaurants: mockRestaurants);
             }),
           ],
-          child: MaterialApp(
-            home: const HomeScreen(),
-          ),
+          child: MaterialApp(home: const HomeScreen()),
         ),
       );
 
@@ -237,46 +234,43 @@ void main() {
       // accessible. This would be implemented with proper test keys in production.
     });
 
-    testWidgets('Featured restaurants carousel displays high-rated restaurants', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            restaurantProvider.overrideWith((ref) {
-              return RestaurantNotifier(
-                initialRestaurants: mockRestaurants,
-              );
-            }),
-          ],
-          child: MaterialApp(
-            home: const HomeScreen(),
+    testWidgets(
+      'Featured restaurants carousel displays high-rated restaurants',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              restaurantProvider.overrideWith((ref) {
+                return RestaurantNotifier(initialRestaurants: mockRestaurants);
+              }),
+            ],
+            child: MaterialApp(home: const HomeScreen()),
           ),
-        ),
-      );
+        );
 
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
-      // Verify featured carousel is present
-      expect(find.byType(FeaturedRestaurantsCarousel), findsOneWidget);
+        // Verify featured carousel is present
+        expect(find.byType(FeaturedRestaurantsCarousel), findsOneWidget);
 
-      // Only restaurants with rating >= 4.5 should appear in featured
-      // (Pizza Palace: 4.5, Sushi World: 4.8)
-    });
+        // Only restaurants with rating >= 4.5 should appear in featured
+        // (Pizza Palace: 4.5, Sushi World: 4.8)
+      },
+    );
 
-    testWidgets('Order Again section is present (when user has orders)', (WidgetTester tester) async {
+    testWidgets('Order Again section is present (when user has orders)', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
             restaurantProvider.overrideWith((ref) {
-              return RestaurantNotifier(
-                initialRestaurants: mockRestaurants,
-              );
+              return RestaurantNotifier(initialRestaurants: mockRestaurants);
             }),
             // Order again section would need auth context
             recentRestaurantsProvider.overrideWith((ref) async => []),
           ],
-          child: MaterialApp(
-            home: const HomeScreen(),
-          ),
+          child: MaterialApp(home: const HomeScreen()),
         ),
       );
 
@@ -292,14 +286,10 @@ void main() {
         ProviderScope(
           overrides: [
             restaurantProvider.overrideWith((ref) {
-              return RestaurantNotifier(
-                initialRestaurants: mockRestaurants,
-              );
+              return RestaurantNotifier(initialRestaurants: mockRestaurants);
             }),
           ],
-          child: MaterialApp(
-            home: const HomeScreen(),
-          ),
+          child: MaterialApp(home: const HomeScreen()),
         ),
       );
 
@@ -309,10 +299,7 @@ void main() {
       expect(find.byType(RefreshIndicator), findsOneWidget);
 
       // Simulate pull to refresh
-      await tester.drag(
-        find.byType(CustomScrollView),
-        const Offset(0, 300),
-      );
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, 300));
       await tester.pump();
       await tester.pump(const Duration(seconds: 1));
       await tester.pumpAndSettle();
@@ -321,16 +308,16 @@ void main() {
       expect(find.text('Pizza Palace'), findsOneWidget);
     });
 
-    testWidgets('Restaurant card tap navigates to restaurant detail', (WidgetTester tester) async {
+    testWidgets('Restaurant card tap navigates to restaurant detail', (
+      WidgetTester tester,
+    ) async {
       String? navigatedRestaurantId;
 
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
             restaurantProvider.overrideWith((ref) {
-              return RestaurantNotifier(
-                initialRestaurants: mockRestaurants,
-              );
+              return RestaurantNotifier(initialRestaurants: mockRestaurants);
             }),
           ],
           child: MaterialApp(
@@ -340,7 +327,9 @@ void main() {
                 navigatedRestaurantId = settings.name?.split('/').last;
                 return MaterialPageRoute(
                   builder: (context) => Scaffold(
-                    body: Center(child: Text('Restaurant $navigatedRestaurantId')),
+                    body: Center(
+                      child: Text('Restaurant $navigatedRestaurantId'),
+                    ),
                   ),
                 );
               }
@@ -353,10 +342,12 @@ void main() {
       await tester.pumpAndSettle();
 
       // Find and tap a restaurant card
-      final pizzaCard = find.ancestor(
-        of: find.text('Pizza Palace'),
-        matching: find.byType(InkWell),
-      ).first;
+      final pizzaCard = find
+          .ancestor(
+            of: find.text('Pizza Palace'),
+            matching: find.byType(InkWell),
+          )
+          .first;
 
       await tester.tap(pizzaCard);
       await tester.pumpAndSettle();
@@ -375,9 +366,7 @@ void main() {
               );
             }),
           ],
-          child: MaterialApp(
-            home: const HomeScreen(),
-          ),
+          child: MaterialApp(home: const HomeScreen()),
         ),
       );
 
@@ -392,7 +381,9 @@ void main() {
       await tester.pumpAndSettle();
     });
 
-    testWidgets('Loading state shows progress indicator', (WidgetTester tester) async {
+    testWidgets('Loading state shows progress indicator', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
@@ -403,9 +394,7 @@ void main() {
               );
             }),
           ],
-          child: MaterialApp(
-            home: const HomeScreen(),
-          ),
+          child: MaterialApp(home: const HomeScreen()),
         ),
       );
 
@@ -419,17 +408,15 @@ void main() {
   });
 
   group('Order Again Section Tests', () {
-    testWidgets('Order Again section hidden when no recent orders', (WidgetTester tester) async {
+    testWidgets('Order Again section hidden when no recent orders', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
             recentRestaurantsProvider.overrideWith((ref) async => []),
           ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: OrderAgainSection(),
-            ),
-          ),
+          child: const MaterialApp(home: Scaffold(body: OrderAgainSection())),
         ),
       );
 
@@ -439,7 +426,9 @@ void main() {
       expect(find.text('Order Again'), findsNothing);
     });
 
-    testWidgets('Order Again section displays recent restaurants', (WidgetTester tester) async {
+    testWidgets('Order Again section displays recent restaurants', (
+      WidgetTester tester,
+    ) async {
       final recentRestaurant = Restaurant(
         id: '1',
         name: 'Previously Ordered Pizza',
@@ -463,13 +452,11 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            recentRestaurantsProvider.overrideWith((ref) async => [recentRestaurant]),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: OrderAgainSection(),
+            recentRestaurantsProvider.overrideWith(
+              (ref) async => [recentRestaurant],
             ),
-          ),
+          ],
+          child: const MaterialApp(home: Scaffold(body: OrderAgainSection())),
         ),
       );
 
@@ -492,12 +479,14 @@ class RestaurantNotifier extends StateNotifier<RestaurantState> {
     List<Restaurant>? initialRestaurants,
     bool isLoading = false,
     String? errorMessage,
-  }) : super(RestaurantState(
-          restaurants: initialRestaurants ?? [],
-          filteredRestaurants: initialRestaurants ?? [],
-          isLoading: isLoading,
-          errorMessage: errorMessage,
-        ));
+  }) : super(
+         RestaurantState(
+           restaurants: initialRestaurants ?? [],
+           filteredRestaurants: initialRestaurants ?? [],
+           isLoading: isLoading,
+           errorMessage: errorMessage,
+         ),
+       );
 
   Future<void> loadRestaurants() async {
     // Mock implementation

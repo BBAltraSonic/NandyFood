@@ -15,9 +15,7 @@ class OrderTrackingWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.all(16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -48,19 +46,17 @@ class OrderTrackingWidget extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Placed on ${_formatDateTime(order.placedAt)}',
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-              ),
+              style: const TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 16),
-            
+
             // Order status timeline
             _buildStatusTimeline(order.status),
             const SizedBox(height: 16),
-            
+
             // Action buttons
-            if (order.status == OrderStatus.placed || order.status == OrderStatus.preparing)
+            if (order.status == OrderStatus.placed ||
+                order.status == OrderStatus.preparing)
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -95,7 +91,7 @@ class OrderTrackingWidget extends StatelessWidget {
         final stepStatus = step['status'] as OrderStatus;
         final isCompleted = _isStepCompleted(status, stepStatus);
         final isCurrent = status == stepStatus;
-        
+
         return Column(
           children: [
             Row(
@@ -105,8 +101,8 @@ class OrderTrackingWidget extends StatelessWidget {
                   width: 30,
                   height: 30,
                   decoration: BoxDecoration(
-                    color: isCompleted 
-                        ? Colors.deepOrange 
+                    color: isCompleted
+                        ? Colors.deepOrange
                         : (isCurrent ? Colors.orange : Colors.grey.shade300),
                     shape: BoxShape.circle,
                   ),
@@ -152,10 +148,10 @@ class OrderTrackingWidget extends StatelessWidget {
       OrderStatus.delivered,
       OrderStatus.cancelled,
     ];
-    
+
     final currentIndex = statusOrder.indexOf(currentStatus);
     final stepIndex = statusOrder.indexOf(stepStatus);
-    
+
     return stepIndex <= currentIndex;
   }
 

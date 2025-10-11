@@ -9,7 +9,8 @@ class NotificationService {
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _notifications =
+      FlutterLocalNotificationsPlugin();
   bool _isInitialized = false;
   bool _timezoneInitialized = false;
 
@@ -37,20 +38,21 @@ class NotificationService {
       _timezoneInitialized = true;
     }
 
-    const AndroidInitializationSettings initializationSettingsAndroid = 
+    const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    const DarwinInitializationSettings initializationSettingsIOS = 
+    const DarwinInitializationSettings initializationSettingsIOS =
         DarwinInitializationSettings(
           requestAlertPermission: true,
           requestBadgePermission: true,
           requestSoundPermission: true,
         );
 
-    const InitializationSettings initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
-      iOS: initializationSettingsIOS,
-    );
+    const InitializationSettings initializationSettings =
+        InitializationSettings(
+          android: initializationSettingsAndroid,
+          iOS: initializationSettingsIOS,
+        );
 
     await _safeOperation(() async {
       await _notifications.initialize(initializationSettings);
@@ -66,24 +68,24 @@ class NotificationService {
     String? payload,
     int? secondsDelay,
   }) async {
-    AndroidNotificationDetails androidPlatformChannelSpecifics = 
+    AndroidNotificationDetails androidPlatformChannelSpecifics =
         const AndroidNotificationDetails(
-      'food_delivery_channel',
-      'Food Delivery Notifications',
-      channelDescription: 'Notifications for food delivery updates',
-      importance: Importance.max,
-      priority: Priority.high,
-      ticker: 'New notification',
-      playSound: true,
-      enableVibration: true,
-    );
+          'food_delivery_channel',
+          'Food Delivery Notifications',
+          channelDescription: 'Notifications for food delivery updates',
+          importance: Importance.max,
+          priority: Priority.high,
+          ticker: 'New notification',
+          playSound: true,
+          enableVibration: true,
+        );
 
-    DarwinNotificationDetails iOSPlatformChannelSpecifics = 
+    DarwinNotificationDetails iOSPlatformChannelSpecifics =
         const DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-    );
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        );
 
     NotificationDetails platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,
@@ -107,7 +109,7 @@ class NotificationService {
           ),
           platformChannelSpecifics,
           payload: payload,
-          uiLocalNotificationDateInterpretation: 
+          uiLocalNotificationDateInterpretation:
               UILocalNotificationDateInterpretation.absoluteTime,
         );
       });
@@ -153,7 +155,8 @@ class NotificationService {
         break;
       case 'delivered':
         title = 'Order Delivered!';
-        body = 'Your order from $restaurantName has been delivered. Enjoy your meal!';
+        body =
+            'Your order from $restaurantName has been delivered. Enjoy your meal!';
         break;
       case 'cancelled':
         title = 'Order Cancelled';
@@ -233,16 +236,21 @@ class NotificationService {
 
     await _safeOperation(() async {
       final androidImplementation = _notifications
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
       if (androidImplementation != null) {
-        final result = await androidImplementation.requestNotificationsPermission();
+        final result = await androidImplementation
+            .requestNotificationsPermission();
         if (result != null) {
           isGranted = isGranted && result;
         }
       }
 
       final iosImplementation = _notifications
-          .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >();
       if (iosImplementation != null) {
         final result = await iosImplementation.requestPermissions(
           alert: true,

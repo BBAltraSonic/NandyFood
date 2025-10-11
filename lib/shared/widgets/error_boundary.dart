@@ -90,9 +90,13 @@ mixin ErrorBoundaryMixin<T extends StatefulWidget> on State<T> {
   _ErrorBoundaryState? get errorBoundary {
     final context = this.context;
     if (context is Element) {
-      final inheritedElement = context
-          .getElementForInheritedWidgetOfExactType<_ErrorBoundaryInherited>()
-          ?.widget as _ErrorBoundaryInherited?;
+      final inheritedElement =
+          context
+                  .getElementForInheritedWidgetOfExactType<
+                    _ErrorBoundaryInherited
+                  >()
+                  ?.widget
+              as _ErrorBoundaryInherited?;
       return inheritedElement?.errorBoundaryState;
     }
     return null;

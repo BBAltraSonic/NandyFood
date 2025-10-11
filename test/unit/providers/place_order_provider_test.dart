@@ -46,10 +46,10 @@ void main() {
     test('clearError should clear error message', () {
       final notifier = container.read(placeOrderProvider.notifier);
       // Simulate an error state
-      container.read(placeOrderProvider.notifier).state = 
-          container.read(placeOrderProvider.notifier).state.copyWith(
-                errorMessage: 'Test error',
-              );
+      container.read(placeOrderProvider.notifier).state = container
+          .read(placeOrderProvider.notifier)
+          .state
+          .copyWith(errorMessage: 'Test error');
 
       notifier.clearError();
 
@@ -60,12 +60,10 @@ void main() {
     test('reset should reset to initial state', () {
       final notifier = container.read(placeOrderProvider.notifier);
       // Set some values to non-initial state
-      container.read(placeOrderProvider.notifier).state = 
-          container.read(placeOrderProvider.notifier).state.copyWith(
-                deliveryFee: 5.0,
-                tipAmount: 3.0,
-                promoCode: 'TEST',
-              );
+      container.read(placeOrderProvider.notifier).state = container
+          .read(placeOrderProvider.notifier)
+          .state
+          .copyWith(deliveryFee: 5.0, tipAmount: 3.0, promoCode: 'TEST');
 
       notifier.reset();
 

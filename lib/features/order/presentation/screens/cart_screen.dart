@@ -8,7 +8,7 @@ class CartScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cartState = ref.watch(cartProvider);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Your Cart'),
@@ -18,9 +18,9 @@ class CartScreen extends ConsumerWidget {
               icon: const Icon(Icons.delete),
               onPressed: () {
                 ref.read(cartProvider.notifier).clearCart();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Cart cleared')),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('Cart cleared')));
               },
             ),
         ],
@@ -48,18 +48,12 @@ class CartScreen extends ConsumerWidget {
           const SizedBox(height: 20),
           const Text(
             'Your cart is empty',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
           const Text(
             'Add delicious items to your cart',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-            ),
+            style: TextStyle(fontSize: 16, color: Colors.grey),
           ),
           const SizedBox(height: 30),
           ElevatedButton(
@@ -78,7 +72,11 @@ class CartScreen extends ConsumerWidget {
   }
 
   /// Build cart content
-  Widget _buildCartContent(BuildContext context, WidgetRef ref, CartState cartState) {
+  Widget _buildCartContent(
+    BuildContext context,
+    WidgetRef ref,
+    CartState cartState,
+  ) {
     return Column(
       children: [
         // Cart items list
@@ -91,11 +89,10 @@ class CartScreen extends ConsumerWidget {
             },
           ),
         ),
-        
+
         // Promo code section
-        if (cartState.promoCode == null)
-          _buildPromoCodeSection(context, ref),
-        
+        if (cartState.promoCode == null) _buildPromoCodeSection(context, ref),
+
         // Order summary
         _buildOrderSummary(cartState),
       ],
@@ -132,26 +129,21 @@ class CartScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  if (item.customizations != null && item.customizations.isNotEmpty)
+                  if (item.customizations != null &&
+                      item.customizations.isNotEmpty)
                     Text(
                       _formatCustomizations(item.customizations),
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
+                      style: const TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                   if (item.specialInstructions != null)
                     Text(
                       'Note: ${item.specialInstructions}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
+                      style: const TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                 ],
               ),
             ),
-            
+
             // Quantity controls
             Row(
               children: [
@@ -159,10 +151,9 @@ class CartScreen extends ConsumerWidget {
                   icon: const Icon(Icons.remove),
                   onPressed: () {
                     if (item.quantity > 1) {
-                      ref.read(cartProvider.notifier).updateItemQuantity(
-                        item.id,
-                        item.quantity - 1,
-                      );
+                      ref
+                          .read(cartProvider.notifier)
+                          .updateItemQuantity(item.id, item.quantity - 1);
                     } else {
                       ref.read(cartProvider.notifier).removeItem(item.id);
                     }
@@ -172,24 +163,20 @@ class CartScreen extends ConsumerWidget {
                 IconButton(
                   icon: const Icon(Icons.add),
                   onPressed: () {
-                    ref.read(cartProvider.notifier).updateItemQuantity(
-                      item.id,
-                      item.quantity + 1,
-                    );
+                    ref
+                        .read(cartProvider.notifier)
+                        .updateItemQuantity(item.id, item.quantity + 1);
                   },
                 ),
               ],
             ),
-            
+
             // Item total
             Text(
               '\$${(item.unitPrice * item.quantity).toStringAsFixed(2)}',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-            
+
             // Remove button
             IconButton(
               icon: const Icon(Icons.delete, color: Colors.red),
@@ -206,7 +193,7 @@ class CartScreen extends ConsumerWidget {
   /// Build promo code section
   Widget _buildPromoCodeSection(BuildContext context, WidgetRef ref) {
     final TextEditingController promoController = TextEditingController();
-    
+
     return Card(
       margin: const EdgeInsets.all(16),
       child: Padding(
@@ -216,10 +203,7 @@ class CartScreen extends ConsumerWidget {
           children: [
             const Text(
               'Have a promo code?',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             Row(
@@ -237,9 +221,9 @@ class CartScreen extends ConsumerWidget {
                 ElevatedButton(
                   onPressed: () {
                     if (promoController.text.isNotEmpty) {
-                      ref.read(cartProvider.notifier).applyPromoCode(
-                        promoController.text,
-                      );
+                      ref
+                          .read(cartProvider.notifier)
+                          .applyPromoCode(promoController.text);
                     }
                   },
                   child: const Text('Apply'),
@@ -263,15 +247,21 @@ class CartScreen extends ConsumerWidget {
           children: [
             const Text(
               'Order Summary',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-            _buildSummaryRow('Subtotal', '\$${cartState.subtotal.toStringAsFixed(2)}'),
-            _buildSummaryRow('Tax', '\$${cartState.taxAmount.toStringAsFixed(2)}'),
-            _buildSummaryRow('Delivery Fee', '\$${cartState.deliveryFee.toStringAsFixed(2)}'),
+            _buildSummaryRow(
+              'Subtotal',
+              '\$${cartState.subtotal.toStringAsFixed(2)}',
+            ),
+            _buildSummaryRow(
+              'Tax',
+              '\$${cartState.taxAmount.toStringAsFixed(2)}',
+            ),
+            _buildSummaryRow(
+              'Delivery Fee',
+              '\$${cartState.deliveryFee.toStringAsFixed(2)}',
+            ),
             if (cartState.promoCode != null)
               _buildSummaryRow(
                 'Discount (${cartState.promoCode})',
@@ -291,7 +281,12 @@ class CartScreen extends ConsumerWidget {
   }
 
   /// Build summary row
-  Widget _buildSummaryRow(String label, String value, {bool isDiscount = false, bool isTotal = false}) {
+  Widget _buildSummaryRow(
+    String label,
+    String value, {
+    bool isDiscount = false,
+    bool isTotal = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -342,10 +337,7 @@ class CartScreen extends ConsumerWidget {
             children: [
               const Text(
                 'Total',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
               Text(
                 '\$${cartState.totalAmount.toStringAsFixed(2)}',

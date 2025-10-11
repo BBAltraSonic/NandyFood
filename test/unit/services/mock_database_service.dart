@@ -12,7 +12,7 @@ class MockDatabaseService {
   Future<void> initialize() async {
     print('Mock DatabaseService initialized');
   }
-  
+
   /// Mock dispose method
   Future<void> dispose() async {
     print('Mock DatabaseService disposed');

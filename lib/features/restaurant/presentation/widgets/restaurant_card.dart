@@ -5,19 +5,14 @@ class RestaurantCard extends StatelessWidget {
   final Restaurant restaurant;
   final VoidCallback? onTap;
 
-  const RestaurantCard({
-    Key? key,
-    required this.restaurant,
-    this.onTap,
-  }) : super(key: key);
+  const RestaurantCard({Key? key, required this.restaurant, this.onTap})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
@@ -41,7 +36,7 @@ class RestaurantCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              
+
               // Restaurant details
               Expanded(
                 child: Column(
@@ -57,19 +52,12 @@ class RestaurantCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       '${restaurant.cuisineType} • ${restaurant.estimatedDeliveryTime} min',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
+                      style: const TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(
-                          Icons.star,
-                          color: Colors.amber,
-                          size: 16,
-                        ),
+                        const Icon(Icons.star, color: Colors.amber, size: 16),
                         const SizedBox(width: 4),
                         Text(
                           '${restaurant.rating}',
@@ -82,16 +70,13 @@ class RestaurantCard extends StatelessWidget {
                           size: 16,
                         ),
                         const SizedBox(width: 4),
-                        Text(
-                          '2.5 km',
-                          style: const TextStyle(fontSize: 14),
-                        ),
+                        Text('2.5 km', style: const TextStyle(fontSize: 14)),
                       ],
                     ),
                   ],
                 ),
               ),
-              
+
               // Rating badge
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

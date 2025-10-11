@@ -15,9 +15,7 @@ class UserProfileWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.all(16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -35,11 +33,7 @@ class UserProfileWidget extends StatelessWidget {
                     color: Colors.deepOrange.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    Icons.person,
-                    color: Colors.deepOrange,
-                    size: 30,
-                  ),
+                  child: Icon(Icons.person, color: Colors.deepOrange, size: 30),
                 ),
                 const SizedBox(width: 16),
                 // User name and email
@@ -74,7 +68,7 @@ class UserProfileWidget extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            
+
             // User details
             if (userProfile.phoneNumber != null)
               _buildDetailRow(
@@ -83,7 +77,7 @@ class UserProfileWidget extends StatelessWidget {
                 userProfile.phoneNumber!,
               ),
             const SizedBox(height: 8),
-            
+
             if (userProfile.defaultAddress != null)
               _buildDetailRow(
                 Icons.location_on,
@@ -91,14 +85,14 @@ class UserProfileWidget extends StatelessWidget {
                 _formatAddress(userProfile.defaultAddress!),
               ),
             const SizedBox(height: 8),
-            
+
             _buildDetailRow(
               Icons.calendar_today,
               'Member Since',
               _formatDate(userProfile.createdAt),
             ),
             const SizedBox(height: 8),
-            
+
             if (userProfile.preferences != null)
               _buildDetailRow(
                 Icons.settings,
@@ -116,11 +110,7 @@ class UserProfileWidget extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          color: Colors.deepOrange,
-          size: 20,
-        ),
+        Icon(icon, color: Colors.deepOrange, size: 20),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -135,12 +125,7 @@ class UserProfileWidget extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 2),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 14,
-                ),
-              ),
+              Text(value, style: const TextStyle(fontSize: 14)),
             ],
           ),
         ),
@@ -154,7 +139,7 @@ class UserProfileWidget extends StatelessWidget {
     final city = address['city'] ?? '';
     final state = address['state'] ?? '';
     final zipCode = address['zip_code'] ?? '';
-    
+
     return '$street, $city, $state $zipCode';
   }
 

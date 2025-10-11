@@ -36,7 +36,9 @@ void main() {
       DatabaseService.disableTestMode();
     });
 
-    testWidgets('displays restaurant details correctly', (WidgetTester tester) async {
+    testWidgets('displays restaurant details correctly', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
@@ -71,7 +73,9 @@ void main() {
       expect(find.text('Menu'), findsOneWidget);
     });
 
-    testWidgets('switches to info tab when tapped', (WidgetTester tester) async {
+    testWidgets('switches to info tab when tapped', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
@@ -88,7 +92,9 @@ void main() {
       // Note: Actual content would depend on implementation
     });
 
-    testWidgets('navigates to menu screen when menu item is tapped', (WidgetTester tester) async {
+    testWidgets('navigates to menu screen when menu item is tapped', (
+      WidgetTester tester,
+    ) async {
       bool navigatedToMenu = false;
 
       await tester.pumpWidget(
@@ -99,9 +105,8 @@ void main() {
               if (settings.name == '/restaurant/${mockRestaurant.id}/menu') {
                 navigatedToMenu = true;
                 return MaterialPageRoute(
-                  builder: (context) => Scaffold(
-                    appBar: AppBar(title: Text('Menu Screen')),
-                  ),
+                  builder: (context) =>
+                      Scaffold(appBar: AppBar(title: Text('Menu Screen'))),
                 );
               }
               return null;
@@ -118,7 +123,9 @@ void main() {
       expect(navigatedToMenu, isTrue);
     });
 
-    testWidgets('adds item to cart when add button is tapped', (WidgetTester tester) async {
+    testWidgets('adds item to cart when add button is tapped', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
@@ -141,7 +148,9 @@ void main() {
       }
     });
 
-    testWidgets('displays loading indicator when loading', (WidgetTester tester) async {
+    testWidgets('displays loading indicator when loading', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(

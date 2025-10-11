@@ -14,10 +14,10 @@ void main() {
       // Enable test mode for DatabaseService to avoid pending timers
       DatabaseService.enableTestMode();
       dbService = DatabaseService();
-      
+
       // Initialize payment service
       paymentService = PaymentService();
-      
+
       // Create a provider container for testing
       container = ProviderContainer();
     });
@@ -25,7 +25,7 @@ void main() {
     tearDown(() {
       // Dispose of the provider container
       container.dispose();
-      
+
       // Disable test mode after tests
       DatabaseService.disableTestMode();
     });
@@ -161,7 +161,7 @@ void main() {
       final validCards = [
         '4242424242424242', // Visa
         '5555555555554444', // Mastercard
-        '378282246310005',  // American Express
+        '378282246310005', // American Express
       ];
 
       for (final cardNumber in validCards) {
@@ -172,7 +172,7 @@ void main() {
       // Test invalid card numbers
       final invalidCards = [
         '1234567890123456', // Invalid Luhn checksum
-        '1234',             // Too short
+        '1234', // Too short
         '12345678901234567890', // Too long
         'abcdabcdabcdabcd', // Contains letters
       ];
@@ -190,25 +190,36 @@ void main() {
 
       // Test valid expiry dates
       final validExpiryDates = [
-        [currentMonth, currentYear],           // Current month/year
-        [12, currentYear + 1],                 // Next year
-        [currentMonth, currentYear + 2],       // Two years from now
+        [currentMonth, currentYear], // Current month/year
+        [12, currentYear + 1], // Next year
+        [currentMonth, currentYear + 2], // Two years from now
       ];
 
       for (final date in validExpiryDates) {
         final isValid = paymentService.validateExpiryDate(date[0], date[1]);
-        expect(isValid, isTrue, reason: 'Expiry date ${date[0]}/${date[1]} should be valid');
+        expect(
+          isValid,
+          isTrue,
+          reason: 'Expiry date ${date[0]}/${date[1]} should be valid',
+        );
       }
 
       // Test invalid expiry dates
       final invalidExpiryDates = [
-        [currentMonth, currentYear - 1],       // Previous year (expired)
-        [currentMonth - 1, currentYear - 1],   // Previous month and year (expired)
+        [currentMonth, currentYear - 1], // Previous year (expired)
+        [
+          currentMonth - 1,
+          currentYear - 1,
+        ], // Previous month and year (expired)
       ];
 
       for (final date in invalidExpiryDates) {
         final isValid = paymentService.validateExpiryDate(date[0], date[1]);
-        expect(isValid, isFalse, reason: 'Expiry date ${date[0]}/${date[1]} should be invalid');
+        expect(
+          isValid,
+          isFalse,
+          reason: 'Expiry date ${date[0]}/${date[1]} should be invalid',
+        );
       }
     });
 
@@ -217,21 +228,33 @@ void main() {
       final validCVVs = ['123', '456', '789'];
       for (final cvv in validCVVs) {
         final isValid = paymentService.validateCvc(cvv, '4242424242424242');
-        expect(isValid, isTrue, reason: 'CVV $cvv should be valid for regular card');
+        expect(
+          isValid,
+          isTrue,
+          reason: 'CVV $cvv should be valid for regular card',
+        );
       }
 
       // Test valid CVVs for American Express cards
       final validAmexCVVs = ['1234', '5678'];
       for (final cvv in validAmexCVVs) {
         final isValid = paymentService.validateCvc(cvv, '378282246310005');
-        expect(isValid, isTrue, reason: 'CVV $cvv should be valid for Amex card');
+        expect(
+          isValid,
+          isTrue,
+          reason: 'CVV $cvv should be valid for Amex card',
+        );
       }
 
       // Test invalid CVVs
       final invalidCVVs = ['12', '12345', 'abc', ''];
       for (final cvv in invalidCVVs) {
         final isValid = paymentService.validateCvc(cvv, '4242424242424242');
-        expect(isValid, isFalse, reason: 'CVV $cvv should be invalid for regular card');
+        expect(
+          isValid,
+          isFalse,
+          reason: 'CVV $cvv should be invalid for regular card',
+        );
       }
     });
 
@@ -240,28 +263,44 @@ void main() {
       final visaCards = ['4242424242424242', '4000056655665556'];
       for (final cardNumber in visaCards) {
         final brand = paymentService.getCardBrand(cardNumber);
-        expect(brand, 'Visa', reason: 'Card $cardNumber should be detected as Visa');
+        expect(
+          brand,
+          'Visa',
+          reason: 'Card $cardNumber should be detected as Visa',
+        );
       }
 
       // Test Mastercard detection
       final mastercardCards = ['5555555555554444', '5200828282828282'];
       for (final cardNumber in mastercardCards) {
         final brand = paymentService.getCardBrand(cardNumber);
-        expect(brand, 'Mastercard', reason: 'Card $cardNumber should be detected as Mastercard');
+        expect(
+          brand,
+          'Mastercard',
+          reason: 'Card $cardNumber should be detected as Mastercard',
+        );
       }
 
       // Test American Express detection
       final amexCards = ['378282246310005', '371449635398431'];
       for (final cardNumber in amexCards) {
         final brand = paymentService.getCardBrand(cardNumber);
-        expect(brand, 'Amex', reason: 'Card $cardNumber should be detected as Amex');
+        expect(
+          brand,
+          'Amex',
+          reason: 'Card $cardNumber should be detected as Amex',
+        );
       }
 
       // Test unknown brand detection
       final unknownCards = ['1234567890123456', '9999999999999999'];
       for (final cardNumber in unknownCards) {
         final brand = paymentService.getCardBrand(cardNumber);
-        expect(brand, 'Unknown', reason: 'Card $cardNumber should be detected as Unknown');
+        expect(
+          brand,
+          'Unknown',
+          reason: 'Card $cardNumber should be detected as Unknown',
+        );
       }
     });
 

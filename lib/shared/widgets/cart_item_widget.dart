@@ -19,9 +19,7 @@ class CartItemWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -58,23 +56,18 @@ class CartItemWidget extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   // Customizations
-                  if (orderItem.customizations != null && orderItem.customizations!.isNotEmpty)
+                  if (orderItem.customizations != null &&
+                      orderItem.customizations!.isNotEmpty)
                     Text(
                       _formatCustomizations(orderItem.customizations!),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey,
-                      ),
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   const SizedBox(height: 4),
                   // Special instructions
                   if (orderItem.specialInstructions != null)
                     Text(
                       'Note: ${orderItem.specialInstructions}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey,
-                      ),
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   const SizedBox(height: 8),
                   // Price
@@ -93,10 +86,7 @@ class CartItemWidget extends StatelessWidget {
             Column(
               children: [
                 // Increment button
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  onPressed: onIncrement,
-                ),
+                IconButton(icon: const Icon(Icons.add), onPressed: onIncrement),
                 // Quantity display
                 Text(
                   '${orderItem.quantity}',

@@ -8,7 +8,7 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final userState = ref.watch(userProvider);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile'),
@@ -28,13 +28,17 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   /// Build profile content
-  Widget _buildProfileContent(BuildContext context, WidgetRef ref, dynamic userProfile) {
+  Widget _buildProfileContent(
+    BuildContext context,
+    WidgetRef ref,
+    dynamic userProfile,
+  ) {
     return SingleChildScrollView(
       child: Column(
         children: [
           // Profile header
           _buildProfileHeader(userProfile),
-          
+
           // Profile sections
           const SizedBox(height: 20),
           _buildProfileSection(
@@ -46,7 +50,7 @@ class ProfileScreen extends ConsumerWidget {
               // Navigate to edit personal info
             },
           ),
-          
+
           const SizedBox(height: 10),
           _buildProfileSection(
             context,
@@ -57,7 +61,7 @@ class ProfileScreen extends ConsumerWidget {
               // Navigate to addresses screen
             },
           ),
-          
+
           const SizedBox(height: 10),
           _buildProfileSection(
             context,
@@ -68,7 +72,7 @@ class ProfileScreen extends ConsumerWidget {
               // Navigate to payment methods screen
             },
           ),
-          
+
           const SizedBox(height: 10),
           _buildProfileSection(
             context,
@@ -79,7 +83,7 @@ class ProfileScreen extends ConsumerWidget {
               // Navigate to order history screen
             },
           ),
-          
+
           const SizedBox(height: 10),
           _buildProfileSection(
             context,
@@ -90,7 +94,7 @@ class ProfileScreen extends ConsumerWidget {
               // Navigate to preferences screen
             },
           ),
-          
+
           const SizedBox(height: 30),
           // Logout button
           Padding(
@@ -105,14 +109,11 @@ class ProfileScreen extends ConsumerWidget {
               ),
               child: const Text(
                 'Logout',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
           ),
-          
+
           const SizedBox(height: 20),
         ],
       ),
@@ -123,9 +124,7 @@ class ProfileScreen extends ConsumerWidget {
   Widget _buildProfileHeader(dynamic userProfile) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.deepOrange.withOpacity(0.1),
-      ),
+      decoration: BoxDecoration(color: Colors.deepOrange.withOpacity(0.1)),
       child: Row(
         children: [
           // Profile picture
@@ -136,14 +135,10 @@ class ProfileScreen extends ConsumerWidget {
               color: Colors.deepOrange,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.person,
-              size: 40,
-              color: Colors.white,
-            ),
+            child: const Icon(Icons.person, size: 40, color: Colors.white),
           ),
           const SizedBox(width: 20),
-          
+
           // User info
           Expanded(
             child: Column(
@@ -159,19 +154,13 @@ class ProfileScreen extends ConsumerWidget {
                 const SizedBox(height: 8),
                 Text(
                   userProfile.email,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
+                  style: const TextStyle(fontSize: 16, color: Colors.grey),
                 ),
                 const SizedBox(height: 8),
                 if (userProfile.phoneNumber != null)
                   Text(
                     userProfile.phoneNumber,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey,
-                    ),
+                    style: const TextStyle(fontSize: 16, color: Colors.grey),
                   ),
               ],
             ),
@@ -235,7 +224,7 @@ class ProfileScreen extends ConsumerWidget {
         _buildInfoRow('Phone', userProfile.phoneNumber ?? 'Not provided'),
         const SizedBox(height: 8),
         _buildInfoRow(
-          'Member Since', 
+          'Member Since',
           '${userProfile.createdAt.day}/${userProfile.createdAt.month}/${userProfile.createdAt.year}',
         ),
       ],
@@ -245,11 +234,11 @@ class ProfileScreen extends ConsumerWidget {
   /// Build addresses section
   Widget _buildAddressesSection(WidgetRef ref, dynamic userProfile) {
     final defaultAddress = userProfile.defaultAddress;
-    
+
     if (defaultAddress == null) {
       return const Text('No addresses saved');
     }
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -275,10 +264,7 @@ class ProfileScreen extends ConsumerWidget {
     return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '• • • • • • • • 1234',
-          style: TextStyle(fontSize: 16),
-        ),
+        Text('• • • • • • • • 1234', style: TextStyle(fontSize: 16)),
         SizedBox(height: 4),
         Text(
           'Visa • Default',
@@ -297,17 +283,11 @@ class ProfileScreen extends ConsumerWidget {
     return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '24 orders completed',
-          style: TextStyle(fontSize: 16),
-        ),
+        Text('24 orders completed', style: TextStyle(fontSize: 16)),
         SizedBox(height: 4),
         Text(
           'Last order: Yesterday',
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey,
-          ),
+          style: TextStyle(fontSize: 14, color: Colors.grey),
         ),
       ],
     );
@@ -317,14 +297,11 @@ class ProfileScreen extends ConsumerWidget {
   Widget _buildPreferencesSection(WidgetRef ref, dynamic userProfile) {
     final preferences = userProfile.preferences ?? {};
     final notificationsEnabled = preferences['notifications'] as bool? ?? true;
-    
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text(
-          'Notifications',
-          style: TextStyle(fontSize: 16),
-        ),
+        const Text('Notifications', style: TextStyle(fontSize: 16)),
         Switch(
           value: notificationsEnabled,
           onChanged: (value) {
@@ -344,18 +321,10 @@ class ProfileScreen extends ConsumerWidget {
           width: 100,
           child: Text(
             label,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.grey,
-            ),
+            style: const TextStyle(fontSize: 14, color: Colors.grey),
           ),
         ),
-        Expanded(
-          child: Text(
-            value,
-            style: const TextStyle(fontSize: 16),
-          ),
-        ),
+        Expanded(child: Text(value, style: const TextStyle(fontSize: 16))),
       ],
     );
   }
@@ -380,10 +349,7 @@ class ProfileScreen extends ConsumerWidget {
                 Navigator.of(context).pop();
                 ref.read(userProvider.notifier).signOut();
               },
-              child: const Text(
-                'Logout',
-                style: TextStyle(color: Colors.red),
-              ),
+              child: const Text('Logout', style: TextStyle(color: Colors.red)),
             ),
           ],
         );

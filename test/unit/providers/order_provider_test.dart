@@ -27,7 +27,7 @@ void main() {
 
     test('createOrder should add order to state', () async {
       final notifier = container.read(orderProvider.notifier);
-      
+
       final order = Order(
         id: 'order1',
         userId: 'user1',
@@ -54,8 +54,8 @@ void main() {
 
     test('loadOrders should update orders list', () async {
       final notifier = container.read(orderProvider.notifier);
-      
-      // Since we don't have a real database service for tests, 
+
+      // Since we don't have a real database service for tests,
       // we'll test the loading state and error handling
       await notifier.loadOrders('user1');
 
@@ -66,7 +66,7 @@ void main() {
 
     test('addItemToOrder should add order item', () async {
       final notifier = container.read(orderProvider.notifier);
-      
+
       final orderItem = OrderItem(
         id: 'orderItem1',
         orderId: 'order1',
@@ -86,7 +86,7 @@ void main() {
 
     test('removeItemFromOrder should remove order item', () async {
       final notifier = container.read(orderProvider.notifier);
-      
+
       final orderItem = OrderItem(
         id: 'orderItem1',
         orderId: 'order1',
@@ -105,7 +105,7 @@ void main() {
 
     test('updateOrderStatus should update order status', () async {
       final notifier = container.read(orderProvider.notifier);
-      
+
       final order = Order(
         id: 'order1',
         userId: 'user1',
@@ -132,7 +132,7 @@ void main() {
 
     test('clearCurrentOrder should clear current order', () {
       final notifier = container.read(orderProvider.notifier);
-      
+
       notifier.clearCurrentOrder();
 
       final state = container.read(orderProvider);

@@ -19,10 +19,12 @@ class FeaturedRestaurantsCarousel extends StatefulWidget {
   });
 
   @override
-  State<FeaturedRestaurantsCarousel> createState() => _FeaturedRestaurantsCarouselState();
+  State<FeaturedRestaurantsCarousel> createState() =>
+      _FeaturedRestaurantsCarouselState();
 }
 
-class _FeaturedRestaurantsCarouselState extends State<FeaturedRestaurantsCarousel> {
+class _FeaturedRestaurantsCarouselState
+    extends State<FeaturedRestaurantsCarousel> {
   late PageController _pageController;
   Timer? _autoScrollTimer;
   int _currentPage = 0;
@@ -35,7 +37,7 @@ class _FeaturedRestaurantsCarouselState extends State<FeaturedRestaurantsCarouse
       viewportFraction: 0.9, // Shows part of adjacent cards
       initialPage: 0,
     );
-    
+
     if (widget.restaurants.isNotEmpty) {
       _startAutoScroll();
     }
@@ -99,7 +101,7 @@ class _FeaturedRestaurantsCarouselState extends State<FeaturedRestaurantsCarouse
         // Section header
         _buildHeader(context),
         const SizedBox(height: 16),
-        
+
         // Carousel
         SizedBox(
           height: widget.height,
@@ -121,7 +123,7 @@ class _FeaturedRestaurantsCarouselState extends State<FeaturedRestaurantsCarouse
             ),
           ),
         ),
-        
+
         // Dot indicators
         const SizedBox(height: 16),
         _buildDotIndicators(context),
@@ -131,7 +133,7 @@ class _FeaturedRestaurantsCarouselState extends State<FeaturedRestaurantsCarouse
 
   Widget _buildHeader(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
@@ -185,10 +187,14 @@ class _FeaturedRestaurantsCarouselState extends State<FeaturedRestaurantsCarouse
     );
   }
 
-  Widget _buildCarouselCard(BuildContext context, Restaurant restaurant, int index) {
+  Widget _buildCarouselCard(
+    BuildContext context,
+    Restaurant restaurant,
+    int index,
+  ) {
     final theme = Theme.of(context);
     final isCurrentPage = index == _currentPage;
-    
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeOut,
@@ -223,16 +229,16 @@ class _FeaturedRestaurantsCarouselState extends State<FeaturedRestaurantsCarouse
                   children: [
                     // Background image with gradient
                     _buildBackgroundImage(context, restaurant),
-                    
+
                     // Gradient overlay
                     _buildGradientOverlay(theme),
-                    
+
                     // Content
                     _buildContent(context, restaurant),
-                    
+
                     // Featured badge
                     _buildFeaturedBadge(theme),
-                    
+
                     // Rating badge
                     if (restaurant.rating >= 4.5)
                       _buildRatingBadge(context, restaurant),
@@ -248,7 +254,7 @@ class _FeaturedRestaurantsCarouselState extends State<FeaturedRestaurantsCarouse
 
   Widget _buildBackgroundImage(BuildContext context, Restaurant restaurant) {
     final theme = Theme.of(context);
-    
+
     // Placeholder with gradient background
     // When backend has images, replace with CachedNetworkImage
     return Container(
@@ -271,7 +277,7 @@ class _FeaturedRestaurantsCarouselState extends State<FeaturedRestaurantsCarouse
         ),
       ),
     );
-    
+
     // Future implementation with actual images:
     /*
     return CachedNetworkImage(
@@ -315,7 +321,7 @@ class _FeaturedRestaurantsCarouselState extends State<FeaturedRestaurantsCarouse
 
   Widget _buildContent(BuildContext context, Restaurant restaurant) {
     final theme = Theme.of(context);
-    
+
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -329,17 +335,14 @@ class _FeaturedRestaurantsCarouselState extends State<FeaturedRestaurantsCarouse
               color: Colors.white,
               fontWeight: FontWeight.bold,
               shadows: [
-                Shadow(
-                  color: Colors.black.withOpacity(0.5),
-                  blurRadius: 4,
-                ),
+                Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 4),
               ],
             ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 8),
-          
+
           // Cuisine type
           Row(
             children: [
@@ -373,9 +376,10 @@ class _FeaturedRestaurantsCarouselState extends State<FeaturedRestaurantsCarouse
               ),
             ],
           ),
-          
+
           // Optional description
-          if (restaurant.description != null && restaurant.description!.isNotEmpty) ...[
+          if (restaurant.description != null &&
+              restaurant.description!.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(
               restaurant.description!,
@@ -399,10 +403,7 @@ class _FeaturedRestaurantsCarouselState extends State<FeaturedRestaurantsCarouse
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              theme.colorScheme.primary,
-              theme.colorScheme.secondary,
-            ],
+            colors: [theme.colorScheme.primary, theme.colorScheme.secondary],
           ),
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
@@ -416,11 +417,7 @@ class _FeaturedRestaurantsCarouselState extends State<FeaturedRestaurantsCarouse
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.star,
-              size: 14,
-              color: Colors.white,
-            ),
+            const Icon(Icons.star, size: 14, color: Colors.white),
             const SizedBox(width: 4),
             Text(
               'Featured',
@@ -438,7 +435,7 @@ class _FeaturedRestaurantsCarouselState extends State<FeaturedRestaurantsCarouse
 
   Widget _buildRatingBadge(BuildContext context, Restaurant restaurant) {
     final theme = Theme.of(context);
-    
+
     return Positioned(
       top: 16,
       right: 16,
@@ -458,11 +455,7 @@ class _FeaturedRestaurantsCarouselState extends State<FeaturedRestaurantsCarouse
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.star,
-              size: 14,
-              color: Colors.white,
-            ),
+            const Icon(Icons.star, size: 14, color: Colors.white),
             const SizedBox(width: 4),
             Text(
               restaurant.rating.toStringAsFixed(1),
@@ -479,7 +472,7 @@ class _FeaturedRestaurantsCarouselState extends State<FeaturedRestaurantsCarouse
 
   Widget _buildDotIndicators(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Center(
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -504,7 +497,7 @@ class _FeaturedRestaurantsCarouselState extends State<FeaturedRestaurantsCarouse
 
   Widget _buildEmptyState(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Container(
       padding: const EdgeInsets.all(40),
       child: Column(

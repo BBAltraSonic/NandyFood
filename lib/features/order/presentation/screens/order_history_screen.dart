@@ -54,10 +54,7 @@ class OrderHistoryScreen extends ConsumerWidget {
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Order History'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Order History'), centerTitle: true),
       body: _buildOrderHistoryContent(mockOrders, context),
     );
   }
@@ -65,10 +62,7 @@ class OrderHistoryScreen extends ConsumerWidget {
   Widget _buildOrderHistoryContent(List<Order> orders, BuildContext context) {
     if (orders.isEmpty) {
       return const Center(
-        child: Text(
-          'No orders yet',
-          style: TextStyle(fontSize: 18),
-        ),
+        child: Text('No orders yet', style: TextStyle(fontSize: 18)),
       );
     }
 
@@ -90,7 +84,9 @@ class OrderHistoryScreen extends ConsumerWidget {
               onTap: () {
                 // TODO: Navigate to order details
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('View order details coming soon')),
+                  const SnackBar(
+                    content: Text('View order details coming soon'),
+                  ),
                 );
               },
             ),

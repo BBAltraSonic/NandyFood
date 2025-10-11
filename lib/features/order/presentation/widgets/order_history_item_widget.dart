@@ -5,19 +5,14 @@ class OrderHistoryItemWidget extends StatelessWidget {
   final Order order;
   final VoidCallback? onTap;
 
-  const OrderHistoryItemWidget({
-    Key? key,
-    required this.order,
-    this.onTap,
-  }) : super(key: key);
+  const OrderHistoryItemWidget({Key? key, required this.order, this.onTap})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Card(
       margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
@@ -49,38 +44,31 @@ class OrderHistoryItemWidget extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 8),
-              
+
               // Restaurant and date
               Row(
                 children: [
-                  const Icon(
-                    Icons.restaurant,
-                    size: 16,
-                    color: Colors.grey,
-                  ),
+                  const Icon(Icons.restaurant, size: 16, color: Colors.grey),
                   const SizedBox(width: 4),
                   Text(
                     'Restaurant Name', // This would come from restaurant data in a real implementation
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
+                    style: const TextStyle(fontSize: 14, color: Colors.grey),
                   ),
                   const Spacer(),
                   Text(
                     _formatDate(order.placedAt),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
+                    style: const TextStyle(fontSize: 14, color: Colors.grey),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
-              
+
               // Order status
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: _getStatusColor(order.status).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
@@ -112,7 +100,7 @@ class OrderHistoryItemWidget extends StatelessWidget {
     }
   }
 
- String _getStatusText(OrderStatus status) {
+  String _getStatusText(OrderStatus status) {
     switch (status) {
       case OrderStatus.placed:
         return 'Placed';
@@ -136,8 +124,18 @@ class OrderHistoryItemWidget extends StatelessWidget {
 
   String _getMonthName(int month) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return months[month - 1];
   }

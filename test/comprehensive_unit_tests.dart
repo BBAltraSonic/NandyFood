@@ -30,7 +30,7 @@ void main() {
 
         // Verify that the totalAmount matches what was set
         expect(order.totalAmount, 30.00);
-        
+
         // Verify other amounts
         expect(order.subtotal, 25.00);
         expect(order.deliveryFee, 2.50);
@@ -167,10 +167,7 @@ void main() {
           updatedAt: DateTime.now(),
         );
 
-        final cartItem = CartItem(
-          orderItem: orderItem,
-          menuItem: menuItem,
-        );
+        final cartItem = CartItem(orderItem: orderItem, menuItem: menuItem);
 
         // Total price should be quantity * unitPrice
         expect(cartItem.totalPrice, 25.00); // 2 * 12.50
@@ -201,10 +198,7 @@ void main() {
           updatedAt: DateTime.now(),
         );
 
-        final cartItem = CartItem(
-          orderItem: orderItem,
-          menuItem: menuItem,
-        );
+        final cartItem = CartItem(orderItem: orderItem, menuItem: menuItem);
 
         expect(cartItem.totalPrice, 18.99);
       });
@@ -247,15 +241,18 @@ void main() {
         final subtotal = 20.00;
         final taxRate = 0.085; // 8.5%
         final taxAmount = subtotal * taxRate;
-        
-        expect(taxAmount, closeTo(1.70, 0.01)); // Allow for floating point precision
+
+        expect(
+          taxAmount,
+          closeTo(1.70, 0.01),
+        ); // Allow for floating point precision
       });
 
       test('Discount calculation should be accurate', () {
         final subtotal = 25.00;
         final discountPercentage = 0.10; // 10%
         final discountAmount = subtotal * discountPercentage;
-        
+
         expect(discountAmount, 2.50); // 25.00 * 0.10 = 2.50
       });
 
@@ -265,14 +262,15 @@ void main() {
         final deliveryFee = 2.00;
         final tipAmount = 5.00;
         final discountAmount = 3.00;
-        
-        final total = subtotal + taxAmount + deliveryFee + tipAmount - discountAmount;
+
+        final total =
+            subtotal + taxAmount + deliveryFee + tipAmount - discountAmount;
         expect(total, 36.55); // 30.00 + 2.55 + 2.00 + 5.00 - 3.00 = 36.55
       });
 
       test('Restaurant rating should be within valid range', () {
         final ratings = [0.0, 1.5, 2.3, 3.7, 4.2, 5.0];
-        
+
         for (final rating in ratings) {
           expect(rating, greaterThanOrEqualTo(0.0));
           expect(rating, lessThanOrEqualTo(5.0));
@@ -281,7 +279,7 @@ void main() {
 
       test('Delivery time should be reasonable', () {
         final deliveryTimes = [10, 15, 20, 25, 30, 45, 60];
-        
+
         for (final time in deliveryTimes) {
           expect(time, greaterThanOrEqualTo(5));
           expect(time, lessThanOrEqualTo(120)); // Max 2 hours

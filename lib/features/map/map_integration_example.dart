@@ -4,7 +4,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:food_delivery_app/core/config/map_config.dart';
 
 /// Example implementation of map integration for NandyFood
-/// 
+///
 /// This file demonstrates:
 /// - Basic map setup with OpenStreetMap
 /// - Restaurant markers
@@ -23,7 +23,7 @@ class _MapIntegrationExampleState extends State<MapIntegrationExample> {
   LatLng? _userLocation;
   LatLng? _deliveryDriverLocation;
   List<LatLng> _deliveryRoute = [];
-  
+
   // Sample restaurant locations
   final List<RestaurantMapData> _restaurants = [
     RestaurantMapData(
@@ -55,7 +55,7 @@ class _MapIntegrationExampleState extends State<MapIntegrationExample> {
     setState(() {
       _userLocation = LatLng(40.7580, -73.9855);
     });
-    
+
     // Center map on user location
     if (_userLocation != null) {
       _mapController.move(_userLocation!, MapConfig.defaultZoom);
@@ -64,9 +64,9 @@ class _MapIntegrationExampleState extends State<MapIntegrationExample> {
 
   void _onRestaurantTapped(RestaurantMapData restaurant) {
     // Show restaurant details or navigate to restaurant page
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Tapped: ${restaurant.name}')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Tapped: ${restaurant.name}')));
   }
 
   void _simulateDeliveryTracking() {
@@ -111,7 +111,7 @@ class _MapIntegrationExampleState extends State<MapIntegrationExample> {
             children: [
               // Tile layer (OpenStreetMap)
               MapConfig.defaultTileLayer,
-              
+
               // Delivery route polyline (if tracking active)
               if (_deliveryRoute.isNotEmpty)
                 PolylineLayer(
@@ -122,7 +122,7 @@ class _MapIntegrationExampleState extends State<MapIntegrationExample> {
                     ),
                   ],
                 ),
-              
+
               // Restaurant markers
               MarkerLayer(
                 markers: _restaurants.map((restaurant) {
@@ -134,7 +134,7 @@ class _MapIntegrationExampleState extends State<MapIntegrationExample> {
                   );
                 }).toList(),
               ),
-              
+
               // User location marker
               if (_userLocation != null)
                 MarkerLayer(
@@ -142,7 +142,7 @@ class _MapIntegrationExampleState extends State<MapIntegrationExample> {
                     MapConfig.createUserMarker(position: _userLocation!),
                   ],
                 ),
-              
+
               // Delivery driver marker
               if (_deliveryDriverLocation != null)
                 MarkerLayer(
@@ -153,7 +153,7 @@ class _MapIntegrationExampleState extends State<MapIntegrationExample> {
                     ),
                   ],
                 ),
-              
+
               // Delivery radius circle (example: 5km)
               if (_userLocation != null)
                 CircleLayer(
@@ -165,7 +165,7 @@ class _MapIntegrationExampleState extends State<MapIntegrationExample> {
                     ),
                   ],
                 ),
-              
+
               // Attribution layer (required for OSM)
               RichAttributionWidget(
                 attributions: [
@@ -179,7 +179,7 @@ class _MapIntegrationExampleState extends State<MapIntegrationExample> {
               ),
             ],
           ),
-          
+
           // Controls overlay
           Positioned(
             bottom: 20,
@@ -199,7 +199,7 @@ class _MapIntegrationExampleState extends State<MapIntegrationExample> {
                   child: const Icon(Icons.add),
                 ),
                 const SizedBox(height: 8),
-                
+
                 // Zoom out button
                 FloatingActionButton(
                   mini: true,
@@ -213,7 +213,7 @@ class _MapIntegrationExampleState extends State<MapIntegrationExample> {
                   child: const Icon(Icons.remove),
                 ),
                 const SizedBox(height: 8),
-                
+
                 // Simulate delivery button
                 FloatingActionButton(
                   mini: true,
@@ -224,7 +224,7 @@ class _MapIntegrationExampleState extends State<MapIntegrationExample> {
               ],
             ),
           ),
-          
+
           // Info card at top
           if (_deliveryDriverLocation != null)
             Positioned(
@@ -248,9 +248,7 @@ class _MapIntegrationExampleState extends State<MapIntegrationExample> {
                       Text(
                         'Distance to you: ${_calculateDistanceToUser().toStringAsFixed(2)} km',
                       ),
-                      Text(
-                        'Estimated time: ${_calculateEstimatedTime()} min',
-                      ),
+                      Text('Estimated time: ${_calculateEstimatedTime()} min'),
                     ],
                   ),
                 ),
@@ -265,19 +263,19 @@ class _MapIntegrationExampleState extends State<MapIntegrationExample> {
     if (_deliveryRoute.length < 2 || _deliveryDriverLocation == null) {
       return 0;
     }
-    
+
     // Calculate bearing to next point
     final currentIndex = _deliveryRoute.indexWhere(
       (point) => point == _deliveryDriverLocation,
     );
-    
+
     if (currentIndex >= 0 && currentIndex < _deliveryRoute.length - 1) {
       return MapConfig.calculateBearing(
         _deliveryRoute[currentIndex],
         _deliveryRoute[currentIndex + 1],
       );
     }
-    
+
     return 0;
   }
 
@@ -285,7 +283,7 @@ class _MapIntegrationExampleState extends State<MapIntegrationExample> {
     if (_userLocation == null || _deliveryDriverLocation == null) {
       return 0;
     }
-    
+
     return MapConfig.calculateDistance(
       _deliveryDriverLocation!,
       _userLocation!,

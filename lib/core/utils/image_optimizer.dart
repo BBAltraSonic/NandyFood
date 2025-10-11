@@ -8,7 +8,7 @@ class ImageOptimizer {
   /// Cache manager configuration
   static const int maxCacheObjects = 100;
   static const int maxCacheSizeBytes = 50 * 1024 * 1024; // 50MB
-  
+
   /// Optimized network image with caching and placeholders
   static Widget optimizedNetworkImage({
     required String imageUrl,
@@ -23,14 +23,16 @@ class ImageOptimizer {
   }) {
     // Use low-quality placeholder for faster initial load
     final lowQualityImageUrl = _generateLowQualityImageUrl(imageUrl);
-    
+
     return CachedNetworkImage(
       imageUrl: imageUrl,
       width: width,
       height: height,
       fit: fit,
-      placeholder: (context, url) => placeholder ?? _defaultPlaceholder(width, height),
-      errorWidget: (context, url, error) => errorWidget ?? _defaultErrorWidget(width, height),
+      placeholder: (context, url) =>
+          placeholder ?? _defaultPlaceholder(width, height),
+      errorWidget: (context, url, error) =>
+          errorWidget ?? _defaultErrorWidget(width, height),
       fadeInDuration: fadeIn ? fadeDuration : Duration.zero,
       fadeOutDuration: fadeIn ? fadeDuration : Duration.zero,
       httpHeaders: headers,
@@ -40,7 +42,7 @@ class ImageOptimizer {
       maxWidthDiskCache: _calculateDiskCacheWidth(width),
     );
   }
-  
+
   /// Optimized asset image with proper sizing
   static Widget optimizedAssetImage({
     required String assetName,
@@ -60,11 +62,11 @@ class ImageOptimizer {
       filterQuality: FilterQuality.medium,
     );
   }
-  
+
   /// Preload images to improve perceived performance
   static Future<void> preloadImages(List<String> imageUrls) async {
     if (kIsWeb) return; // Preloading not needed on web
-    
+
     // Preload images in background
     for (final url in imageUrls) {
       try {
@@ -75,7 +77,7 @@ class ImageOptimizer {
       }
     }
   }
-  
+
   /// Clear image cache to free memory
   static Future<void> clearImageCache() async {
     // Clear the cache using the cache manager
@@ -84,7 +86,7 @@ class ImageOptimizer {
     PaintingBinding.instance.imageCache.clear();
     PaintingBinding.instance.imageCache.clearLiveImages();
   }
-  
+
   /// Get cache statistics
   static Future<Map<String, dynamic>> getCacheStats() async {
     // In a real implementation, we would get actual cache stats
@@ -96,14 +98,14 @@ class ImageOptimizer {
       'maxCacheObjects': maxCacheObjects,
     };
   }
-  
+
   /// Generate low-quality image URL for placeholder
   static String _generateLowQualityImageUrl(String originalUrl) {
     // In a real implementation, this would generate a low-quality version
     // For now, we'll just return the original URL
     return originalUrl;
   }
-  
+
   /// Default placeholder widget
   static Widget _defaultPlaceholder(double? width, double? height) {
     return Container(
@@ -113,14 +115,10 @@ class ImageOptimizer {
         color: Colors.grey.shade300,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: const Icon(
-        Icons.image,
-        color: Colors.grey,
-        size: 40,
-      ),
+      child: const Icon(Icons.image, color: Colors.grey, size: 40),
     );
   }
-  
+
   /// Default error widget
   static Widget _defaultErrorWidget(double? width, double? height) {
     return Container(
@@ -130,32 +128,28 @@ class ImageOptimizer {
         color: Colors.grey.shade200,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: const Icon(
-        Icons.broken_image,
-        color: Colors.red,
-        size: 40,
-      ),
+      child: const Icon(Icons.broken_image, color: Colors.red, size: 40),
     );
   }
-  
+
   /// Calculate memory cache width
   static int? _calculateCacheWidth(double? width) {
     if (width == null) return null;
     return width.toInt().clamp(50, 2000);
   }
-  
+
   /// Calculate memory cache height
   static int? _calculateCacheHeight(double? height) {
     if (height == null) return null;
     return height.toInt().clamp(50, 2000);
   }
-  
+
   /// Calculate disk cache width
   static int? _calculateDiskCacheWidth(double? width) {
     if (width == null) return null;
     return (width * 1.5).toInt().clamp(100, 3000);
   }
-  
+
   /// Calculate disk cache height
   static int? _calculateDiskCacheHeight(double? height) {
     if (height == null) return null;
@@ -211,7 +205,7 @@ class _MemoryEfficientImageState extends State<MemoryEfficientImage> {
   @override
   Widget build(BuildContext context) {
     if (!_isVisible) {
-      return widget.placeholder ?? 
+      return widget.placeholder ??
           Container(
             width: widget.width,
             height: widget.height,

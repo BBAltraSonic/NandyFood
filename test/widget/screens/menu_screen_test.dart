@@ -39,9 +39,7 @@ void main() {
     testWidgets('displays menu items correctly', (WidgetTester tester) async {
       await tester.pumpWidget(
         ProviderScope(
-          child: MaterialApp(
-            home: MenuScreen(restaurant: mockRestaurant),
-          ),
+          child: MaterialApp(home: MenuScreen(restaurant: mockRestaurant)),
         ),
       );
 
@@ -58,9 +56,7 @@ void main() {
     testWidgets('displays menu categories', (WidgetTester tester) async {
       await tester.pumpWidget(
         ProviderScope(
-          child: MaterialApp(
-            home: MenuScreen(restaurant: mockRestaurant),
-          ),
+          child: MaterialApp(home: MenuScreen(restaurant: mockRestaurant)),
         ),
       );
 
@@ -74,12 +70,12 @@ void main() {
       expect(find.text('Desserts'), findsOneWidget);
     });
 
-    testWidgets('adds item to cart when add button is tapped', (WidgetTester tester) async {
+    testWidgets('adds item to cart when add button is tapped', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
-          child: MaterialApp(
-            home: MenuScreen(restaurant: mockRestaurant),
-          ),
+          child: MaterialApp(home: MenuScreen(restaurant: mockRestaurant)),
         ),
       );
 
@@ -97,12 +93,12 @@ void main() {
       }
     });
 
-    testWidgets('filters menu items by dietary restrictions', (WidgetTester tester) async {
+    testWidgets('filters menu items by dietary restrictions', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
-          child: MaterialApp(
-            home: MenuScreen(restaurant: mockRestaurant),
-          ),
+          child: MaterialApp(home: MenuScreen(restaurant: mockRestaurant)),
         ),
       );
 
@@ -124,9 +120,7 @@ void main() {
     testWidgets('search functionality works', (WidgetTester tester) async {
       await tester.pumpWidget(
         ProviderScope(
-          child: MaterialApp(
-            home: MenuScreen(restaurant: mockRestaurant),
-          ),
+          child: MaterialApp(home: MenuScreen(restaurant: mockRestaurant)),
         ),
       );
 
@@ -143,7 +137,9 @@ void main() {
       // Note: Actual search would be tested in integration tests
     });
 
-    testWidgets('navigates to cart when cart icon is tapped', (WidgetTester tester) async {
+    testWidgets('navigates to cart when cart icon is tapped', (
+      WidgetTester tester,
+    ) async {
       bool navigatedToCart = false;
 
       await tester.pumpWidget(
@@ -154,9 +150,8 @@ void main() {
               if (settings.name == '/order/cart') {
                 navigatedToCart = true;
                 return MaterialPageRoute(
-                  builder: (context) => Scaffold(
-                    appBar: AppBar(title: Text('Cart Screen')),
-                  ),
+                  builder: (context) =>
+                      Scaffold(appBar: AppBar(title: Text('Cart Screen'))),
                 );
               }
               return null;

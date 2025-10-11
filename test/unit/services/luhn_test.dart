@@ -14,10 +14,10 @@ void main() {
       final validCards = [
         '4532015112830366', // Visa
         '555555554444', // Mastercard
-        '378282246310005',  // American Express
+        '378282246310005', // American Express
         '4000056655665556', // Another Visa test card
         '520082828210', // Another Mastercard test card
-        '371449635398431',  // Another Amex test card
+        '371449635398431', // Another Amex test card
       ];
 
       print('Testing valid card numbers:');

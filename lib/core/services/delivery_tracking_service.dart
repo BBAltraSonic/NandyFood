@@ -3,7 +3,8 @@ import 'package:food_delivery_app/shared/models/delivery.dart';
 import 'package:food_delivery_app/shared/models/order.dart';
 
 class DeliveryTrackingService {
-  static final DeliveryTrackingService _instance = DeliveryTrackingService._internal();
+  static final DeliveryTrackingService _instance =
+      DeliveryTrackingService._internal();
   factory DeliveryTrackingService() => _instance;
   DeliveryTrackingService._internal();
 
@@ -14,9 +15,9 @@ class DeliveryTrackingService {
   void startTrackingDelivery(String orderId) {
     // In a real app, this would connect to a real-time service
     // For this mock implementation, we'll simulate delivery updates
-    
+
     _deliveryStreamController = StreamController<Delivery>();
-    
+
     // Simulate delivery updates at intervals
     _deliveryUpdateTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
       _simulateDeliveryUpdate(orderId);
@@ -29,7 +30,7 @@ class DeliveryTrackingService {
   }
 
   /// Stop tracking delivery
- void stopTrackingDelivery() {
+  void stopTrackingDelivery() {
     _deliveryUpdateTimer?.cancel();
     _deliveryStreamController?.close();
     _deliveryUpdateTimer = null;
@@ -40,7 +41,7 @@ class DeliveryTrackingService {
   void _simulateDeliveryUpdate(String orderId) {
     // In a real implementation, this would fetch real-time delivery data
     // For the mock, we'll simulate progression through delivery states
-    
+
     final mockDelivery = Delivery(
       id: 'del_$orderId',
       orderId: orderId,
@@ -55,7 +56,7 @@ class DeliveryTrackingService {
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
-    
+
     _deliveryStreamController?.add(mockDelivery);
   }
 
@@ -65,7 +66,7 @@ class DeliveryTrackingService {
     // In a real app, this would be determined by the actual delivery state
     final currentTime = DateTime.now().millisecond;
     final statusIndex = (currentTime ~/ 3000) % 4; // Cycle every 3 seconds
-    
+
     switch (statusIndex) {
       case 0:
         return DeliveryStatus.assigned;
@@ -78,7 +79,7 @@ class DeliveryTrackingService {
       default:
         return DeliveryStatus.assigned;
     }
- }
+  }
 
   /// Get current delivery status for an order
   Future<Delivery> getDeliveryStatus(String orderId) async {

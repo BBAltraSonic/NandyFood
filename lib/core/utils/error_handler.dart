@@ -97,7 +97,11 @@ class ErrorHandler {
   }
 
   /// Log error for debugging purposes
-  static void logError(Object error, StackTrace stackTrace, {String? logContext}) {
+  static void logError(
+    Object error,
+    StackTrace stackTrace, {
+    String? logContext,
+  }) {
     // In a real app, this would log to a service like Sentry or Firebase Crashlytics
     if (kDebugMode) {
       print('ERROR${logContext != null ? ' ($logContext)' : ''}: $error');
@@ -122,18 +126,9 @@ class ErrorHandler {
 
     // Show appropriate UI feedback
     if (useDialog) {
-      showErrorDialog(
-        context,
-        'Error',
-        errorMessage,
-        onRetry: onRetry,
-      );
+      showErrorDialog(context, 'Error', errorMessage, onRetry: onRetry);
     } else {
-      showSnackBarError(
-        context,
-        errorMessage,
-        onRetry: onRetry,
-      );
+      showSnackBarError(context, errorMessage, onRetry: onRetry);
     }
   }
 }

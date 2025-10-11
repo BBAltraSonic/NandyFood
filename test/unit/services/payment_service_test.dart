@@ -25,17 +25,32 @@ void main() {
 
     test('PaymentService should validate card numbers correctly', () {
       // Test valid card numbers (these are actual valid test card numbers that pass Luhn)
-      expect(paymentService.validateCardNumber('4532015112830366'), isTrue); // Visa (valid Luhn)
-      expect(paymentService.validateCardNumber('378282246310005'), isTrue);  // American Express (valid Luhn)
-      expect(paymentService.validateCardNumber('371449635398431'), isTrue);  // Another Amex (valid Luhn)
-      
+      expect(
+        paymentService.validateCardNumber('4532015112830366'),
+        isTrue,
+      ); // Visa (valid Luhn)
+      expect(
+        paymentService.validateCardNumber('378282246310005'),
+        isTrue,
+      ); // American Express (valid Luhn)
+      expect(
+        paymentService.validateCardNumber('371449635398431'),
+        isTrue,
+      ); // Another Amex (valid Luhn)
+
       // Test invalid card numbers
       expect(paymentService.validateCardNumber('400005665556'), isFalse);
       expect(paymentService.validateCardNumber('1234567890123456'), isFalse);
       expect(paymentService.validateCardNumber(''), isFalse);
       expect(paymentService.validateCardNumber('123'), isFalse);
-      expect(paymentService.validateCardNumber('555555554444'), isFalse); // Invalid Luhn
-      expect(paymentService.validateCardNumber('520082828210'), isFalse); // Invalid Luhn
+      expect(
+        paymentService.validateCardNumber('555555554444'),
+        isFalse,
+      ); // Invalid Luhn
+      expect(
+        paymentService.validateCardNumber('520082828210'),
+        isFalse,
+      ); // Invalid Luhn
     });
 
     test('PaymentService should validate expiry dates correctly', () {
@@ -43,14 +58,14 @@ void main() {
       final currentYear = now.year % 100;
       final nextYear = (now.year + 1) % 100;
       final pastYear = (now.year - 1) % 100;
-      
+
       // Test valid future dates
       expect(paymentService.validateExpiryDate(now.month, nextYear), isTrue);
       expect(paymentService.validateExpiryDate(12, nextYear), isTrue);
-      
+
       // Test invalid past dates
       expect(paymentService.validateExpiryDate(now.month, pastYear), isFalse);
-      
+
       // Test current month/year (should be valid)
       expect(paymentService.validateExpiryDate(now.month, currentYear), isTrue);
     });
@@ -59,7 +74,7 @@ void main() {
       // Test Visa/Mastercard CVC (3 digits)
       expect(paymentService.validateCvc('123', '4532015112830366'), isTrue);
       expect(paymentService.validateCvc('1234', '4532015112830366'), isFalse);
-      
+
       // Test Amex CVC (4 digits)
       expect(paymentService.validateCvc('1234', '378282246310005'), isTrue);
       expect(paymentService.validateCvc('123', '378282246310005'), isFalse);
@@ -68,13 +83,13 @@ void main() {
     test('PaymentService should identify card brands correctly', () {
       // Test Visa
       expect(paymentService.getCardBrand('4532015112830366'), 'Visa');
-      
+
       // Test Mastercard
       expect(paymentService.getCardBrand('555555554444'), 'Mastercard');
-      
+
       // Test American Express
       expect(paymentService.getCardBrand('378282246310005'), 'Amex');
-      
+
       // Test unknown
       expect(paymentService.getCardBrand('1234567890123456'), 'Unknown');
     });
@@ -108,7 +123,7 @@ void main() {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
-      
+
       // Create a mock payment method
       final paymentMethod = PaymentMethod(
         id: 'pm_test_123',
@@ -118,7 +133,7 @@ void main() {
         expiryMonth: 12,
         expiryYear: 25,
       );
-      
+
       // Test that processOrderPayment returns a bool without throwing
       // Note: The service has a 90% success rate, so we test that it returns a bool
       final result = await paymentService.processOrderPayment(

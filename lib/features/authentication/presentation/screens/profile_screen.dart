@@ -36,7 +36,9 @@ class ProfileScreen extends ConsumerWidget {
                           await authNotifier.signOut();
                           if (context.mounted) {
                             Navigator.of(context).pop(); // Close dialog
-                            Navigator.of(context).pop(); // Go back to previous screen
+                            Navigator.of(
+                              context,
+                            ).pop(); // Go back to previous screen
                           }
                         },
                         child: const Text('Sign Out'),
@@ -72,7 +74,10 @@ class ProfileScreen extends ConsumerWidget {
     final userProfile = UserProfile(
       id: user.id,
       email: user.email ?? 'No email',
-      fullName: user.userMetadata?['full_name'] ?? user.email?.split('@')[0] ?? 'User',
+      fullName:
+          user.userMetadata?['full_name'] ??
+          user.email?.split('@')[0] ??
+          'User',
       createdAt: DateTime.now(), // This would normally come from the database
       updatedAt: DateTime.now(), // This would normally come from the database
     );
@@ -88,13 +93,15 @@ class ProfileScreen extends ConsumerWidget {
               onEditProfile: () {
                 // TODO: Navigate to edit profile screen
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Edit Profile functionality coming soon')),
+                  const SnackBar(
+                    content: Text('Edit Profile functionality coming soon'),
+                  ),
                 );
               },
             ),
-            
+
             const SizedBox(height: 30),
-            
+
             // Profile options
             _buildProfileOption(
               context,
@@ -103,11 +110,13 @@ class ProfileScreen extends ConsumerWidget {
               onTap: () {
                 // TODO: Navigate to edit profile screen
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Edit Profile functionality coming soon')),
+                  const SnackBar(
+                    content: Text('Edit Profile functionality coming soon'),
+                  ),
                 );
               },
             ),
-            
+
             _buildProfileOption(
               context,
               icon: Icons.location_on,
@@ -115,11 +124,15 @@ class ProfileScreen extends ConsumerWidget {
               onTap: () {
                 // TODO: Navigate to addresses screen
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Delivery Addresses functionality coming soon')),
+                  const SnackBar(
+                    content: Text(
+                      'Delivery Addresses functionality coming soon',
+                    ),
+                  ),
                 );
               },
             ),
-            
+
             _buildProfileOption(
               context,
               icon: Icons.payment,
@@ -127,11 +140,13 @@ class ProfileScreen extends ConsumerWidget {
               onTap: () {
                 // TODO: Navigate to payment methods screen
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Payment Methods functionality coming soon')),
+                  const SnackBar(
+                    content: Text('Payment Methods functionality coming soon'),
+                  ),
                 );
               },
             ),
-            
+
             _buildProfileOption(
               context,
               icon: Icons.history,
@@ -139,11 +154,13 @@ class ProfileScreen extends ConsumerWidget {
               onTap: () {
                 // TODO: Navigate to order history screen
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Order History functionality coming soon')),
+                  const SnackBar(
+                    content: Text('Order History functionality coming soon'),
+                  ),
                 );
               },
             ),
-            
+
             _buildProfileOption(
               context,
               icon: Icons.settings,
@@ -151,13 +168,15 @@ class ProfileScreen extends ConsumerWidget {
               onTap: () {
                 // TODO: Navigate to settings screen
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Settings functionality coming soon')),
+                  const SnackBar(
+                    content: Text('Settings functionality coming soon'),
+                  ),
                 );
               },
             ),
-            
+
             const SizedBox(height: 30),
-            
+
             // Sign out button
             SizedBox(
               width: double.infinity,
@@ -176,11 +195,15 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                         TextButton(
                           onPressed: () async {
-                            final authNotifier = ProviderScope.containerOf(context).read(authStateProvider.notifier);
+                            final authNotifier = ProviderScope.containerOf(
+                              context,
+                            ).read(authStateProvider.notifier);
                             await authNotifier.signOut();
                             if (context.mounted) {
                               Navigator.of(context).pop(); // Close dialog
-                              Navigator.of(context).pop(); // Go back to previous screen
+                              Navigator.of(
+                                context,
+                              ).pop(); // Go back to previous screen
                             }
                           },
                           child: const Text('Sign Out'),
@@ -230,34 +253,22 @@ class ProfileScreen extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.account_circle,
-            size: 100,
-            color: Colors.grey,
-          ),
+          const Icon(Icons.account_circle, size: 100, color: Colors.grey),
           const SizedBox(height: 20),
           const Text(
             'Not Signed In',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
           const Text(
             'Sign in to access your profile',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-            ),
+            style: TextStyle(fontSize: 16, color: Colors.grey),
           ),
           const SizedBox(height: 30),
           ElevatedButton(
             onPressed: () {
               Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const LoginScreen(),
-                ),
+                MaterialPageRoute(builder: (context) => const LoginScreen()),
               );
             },
             style: ElevatedButton.styleFrom(

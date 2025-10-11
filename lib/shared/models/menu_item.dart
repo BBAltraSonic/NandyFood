@@ -37,7 +37,7 @@ class MenuItem {
 
   Map<String, dynamic> toJson() => _$MenuItemToJson(this);
 
- MenuItem copyWith({
+  MenuItem copyWith({
     String? id,
     String? restaurantId,
     String? name,

@@ -5,19 +5,13 @@ class OrderHistoryItemWidget extends StatelessWidget {
   final Order order;
   final VoidCallback? onTap;
 
-  const OrderHistoryItemWidget({
-    super.key,
-    required this.order,
-    this.onTap,
-  });
+  const OrderHistoryItemWidget({super.key, required this.order, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
       child: InkWell(
         onTap: onTap,
@@ -52,10 +46,7 @@ class OrderHistoryItemWidget extends StatelessWidget {
               // Order details
               Text(
                 'Placed on ${_formatDateTime(order.placedAt)}',
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
-                ),
+                style: const TextStyle(fontSize: 14, color: Colors.grey),
               ),
               const SizedBox(height: 8),
               // Order status
@@ -78,10 +69,7 @@ class OrderHistoryItemWidget extends StatelessWidget {
               // Restaurant name (placeholder)
               Text(
                 'Restaurant Name', // Would be fetched from restaurant data
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
-                ),
+                style: const TextStyle(fontSize: 14, color: Colors.grey),
               ),
             ],
           ),

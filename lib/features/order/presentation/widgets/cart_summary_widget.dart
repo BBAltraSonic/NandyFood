@@ -17,9 +17,7 @@ class CartSummaryWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.all(16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -29,51 +27,60 @@ class CartSummaryWidget extends StatelessWidget {
             // Cart header
             const Text(
               'Order Summary',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            
+
             // Subtotal
-            _buildSummaryRow('Subtotal', '\$${cartState.subtotal.toStringAsFixed(2)}'),
+            _buildSummaryRow(
+              'Subtotal',
+              '\$${cartState.subtotal.toStringAsFixed(2)}',
+            ),
             const SizedBox(height: 8),
-            
+
             // Tax
-            _buildSummaryRow('Tax', '\$${cartState.taxAmount.toStringAsFixed(2)}'),
+            _buildSummaryRow(
+              'Tax',
+              '\$${cartState.taxAmount.toStringAsFixed(2)}',
+            ),
             const SizedBox(height: 8),
-            
+
             // Delivery fee
-            _buildSummaryRow('Delivery Fee', '\$${cartState.deliveryFee.toStringAsFixed(2)}'),
+            _buildSummaryRow(
+              'Delivery Fee',
+              '\$${cartState.deliveryFee.toStringAsFixed(2)}',
+            ),
             const SizedBox(height: 8),
-            
+
             // Discount (if applicable)
             if (cartState.discountAmount > 0)
               _buildSummaryRow(
-                'Discount ${cartState.promoCode != null ? '(${cartState.promoCode})' : ''}', 
+                'Discount ${cartState.promoCode != null ? '(${cartState.promoCode})' : ''}',
                 '-\$${cartState.discountAmount.toStringAsFixed(2)}',
                 isDiscount: true,
               ),
             const SizedBox(height: 8),
-            
+
             // Tip (if applicable)
             if (cartState.tipAmount > 0)
-              _buildSummaryRow('Tip', '\$${cartState.tipAmount.toStringAsFixed(2)}'),
+              _buildSummaryRow(
+                'Tip',
+                '\$${cartState.tipAmount.toStringAsFixed(2)}',
+              ),
             const SizedBox(height: 16),
-            
+
             // Divider
             const Divider(),
             const SizedBox(height: 8),
-            
+
             // Total
             _buildSummaryRow(
-              'Total', 
+              'Total',
               '\$${cartState.totalAmount.toStringAsFixed(2)}',
               isTotal: true,
             ),
             const SizedBox(height: 16),
-            
+
             // Promo code input
             Row(
               children: [
@@ -98,7 +105,7 @@ class CartSummaryWidget extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            
+
             // Checkout button
             SizedBox(
               width: double.infinity,
@@ -109,10 +116,7 @@ class CartSummaryWidget extends StatelessWidget {
                 ),
                 child: const Text(
                   'Proceed to Checkout',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -123,7 +127,12 @@ class CartSummaryWidget extends StatelessWidget {
   }
 
   /// Build a summary row
-  Widget _buildSummaryRow(String label, String value, {bool isDiscount = false, bool isTotal = false}) {
+  Widget _buildSummaryRow(
+    String label,
+    String value, {
+    bool isDiscount = false,
+    bool isTotal = false,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -132,7 +141,9 @@ class CartSummaryWidget extends StatelessWidget {
           style: TextStyle(
             fontSize: isTotal ? 16 : 14,
             fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-            color: isDiscount ? Colors.green : (isTotal ? Colors.black : Colors.grey.shade700),
+            color: isDiscount
+                ? Colors.green
+                : (isTotal ? Colors.black : Colors.grey.shade700),
           ),
         ),
         Text(
@@ -140,7 +151,9 @@ class CartSummaryWidget extends StatelessWidget {
           style: TextStyle(
             fontSize: isTotal ? 16 : 14,
             fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-            color: isDiscount ? Colors.green : (isTotal ? Colors.black : Colors.grey.shade700),
+            color: isDiscount
+                ? Colors.green
+                : (isTotal ? Colors.black : Colors.grey.shade700),
           ),
         ),
       ],

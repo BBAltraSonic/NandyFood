@@ -10,15 +10,12 @@ import 'package:food_delivery_app/shared/widgets/filter_widget.dart';
 class MenuScreen extends ConsumerWidget {
   final Restaurant restaurant;
 
-  const MenuScreen({
-    super.key,
-    required this.restaurant,
-  });
+  const MenuScreen({super.key, required this.restaurant});
 
   @override
- Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final restaurantState = ref.watch(restaurantProvider);
-    
+
     // Load menu items for this restaurant
     ref.listen<RestaurantState>(restaurantProvider, (previous, next) {
       if (previous?.selectedRestaurant?.id != restaurant.id &&
@@ -35,25 +32,28 @@ class MenuScreen extends ConsumerWidget {
       FilterOption(
         id: 'vegetarian',
         label: 'Vegetarian',
-        isSelected: restaurantState.selectedDietaryRestrictions.contains('vegetarian'),
+        isSelected: restaurantState.selectedDietaryRestrictions.contains(
+          'vegetarian',
+        ),
       ),
       FilterOption(
         id: 'vegan',
         label: 'Vegan',
-        isSelected: restaurantState.selectedDietaryRestrictions.contains('vegan'),
+        isSelected: restaurantState.selectedDietaryRestrictions.contains(
+          'vegan',
+        ),
       ),
       FilterOption(
         id: 'gluten-free',
         label: 'Gluten-Free',
-        isSelected: restaurantState.selectedDietaryRestrictions.contains('gluten-free'),
+        isSelected: restaurantState.selectedDietaryRestrictions.contains(
+          'gluten-free',
+        ),
       ),
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('${restaurant.name} Menu'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: Text('${restaurant.name} Menu'), centerTitle: true),
       body: Column(
         children: [
           // Filter widget for dietary restrictions
@@ -61,26 +61,35 @@ class MenuScreen extends ConsumerWidget {
             options: dietaryOptions,
             onFiltersChanged: (selectedOptions) {
               // Extract the selected dietary restrictions
-              final selectedRestrictions = selectedOptions.map((option) => option.id).toList();
-              
+              final selectedRestrictions = selectedOptions
+                  .map((option) => option.id)
+                  .toList();
+
               // Update the provider with the selected dietary restrictions
-              final currentRestrictions = restaurantState.selectedDietaryRestrictions;
-              final newRestrictions = selectedOptions.map((option) => option.id).toList();
-              
+              final currentRestrictions =
+                  restaurantState.selectedDietaryRestrictions;
+              final newRestrictions = selectedOptions
+                  .map((option) => option.id)
+                  .toList();
+
               // Find added restrictions
               for (final restriction in newRestrictions) {
                 if (!currentRestrictions.contains(restriction)) {
-                  ref.read(restaurantProvider.notifier).toggleDietaryRestriction(restriction);
+                  ref
+                      .read(restaurantProvider.notifier)
+                      .toggleDietaryRestriction(restriction);
                 }
               }
-              
+
               // Find removed restrictions
               for (final restriction in currentRestrictions) {
                 if (!newRestrictions.contains(restriction)) {
-                  ref.read(restaurantProvider.notifier).toggleDietaryRestriction(restriction);
+                  ref
+                      .read(restaurantProvider.notifier)
+                      .toggleDietaryRestriction(restriction);
                 }
               }
-              
+
               // Apply the filters to menu items
               ref.read(restaurantProvider.notifier).applyMenuItemFilters();
             },
@@ -91,31 +100,38 @@ class MenuScreen extends ConsumerWidget {
             child: restaurantState.isLoading
                 ? const LoadingIndicator()
                 : restaurantState.errorMessage != null
-                    ? ErrorMessageWidget(
-                        message: restaurantState.errorMessage!,
-                        onRetry: () => ref.read(restaurantProvider.notifier).loadMenuItems(restaurant.id),
-                      )
-                    : _buildMenuContent(restaurantState, context, ref),
+                ? ErrorMessageWidget(
+                    message: restaurantState.errorMessage!,
+                    onRetry: () => ref
+                        .read(restaurantProvider.notifier)
+                        .loadMenuItems(restaurant.id),
+                  )
+                : _buildMenuContent(restaurantState, context, ref),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildMenuContent(RestaurantState restaurantState, BuildContext context, WidgetRef ref) {
+  Widget _buildMenuContent(
+    RestaurantState restaurantState,
+    BuildContext context,
+    WidgetRef ref,
+  ) {
     // Use filtered menu items from state
-    final menuItems = restaurantState.filteredMenuItems.isEmpty && restaurantState.selectedDietaryRestrictions.isNotEmpty
+    final menuItems =
+        restaurantState.filteredMenuItems.isEmpty &&
+            restaurantState.selectedDietaryRestrictions.isNotEmpty
         ? [] // If filters are active but no results, show empty
         : restaurantState.filteredMenuItems.isEmpty
-            ? restaurantState.menuItems // If no filters, show all
-            : restaurantState.filteredMenuItems; // If filters and results, show filtered
+        ? restaurantState
+              .menuItems // If no filters, show all
+        : restaurantState
+              .filteredMenuItems; // If filters and results, show filtered
 
     if (menuItems.isEmpty) {
       return const Center(
-        child: Text(
-          'No menu items available',
-          style: TextStyle(fontSize: 18),
-        ),
+        child: Text('No menu items available', style: TextStyle(fontSize: 18)),
       );
     }
 
@@ -131,15 +147,19 @@ class MenuScreen extends ConsumerWidget {
 
     return RefreshIndicator(
       onRefresh: () async {
-        await Future.delayed(const Duration(milliseconds: 500)); // Simulate network delay
-        await ref.read(restaurantProvider.notifier).loadMenuItems(restaurant.id);
+        await Future.delayed(
+          const Duration(milliseconds: 500),
+        ); // Simulate network delay
+        await ref
+            .read(restaurantProvider.notifier)
+            .loadMenuItems(restaurant.id);
       },
       child: ListView.builder(
         itemCount: categories.length,
         itemBuilder: (context, index) {
           final categoryName = categories.keys.elementAt(index);
           final items = categories[categoryName] as List;
-          
+
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -153,18 +173,25 @@ class MenuScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-              ...items.map((item) => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-                child: MenuItemCard(
-                  menuItem: item,
-                  onAddToCart: () {
-                    // TODO: Add to cart functionality
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Added to cart')),
-                    );
-                  },
-                ),
-              )).toList(),
+              ...items
+                  .map(
+                    (item) => Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 4.0,
+                      ),
+                      child: MenuItemCard(
+                        menuItem: item,
+                        onAddToCart: () {
+                          // TODO: Add to cart functionality
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Added to cart')),
+                          );
+                        },
+                      ),
+                    ),
+                  )
+                  .toList(),
             ],
           );
         },

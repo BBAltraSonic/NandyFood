@@ -3,10 +3,8 @@ import 'package:flutter/material.dart';
 class FilterWidget extends StatefulWidget {
   final Function(Map<String, dynamic>) onFilterChanged;
 
-  const FilterWidget({
-    Key? key,
-    required this.onFilterChanged,
-  }) : super(key: key);
+  const FilterWidget({Key? key, required this.onFilterChanged})
+    : super(key: key);
 
   @override
   State<FilterWidget> createState() => _FilterWidgetState();
@@ -20,8 +18,21 @@ class _FilterWidgetState extends State<FilterWidget> {
   bool _veganOnly = false;
   bool _glutenFreeOnly = false;
 
-  final List<String> _cuisineTypes = ['All', 'Italian', 'Mexican', 'Chinese', 'Indian', 'American', 'Japanese'];
-  final List<String> _deliveryTimes = ['Any', 'Under 15 min', 'Under 30 min', 'Under 45 min'];
+  final List<String> _cuisineTypes = [
+    'All',
+    'Italian',
+    'Mexican',
+    'Chinese',
+    'Indian',
+    'American',
+    'Japanese',
+  ];
+  final List<String> _deliveryTimes = [
+    'Any',
+    'Under 15 min',
+    'Under 30 min',
+    'Under 45 min',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -42,29 +53,21 @@ class _FilterWidgetState extends State<FilterWidget> {
         children: [
           const Text(
             'Filters',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          
+
           // Cuisine type filter
           const Text(
             'Cuisine Type',
-            style: TextStyle(
-              fontWeight: FontWeight.w500,
-            ),
+            style: TextStyle(fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 8),
           DropdownButton<String>(
             isExpanded: true,
             value: _selectedCuisine,
             items: _cuisineTypes.map((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              );
+              return DropdownMenuItem<String>(value: value, child: Text(value));
             }).toList(),
             onChanged: (String? newValue) {
               setState(() {
@@ -74,13 +77,11 @@ class _FilterWidgetState extends State<FilterWidget> {
             },
           ),
           const SizedBox(height: 16),
-          
+
           // Rating filter
           const Text(
             'Minimum Rating',
-            style: TextStyle(
-              fontWeight: FontWeight.w500,
-            ),
+            style: TextStyle(fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 8),
           Slider(
@@ -98,23 +99,18 @@ class _FilterWidgetState extends State<FilterWidget> {
           ),
           Text('$_selectedRating stars and up'),
           const SizedBox(height: 16),
-          
+
           // Delivery time filter
           const Text(
             'Delivery Time',
-            style: TextStyle(
-              fontWeight: FontWeight.w500,
-            ),
+            style: TextStyle(fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 8),
           DropdownButton<String>(
             isExpanded: true,
             value: _selectedDeliveryTime,
             items: _deliveryTimes.map((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              );
+              return DropdownMenuItem<String>(value: value, child: Text(value));
             }).toList(),
             onChanged: (String? newValue) {
               setState(() {
@@ -124,13 +120,11 @@ class _FilterWidgetState extends State<FilterWidget> {
             },
           ),
           const SizedBox(height: 16),
-          
+
           // Dietary restrictions
           const Text(
             'Dietary Restrictions',
-            style: TextStyle(
-              fontWeight: FontWeight.w500,
-            ),
+            style: TextStyle(fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 8),
           Row(
@@ -191,11 +185,11 @@ class _FilterWidgetState extends State<FilterWidget> {
       'veganOnly': _veganOnly,
       'glutenFreeOnly': _glutenFreeOnly,
     };
-    
+
     widget.onFilterChanged(filterOptions);
   }
 
- int? _getMaxDeliveryTime() {
+  int? _getMaxDeliveryTime() {
     switch (_selectedDeliveryTime) {
       case 'Under 15 min':
         return 15;

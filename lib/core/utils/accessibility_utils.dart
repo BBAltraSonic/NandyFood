@@ -12,7 +12,7 @@ class Accessibility {
     double? minContrastRatio = 4.5, // WCAG AA standard
   }) {
     final baseStyle = style ?? const TextStyle();
-    
+
     return baseStyle.copyWith(
       fontSize: fontSize ?? baseStyle.fontSize,
       fontWeight: fontWeight ?? baseStyle.fontWeight,
@@ -65,11 +65,7 @@ class Accessibility {
       enabled: enabled,
       focusable: true,
       child: IconButton(
-        icon: Icon(
-          icon,
-          color: color,
-          size: size,
-        ),
+        icon: Icon(icon, color: color, size: size),
         onPressed: enabled ? onPressed : null,
         tooltip: tooltip,
       ),
@@ -97,10 +93,7 @@ class Accessibility {
       focusable: true,
       child: TextFormField(
         controller: controller,
-        decoration: InputDecoration(
-          labelText: label,
-          hintText: hint,
-        ),
+        decoration: InputDecoration(labelText: label, hintText: hint),
         keyboardType: keyboardType,
         obscureText: obscureText,
         validator: validator,
@@ -125,14 +118,8 @@ class Accessibility {
     int level = 2, // Heading level (1-6)
   }) {
     final headingStyle = style ?? _getHeadingStyle(level);
-    
-    return Semantics(
-      header: true,
-      child: Text(
-        text,
-        style: headingStyle,
-      ),
-    );
+
+    return Semantics(header: true, child: Text(text, style: headingStyle));
   }
 
   /// Get appropriate heading style based on level
@@ -166,11 +153,7 @@ class Accessibility {
       selected: selected,
       button: onTap != null,
       focusable: true,
-      child: ListTile(
-        title: child,
-        selected: selected,
-        onTap: onTap,
-      ),
+      child: ListTile(title: child, selected: selected, onTap: onTap),
     );
   }
 

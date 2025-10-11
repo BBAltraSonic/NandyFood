@@ -19,9 +19,7 @@ class CartItemWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -58,23 +56,18 @@ class CartItemWidget extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   // Customizations
-                  if (orderItem.customizations != null && orderItem.customizations!.isNotEmpty)
+                  if (orderItem.customizations != null &&
+                      orderItem.customizations!.isNotEmpty)
                     Text(
                       _formatCustomizations(orderItem.customizations!),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey,
-                      ),
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   const SizedBox(height: 4),
                   // Special instructions
                   if (orderItem.specialInstructions != null)
                     Text(
                       'Note: ${orderItem.specialInstructions}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey,
-                      ),
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   const SizedBox(height: 8),
                   // Price
@@ -93,10 +86,7 @@ class CartItemWidget extends StatelessWidget {
             Column(
               children: [
                 // Increment button
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  onPressed: onIncrement,
-                ),
+                IconButton(icon: const Icon(Icons.add), onPressed: onIncrement),
                 // Quantity display
                 Text(
                   '${orderItem.quantity}',
@@ -126,6 +116,38 @@ class CartItemWidget extends StatelessWidget {
 
   /// Format customizations for display
   String _formatCustomizations(Map<String, dynamic> customizations) {
-    return customizations.entries.map((e) => '${e.key}: ${e.value}').join(', ');
+    final List<String> parts = [];
+
+    // Add size
+    if (customizations['size'] != null) {
+      parts.add('Size: ${customizations['size']}');
+    }
+
+    // Add toppings
+    if (customizations['toppings'] != null &&
+        (customizations['toppings'] as List).isNotEmpty) {
+      final toppings = (customizations['toppings'] as List).join(', ');
+      parts.add('Toppings: $toppings');
+    }
+
+    // Add spice level
+    if (customizations['spiceLevel'] != null) {
+      final spiceLevel = customizations['spiceLevel'] as int;
+      String spiceLevelText;
+      if (spiceLevel <= 1) {
+        spiceLevelText = 'Mild';
+      } else if (spiceLevel <= 2) {
+        spiceLevelText = 'Medium';
+      } else if (spiceLevel <= 3) {
+        spiceLevelText = 'Spicy';
+      } else if (spiceLevel <= 4) {
+        spiceLevelText = 'Hot';
+      } else {
+        spiceLevelText = 'Extra Hot';
+      }
+      parts.add('Spice: $spiceLevelText');
+    }
+
+    return parts.join(' • ');
   }
 }

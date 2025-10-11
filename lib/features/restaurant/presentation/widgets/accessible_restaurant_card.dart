@@ -23,7 +23,8 @@ class AccessibleRestaurantCard extends StatelessWidget {
     return Semantics(
       container: true,
       button: true,
-      label: '${restaurant.name}, ${restaurant.cuisineType}, '
+      label:
+          '${restaurant.name}, ${restaurant.cuisineType}, '
           'Rating: ${restaurant.rating}, '
           'Delivery time: ${restaurant.estimatedDeliveryTime} minutes',
       selected: isSelected,
@@ -56,7 +57,7 @@ class AccessibleRestaurantCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 16),
-                
+
                 // Restaurant details
                 Expanded(
                   child: Column(
@@ -71,7 +72,7 @@ class AccessibleRestaurantCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      
+
                       // Cuisine type and delivery time
                       Text(
                         '${restaurant.cuisineType} • ${restaurant.estimatedDeliveryTime} min',
@@ -80,15 +81,11 @@ class AccessibleRestaurantCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      
+
                       // Rating and distance
                       Row(
                         children: [
-                          const Icon(
-                            Icons.star,
-                            color: Colors.amber,
-                            size: 16,
-                          ),
+                          const Icon(Icons.star, color: Colors.amber, size: 16),
                           const SizedBox(width: 4),
                           Text(
                             restaurant.rating.toString(),
@@ -101,13 +98,10 @@ class AccessibleRestaurantCard extends StatelessWidget {
                             size: 16,
                           ),
                           const SizedBox(width: 4),
-                          const Text(
-                            '2.5 km',
-                            style: TextStyle(fontSize: 14),
-                          ),
+                          const Text('2.5 km', style: TextStyle(fontSize: 14)),
                         ],
                       ),
-                      
+
                       // Dietary restrictions badges
                       if (restaurant.dietaryOptions?.isNotEmpty == true) ...[
                         const SizedBox(height: 8),
@@ -120,7 +114,9 @@ class AccessibleRestaurantCard extends StatelessWidget {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: _getDietaryBadgeColor(option).withOpacity(0.1),
+                                color: _getDietaryBadgeColor(
+                                  option,
+                                ).withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color: _getDietaryBadgeColor(option),
@@ -141,13 +137,10 @@ class AccessibleRestaurantCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                
+
                 // Selection indicator
                 if (isSelected)
-                  Icon(
-                    Icons.check_circle,
-                    color: colorScheme.primary,
-                  ),
+                  Icon(Icons.check_circle, color: colorScheme.primary),
               ],
             ),
           ),

@@ -9,24 +9,19 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeState = ref.watch(themeProvider);
-    
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
+      appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         children: [
           const Padding(
             padding: EdgeInsets.all(16.0),
             child: Text(
               'Appearance',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ),
-          
+
           // Theme selection
           ListTile(
             leading: const Icon(Icons.palette),
@@ -35,20 +30,17 @@ class SettingsScreen extends ConsumerWidget {
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () => _showThemeDialog(context, ref),
           ),
-          
+
           const Divider(),
-          
+
           const Padding(
             padding: EdgeInsets.all(16.0),
             child: Text(
               'Notifications',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ),
-          
+
           // Notification settings
           SwitchListTile(
             secondary: const Icon(Icons.notifications),
@@ -59,7 +51,7 @@ class SettingsScreen extends ConsumerWidget {
               // TODO: Implement notification toggle
             },
           ),
-          
+
           SwitchListTile(
             secondary: const Icon(Icons.email),
             title: const Text('Email Notifications'),
@@ -69,20 +61,17 @@ class SettingsScreen extends ConsumerWidget {
               // TODO: Implement email notification toggle
             },
           ),
-          
+
           const Divider(),
-          
+
           const Padding(
             padding: EdgeInsets.all(16.0),
             child: Text(
               'Account',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ),
-          
+
           ListTile(
             leading: const Icon(Icons.person),
             title: const Text('Edit Profile'),
@@ -91,7 +80,7 @@ class SettingsScreen extends ConsumerWidget {
               // Navigate to edit profile
             },
           ),
-          
+
           ListTile(
             leading: const Icon(Icons.location_on),
             title: const Text('Delivery Addresses'),
@@ -100,27 +89,24 @@ class SettingsScreen extends ConsumerWidget {
               // Navigate to addresses
             },
           ),
-          
+
           ListTile(
             leading: const Icon(Icons.payment),
             title: const Text('Payment Methods'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () => context.push('/profile/payment-methods'),
           ),
-          
+
           const Divider(),
-          
+
           const Padding(
             padding: EdgeInsets.all(16.0),
             child: Text(
               'Support',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ),
-          
+
           ListTile(
             leading: const Icon(Icons.help),
             title: const Text('Help & Support'),
@@ -129,7 +115,7 @@ class SettingsScreen extends ConsumerWidget {
               // Navigate to help
             },
           ),
-          
+
           ListTile(
             leading: const Icon(Icons.privacy_tip),
             title: const Text('Privacy Policy'),
@@ -138,7 +124,7 @@ class SettingsScreen extends ConsumerWidget {
               // Navigate to privacy policy
             },
           ),
-          
+
           ListTile(
             leading: const Icon(Icons.description),
             title: const Text('Terms of Service'),
@@ -147,9 +133,9 @@ class SettingsScreen extends ConsumerWidget {
               // Navigate to terms
             },
           ),
-          
+
           const Divider(),
-          
+
           ListTile(
             leading: const Icon(Icons.info),
             title: const Text('About'),
@@ -159,9 +145,9 @@ class SettingsScreen extends ConsumerWidget {
               _showAboutDialog(context);
             },
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: OutlinedButton.icon(
@@ -179,7 +165,7 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 32),
         ],
       ),
@@ -199,7 +185,7 @@ class SettingsScreen extends ConsumerWidget {
 
   void _showThemeDialog(BuildContext context, WidgetRef ref) {
     final currentTheme = ref.read(themeProvider).themeMode;
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -251,9 +237,15 @@ class SettingsScreen extends ConsumerWidget {
       context: context,
       applicationName: 'NandyFood',
       applicationVersion: '1.0.0',
-      applicationIcon: const Icon(Icons.fastfood, size: 48, color: Colors.deepOrange),
+      applicationIcon: const Icon(
+        Icons.fastfood,
+        size: 48,
+        color: Colors.deepOrange,
+      ),
       children: [
-        const Text('A modern food delivery application built with Flutter and Supabase.'),
+        const Text(
+          'A modern food delivery application built with Flutter and Supabase.',
+        ),
       ],
     );
   }
@@ -275,9 +267,7 @@ class SettingsScreen extends ConsumerWidget {
               Navigator.pop(context);
               context.go('/auth/login');
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Sign Out'),
           ),
         ],

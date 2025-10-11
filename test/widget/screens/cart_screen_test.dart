@@ -19,13 +19,11 @@ void main() {
       DatabaseService.disableTestMode();
     });
 
-    testWidgets('displays empty cart message when cart is empty', (WidgetTester tester) async {
+    testWidgets('displays empty cart message when cart is empty', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: CartScreen(),
-          ),
-        ),
+        ProviderScope(child: MaterialApp(home: CartScreen())),
       );
 
       // Verify that empty cart message is displayed
@@ -35,13 +33,11 @@ void main() {
       expect(find.text('Browse Restaurants'), findsOneWidget);
     });
 
-    testWidgets('displays cart items when cart is not empty', (WidgetTester tester) async {
+    testWidgets('displays cart items when cart is not empty', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: CartScreen(),
-          ),
-        ),
+        ProviderScope(child: MaterialApp(home: CartScreen())),
       );
 
       // Verify that cart items are displayed
@@ -49,13 +45,11 @@ void main() {
       expect(find.byType(ListView), findsOneWidget);
     });
 
-    testWidgets('updates item quantity when +/- buttons are tapped', (WidgetTester tester) async {
+    testWidgets('updates item quantity when +/- buttons are tapped', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: CartScreen(),
-          ),
-        ),
+        ProviderScope(child: MaterialApp(home: CartScreen())),
       );
 
       // Wait for cart to load
@@ -84,13 +78,11 @@ void main() {
       }
     });
 
-    testWidgets('removes item when remove button is tapped', (WidgetTester tester) async {
+    testWidgets('removes item when remove button is tapped', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: CartScreen(),
-          ),
-        ),
+        ProviderScope(child: MaterialApp(home: CartScreen())),
       );
 
       // Wait for cart to load
@@ -109,7 +101,9 @@ void main() {
       }
     });
 
-    testWidgets('navigates to checkout when checkout button is tapped', (WidgetTester tester) async {
+    testWidgets('navigates to checkout when checkout button is tapped', (
+      WidgetTester tester,
+    ) async {
       bool navigatedToCheckout = false;
 
       await tester.pumpWidget(
@@ -120,9 +114,8 @@ void main() {
               if (settings.name == '/order/checkout') {
                 navigatedToCheckout = true;
                 return MaterialPageRoute(
-                  builder: (context) => Scaffold(
-                    appBar: AppBar(title: Text('Checkout Screen')),
-                  ),
+                  builder: (context) =>
+                      Scaffold(appBar: AppBar(title: Text('Checkout Screen'))),
                 );
               }
               return null;
@@ -145,13 +138,11 @@ void main() {
       }
     });
 
-    testWidgets('clears cart when clear cart button is tapped', (WidgetTester tester) async {
+    testWidgets('clears cart when clear cart button is tapped', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: CartScreen(),
-          ),
-        ),
+        ProviderScope(child: MaterialApp(home: CartScreen())),
       );
 
       // Wait for cart to load
@@ -168,13 +159,11 @@ void main() {
       }
     });
 
-    testWidgets('displays order summary correctly', (WidgetTester tester) async {
+    testWidgets('displays order summary correctly', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: CartScreen(),
-          ),
-        ),
+        ProviderScope(child: MaterialApp(home: CartScreen())),
       );
 
       // Wait for cart to load

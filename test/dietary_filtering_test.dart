@@ -21,7 +21,7 @@ void main() {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
-      
+
       final restaurant2 = Restaurant(
         id: 'rest2',
         name: 'Meat Palace',
@@ -35,7 +35,7 @@ void main() {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
-      
+
       // Create test menu items
       final veggieBurger = MenuItem(
         id: 'item1',
@@ -49,7 +49,7 @@ void main() {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
-      
+
       final chickenBurger = MenuItem(
         id: 'item2',
         restaurantId: 'rest2',
@@ -62,31 +62,31 @@ void main() {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
-      
+
       // Create a notifier instance and set up initial state
       final container = ProviderContainer();
       addTearDown(container.dispose);
-      
+
       final notifier = container.read(restaurantProvider.notifier);
-      
+
       // Set up the state with restaurants and menu items
       notifier.state = notifier.state.copyWith(
         restaurants: [restaurant1, restaurant2],
         menuItems: [veggieBurger, chickenBurger],
       );
-      
+
       // Apply vegetarian filter - this will trigger the filtering
       notifier.toggleDietaryRestriction('vegetarian');
-      
+
       // Since toggleDietaryRestriction is async, we need to wait for the state to update
       await Future.delayed(Duration.zero); // Process microtasks
-      
+
       // Verify that only restaurants with vegetarian options are shown
       final state = container.read(restaurantProvider);
       expect(state.filteredRestaurants.length, 1);
       expect(state.filteredRestaurants.first.id, 'rest1');
     });
-    
+
     test('Menu item filtering by dietary restrictions', () {
       // Create test menu items
       final veggieBurger = MenuItem(
@@ -101,7 +101,7 @@ void main() {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
-      
+
       final chickenBurger = MenuItem(
         id: 'item2',
         restaurantId: 'rest1',
@@ -114,13 +114,13 @@ void main() {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
-      
+
       // Create a notifier instance and set up initial state
       final container = ProviderContainer();
       addTearDown(container.dispose);
-      
+
       final notifier = container.read(restaurantProvider.notifier);
-      
+
       // Set up the state with menu items
       final restaurant = Restaurant(
         id: 'rest1',
@@ -135,16 +135,16 @@ void main() {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
-      
+
       notifier.selectRestaurant(restaurant);
       notifier.state = notifier.state.copyWith(
         menuItems: [veggieBurger, chickenBurger],
         selectedDietaryRestrictions: ['vegetarian'],
       );
-      
+
       // Apply the menu item filters
       notifier.applyMenuItemFilters();
-      
+
       // Verify that only vegetarian items are shown
       final state = container.read(restaurantProvider);
       expect(state.filteredMenuItems.length, 1);

@@ -38,12 +38,12 @@ void main() {
       DatabaseService.disableTestMode();
     });
 
-    testWidgets('displays order tracking information correctly', (WidgetTester tester) async {
+    testWidgets('displays order tracking information correctly', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
-          child: MaterialApp(
-            home: OrderTrackingScreen(order: mockOrder),
-          ),
+          child: MaterialApp(home: OrderTrackingScreen(order: mockOrder)),
         ),
       );
 
@@ -57,20 +57,26 @@ void main() {
       expect(find.text('Status: ${mockOrder.status.name}'), findsOneWidget);
 
       // Verify that total amount is displayed
-      expect(find.text('\$${mockOrder.totalAmount.toStringAsFixed(2)}'), findsOneWidget);
+      expect(
+        find.text('\$${mockOrder.totalAmount.toStringAsFixed(2)}'),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('displays delivery progress correctly', (WidgetTester tester) async {
+    testWidgets('displays delivery progress correctly', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
-          child: MaterialApp(
-            home: OrderTrackingScreen(order: mockOrder),
-          ),
+          child: MaterialApp(home: OrderTrackingScreen(order: mockOrder)),
         ),
       );
 
       // Verify that delivery progress widget is displayed
-      expect(find.byType(Column), findsWidgets); // Progress indicators are in a column
+      expect(
+        find.byType(Column),
+        findsWidgets,
+      ); // Progress indicators are in a column
 
       // Verify that status labels are displayed
       expect(find.text('Order Placed'), findsOneWidget);
@@ -82,9 +88,7 @@ void main() {
     testWidgets('displays driver information', (WidgetTester tester) async {
       await tester.pumpWidget(
         ProviderScope(
-          child: MaterialApp(
-            home: OrderTrackingScreen(order: mockOrder),
-          ),
+          child: MaterialApp(home: OrderTrackingScreen(order: mockOrder)),
         ),
       );
 
@@ -102,9 +106,7 @@ void main() {
     testWidgets('displays restaurant information', (WidgetTester tester) async {
       await tester.pumpWidget(
         ProviderScope(
-          child: MaterialApp(
-            home: OrderTrackingScreen(order: mockOrder),
-          ),
+          child: MaterialApp(home: OrderTrackingScreen(order: mockOrder)),
         ),
       );
 
@@ -119,12 +121,12 @@ void main() {
       expect(find.byType(Container), findsWidgets); // Restaurant info container
     });
 
-    testWidgets('updates delivery status in real-time', (WidgetTester tester) async {
+    testWidgets('updates delivery status in real-time', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
-          child: MaterialApp(
-            home: OrderTrackingScreen(order: mockOrder),
-          ),
+          child: MaterialApp(home: OrderTrackingScreen(order: mockOrder)),
         ),
       );
 
@@ -138,12 +140,12 @@ void main() {
       // Note: Actual status updates would come from delivery tracking service
     });
 
-    testWidgets('calls driver when call button is tapped', (WidgetTester tester) async {
+    testWidgets('calls driver when call button is tapped', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
-          child: MaterialApp(
-            home: OrderTrackingScreen(order: mockOrder),
-          ),
+          child: MaterialApp(home: OrderTrackingScreen(order: mockOrder)),
         ),
       );
 
@@ -163,12 +165,12 @@ void main() {
       }
     });
 
-    testWidgets('displays estimated delivery time', (WidgetTester tester) async {
+    testWidgets('displays estimated delivery time', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
-          child: MaterialApp(
-            home: OrderTrackingScreen(order: mockOrder),
-          ),
+          child: MaterialApp(home: OrderTrackingScreen(order: mockOrder)),
         ),
       );
 
@@ -177,15 +179,18 @@ void main() {
 
       // Verify that estimated delivery time is displayed
       // Note: Actual time would depend on delivery data
-      expect(find.byType(Text), findsWidgets); // Time information is in text widgets
+      expect(
+        find.byType(Text),
+        findsWidgets,
+      ); // Time information is in text widgets
     });
 
-    testWidgets('refreshes delivery information when pulled down', (WidgetTester tester) async {
+    testWidgets('refreshes delivery information when pulled down', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
-          child: MaterialApp(
-            home: OrderTrackingScreen(order: mockOrder),
-          ),
+          child: MaterialApp(home: OrderTrackingScreen(order: mockOrder)),
         ),
       );
 

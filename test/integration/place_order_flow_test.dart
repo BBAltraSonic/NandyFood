@@ -18,7 +18,7 @@ void main() {
       // Enable test mode for DatabaseService to avoid pending timers
       DatabaseService.enableTestMode();
       dbService = DatabaseService();
-      
+
       // Create a provider container for testing
       container = ProviderContainer();
     });
@@ -26,7 +26,7 @@ void main() {
     tearDown(() {
       // Dispose of the provider container
       container.dispose();
-      
+
       // Disable test mode after tests
       DatabaseService.disableTestMode();
     });
@@ -139,10 +139,7 @@ void main() {
 
       // Add items to cart
       final cartNotifier = container.read(cartProvider.notifier);
-      await cartNotifier.addItem(
-        mockMenuItem,
-        quantity: 3,
-      );
+      await cartNotifier.addItem(mockMenuItem, quantity: 3);
 
       // Verify initial cart state
       var cartState = container.read(cartProvider);
@@ -151,7 +148,7 @@ void main() {
 
       // Apply promo code
       await cartNotifier.applyPromoCode('SAVE10'); // Assuming 10% discount
-      
+
       // Verify discount is applied
       cartState = container.read(cartProvider);
       expect(cartState.promoCode, 'SAVE10');
@@ -177,7 +174,10 @@ void main() {
       expect(order, isNotNull);
       expect(order.promoCode, 'SAVE10');
       expect(order.discountAmount, greaterThan(0));
-      expect(order.totalAmount, lessThan(cartState.subtotal + 2.5)); // Total should be less due to discount
+      expect(
+        order.totalAmount,
+        lessThan(cartState.subtotal + 2.5),
+      ); // Total should be less due to discount
     });
 
     test('place order with multiple items', () async {
@@ -310,7 +310,7 @@ void main() {
 
       // Place order with invalid payment method
       final placeOrderNotifier = container.read(placeOrderProvider.notifier);
-      
+
       try {
         await placeOrderNotifier.placeOrder(
           userId: 'user4',
@@ -333,77 +333,92 @@ void main() {
       }
     });
 
-    test('order placement with customizations and special instructions', () async {
-      // Setup mock restaurant and menu items
-      final mockRestaurant = Restaurant(
-        id: 'restaurant5',
-        name: 'Customization Restaurant',
-        cuisineType: 'Mediterranean',
-        address: {'street': '888 Customize St'},
-        rating: 4.7,
-        deliveryRadius: 5.0,
-        estimatedDeliveryTime: 40,
-        isActive: true,
-        openingHours: {}, // Required parameter
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
+    test(
+      'order placement with customizations and special instructions',
+      () async {
+        // Setup mock restaurant and menu items
+        final mockRestaurant = Restaurant(
+          id: 'restaurant5',
+          name: 'Customization Restaurant',
+          cuisineType: 'Mediterranean',
+          address: {'street': '888 Customize St'},
+          rating: 4.7,
+          deliveryRadius: 5.0,
+          estimatedDeliveryTime: 40,
+          isActive: true,
+          openingHours: {}, // Required parameter
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
 
-      final mockMenuItem = MenuItem(
-        id: 'item7',
-        restaurantId: 'restaurant5',
-        name: 'Greek Salad',
-        description: 'Fresh greek salad',
-        price: 11.99,
-        category: 'Salads',
-        isAvailable: true,
-        dietaryRestrictions: ['vegetarian', 'gluten-free'],
-        preparationTime: 10,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
+        final mockMenuItem = MenuItem(
+          id: 'item7',
+          restaurantId: 'restaurant5',
+          name: 'Greek Salad',
+          description: 'Fresh greek salad',
+          price: 11.99,
+          category: 'Salads',
+          isAvailable: true,
+          dietaryRestrictions: ['vegetarian', 'gluten-free'],
+          preparationTime: 10,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
 
-      // Add item to cart with customizations
-      final cartNotifier = container.read(cartProvider.notifier);
-      await cartNotifier.addItem(
-        mockMenuItem,
-        quantity: 1,
-        customizations: {
-          'extra_olives': true,
-          'no_feta': false,
-          'dressing': 'lemon_vinaigrette',
-        },
-        specialInstructions: 'Make it extra fresh',
-      );
+        // Add item to cart with customizations
+        final cartNotifier = container.read(cartProvider.notifier);
+        await cartNotifier.addItem(
+          mockMenuItem,
+          quantity: 1,
+          customizations: {
+            'extra_olives': true,
+            'no_feta': false,
+            'dressing': 'lemon_vinaigrette',
+          },
+          specialInstructions: 'Make it extra fresh',
+        );
 
-      // Verify cart item has customizations
-      var cartState = container.read(cartProvider);
-      expect(cartState.items.length, 1);
-      expect(cartState.items[0].orderItem.customizations, isNotNull);
-      expect(cartState.items[0].orderItem.customizations!['extra_olives'], isTrue);
-      expect(cartState.items[0].orderItem.customizations!['no_feta'], isFalse);
-      expect(cartState.items[0].orderItem.customizations!['dressing'], 'lemon_vinaigrette');
-      expect(cartState.items[0].orderItem.specialInstructions, 'Make it extra fresh');
+        // Verify cart item has customizations
+        var cartState = container.read(cartProvider);
+        expect(cartState.items.length, 1);
+        expect(cartState.items[0].orderItem.customizations, isNotNull);
+        expect(
+          cartState.items[0].orderItem.customizations!['extra_olives'],
+          isTrue,
+        );
+        expect(
+          cartState.items[0].orderItem.customizations!['no_feta'],
+          isFalse,
+        );
+        expect(
+          cartState.items[0].orderItem.customizations!['dressing'],
+          'lemon_vinaigrette',
+        );
+        expect(
+          cartState.items[0].orderItem.specialInstructions,
+          'Make it extra fresh',
+        );
 
-      // Place order with customizations
-      final placeOrderNotifier = container.read(placeOrderProvider.notifier);
-      final order = await placeOrderNotifier.placeOrder(
-        userId: 'user5',
-        restaurantId: 'restaurant5',
-        deliveryAddress: {
-          'street': '111 Custom St',
-          'city': 'Custom City',
-          'zipCode': '11111',
-        },
-        paymentMethod: 'card',
-        tipAmount: 3.5,
-        promoCode: null,
-        specialInstructions: 'Call upon arrival',
-      );
+        // Place order with customizations
+        final placeOrderNotifier = container.read(placeOrderProvider.notifier);
+        final order = await placeOrderNotifier.placeOrder(
+          userId: 'user5',
+          restaurantId: 'restaurant5',
+          deliveryAddress: {
+            'street': '111 Custom St',
+            'city': 'Custom City',
+            'zipCode': '11111',
+          },
+          paymentMethod: 'card',
+          tipAmount: 3.5,
+          promoCode: null,
+          specialInstructions: 'Call upon arrival',
+        );
 
-      // Verify order was created with customizations
-      expect(order, isNotNull);
-      expect(order.id, isNotEmpty);
-    });
+        // Verify order was created with customizations
+        expect(order, isNotNull);
+        expect(order.id, isNotEmpty);
+      },
+    );
   });
 }

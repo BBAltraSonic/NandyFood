@@ -19,7 +19,8 @@ class HomeMapViewWidget extends StatefulWidget {
   State<HomeMapViewWidget> createState() => _HomeMapViewWidgetState();
 }
 
-class _HomeMapViewWidgetState extends State<HomeMapViewWidget> with SingleTickerProviderStateMixin {
+class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
+    with SingleTickerProviderStateMixin {
   late MapController _mapController;
   Restaurant? _selectedRestaurant;
   late AnimationController _animationController;
@@ -30,18 +31,18 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget> with SingleTicker
   void initState() {
     super.initState();
     _mapController = MapController();
-    
+
     // Initialize animation controller for preview card
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    
+
     _scaleAnimation = CurvedAnimation(
       parent: _animationController,
       curve: Curves.easeOutBack,
     );
-    
+
     _centerMapOnUser();
   }
 
@@ -57,11 +58,11 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget> with SingleTicker
     setState(() {
       _selectedRestaurant = restaurant;
     });
-    
+
     // Trigger animation for preview card
     _animationController.reset();
     _animationController.forward();
-    
+
     // Smoothly move map to center on restaurant with slight offset for preview card
     if (restaurant.latitude != 0 && restaurant.longitude != 0) {
       final targetZoom = _currentZoom < 14 ? 15.0 : _currentZoom;
@@ -71,7 +72,7 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget> with SingleTicker
       );
     }
   }
-  
+
   void _closePreviewCard() {
     setState(() {
       _selectedRestaurant = null;
@@ -84,22 +85,16 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget> with SingleTicker
       setState(() {
         _currentZoom += 1;
       });
-      _mapController.move(
-        _mapController.camera.center,
-        _currentZoom,
-      );
+      _mapController.move(_mapController.camera.center, _currentZoom);
     }
   }
-  
+
   void _onZoomOut() {
     if (_currentZoom > 10.0) {
       setState(() {
         _currentZoom -= 1;
       });
-      _mapController.move(
-        _mapController.camera.center,
-        _currentZoom,
-      );
+      _mapController.move(_mapController.camera.center, _currentZoom);
     }
   }
 
@@ -110,7 +105,7 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget> with SingleTicker
     for (final restaurant in widget.restaurants) {
       if (restaurant.latitude != 0 && restaurant.longitude != 0) {
         final isSelected = _selectedRestaurant?.id == restaurant.id;
-        
+
         markers.add(
           Marker(
             width: isSelected ? 60 : 50,
@@ -132,7 +127,9 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget> with SingleTicker
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withOpacity(0.4),
                       blurRadius: isSelected ? 8 : 4,
                       offset: const Offset(0, 2),
                       spreadRadius: isSelected ? 2 : 0,
@@ -190,11 +187,7 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget> with SingleTicker
               shape: BoxShape.circle,
               border: Border.all(color: Colors.blue, width: 3),
             ),
-            child: const Icon(
-              Icons.person_pin,
-              color: Colors.blue,
-              size: 30,
-            ),
+            child: const Icon(Icons.person_pin, color: Colors.blue, size: 30),
           ),
         ),
       );
@@ -206,14 +199,15 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget> with SingleTicker
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Stack(
       children: [
         // Map
         FlutterMap(
           mapController: _mapController,
           options: MapOptions(
-            initialCenter: widget.userLocation ?? const LatLng(40.7128, -74.0060),
+            initialCenter:
+                widget.userLocation ?? const LatLng(40.7128, -74.0060),
             initialZoom: _currentZoom,
             minZoom: 10.0,
             maxZoom: 18.0,
@@ -355,7 +349,7 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget> with SingleTicker
 
   Widget _buildRestaurantPreviewCard(Restaurant restaurant) {
     final theme = Theme.of(context);
-    
+
     return Card(
       elevation: 12,
       shadowColor: theme.colorScheme.primary.withOpacity(0.3),
@@ -416,14 +410,17 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget> with SingleTicker
                             Icon(
                               Icons.restaurant_menu,
                               size: 14,
-                              color: theme.colorScheme.onSurface.withOpacity(0.6),
+                              color: theme.colorScheme.onSurface.withOpacity(
+                                0.6,
+                              ),
                             ),
                             const SizedBox(width: 4),
                             Expanded(
                               child: Text(
                                 restaurant.cuisineType,
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                  color: theme.colorScheme.onSurface
+                                      .withOpacity(0.6),
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -467,13 +464,17 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget> with SingleTicker
                             Icon(
                               Icons.access_time,
                               size: 14,
-                              color: theme.colorScheme.onSurface.withOpacity(0.6),
+                              color: theme.colorScheme.onSurface.withOpacity(
+                                0.6,
+                              ),
                             ),
                             const SizedBox(width: 4),
                             Text(
                               '${restaurant.estimatedDeliveryTime} min',
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                color: theme.colorScheme.onSurface.withOpacity(
+                                  0.6,
+                                ),
                               ),
                             ),
                           ],

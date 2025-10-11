@@ -19,13 +19,11 @@ void main() {
       DatabaseService.disableTestMode();
     });
 
-    testWidgets('displays profile information correctly', (WidgetTester tester) async {
+    testWidgets('displays profile information correctly', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: ProfileScreen(),
-          ),
-        ),
+        ProviderScope(child: MaterialApp(home: ProfileScreen())),
       );
       await tester.pumpAndSettle();
 
@@ -40,13 +38,11 @@ void main() {
       expect(find.text('Preferences'), findsOneWidget);
     });
 
-    testWidgets('displays user profile header with avatar', (WidgetTester tester) async {
+    testWidgets('displays user profile header with avatar', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: ProfileScreen(),
-          ),
-        ),
+        ProviderScope(child: MaterialApp(home: ProfileScreen())),
       );
       await tester.pumpAndSettle();
 
@@ -60,7 +56,9 @@ void main() {
       // Note: Actual name would depend on user profile data
     });
 
-    testWidgets('navigates to edit profile screen when edit button is tapped', (WidgetTester tester) async {
+    testWidgets('navigates to edit profile screen when edit button is tapped', (
+      WidgetTester tester,
+    ) async {
       bool navigatedToEditProfile = false;
 
       await tester.pumpWidget(
@@ -71,9 +69,8 @@ void main() {
               if (settings.name == '/profile/edit') {
                 navigatedToEditProfile = true;
                 return MaterialPageRoute(
-                  builder: (context) => Scaffold(
-                    appBar: AppBar(title: Text('Edit Profile')),
-                  ),
+                  builder: (context) =>
+                      Scaffold(appBar: AppBar(title: Text('Edit Profile'))),
                 );
               }
               return null;
@@ -91,112 +88,117 @@ void main() {
       expect(navigatedToEditProfile, isTrue);
     });
 
-    testWidgets('navigates to addresses screen when addresses section is tapped', (WidgetTester tester) async {
-      bool navigatedToAddresses = false;
+    testWidgets(
+      'navigates to addresses screen when addresses section is tapped',
+      (WidgetTester tester) async {
+        bool navigatedToAddresses = false;
 
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: ProfileScreen(),
-            onGenerateRoute: (settings) {
-              if (settings.name == '/profile/addresses') {
-                navigatedToAddresses = true;
-                return MaterialPageRoute(
-                  builder: (context) => Scaffold(
-                    appBar: AppBar(title: Text('Addresses')),
-                  ),
-                );
-              }
-              return null;
-            },
+        await tester.pumpWidget(
+          ProviderScope(
+            child: MaterialApp(
+              home: ProfileScreen(),
+              onGenerateRoute: (settings) {
+                if (settings.name == '/profile/addresses') {
+                  navigatedToAddresses = true;
+                  return MaterialPageRoute(
+                    builder: (context) =>
+                        Scaffold(appBar: AppBar(title: Text('Addresses'))),
+                  );
+                }
+                return null;
+              },
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      // Find and tap addresses section
-      final addressesFinder = find.text('Addresses');
-      await tester.ensureVisible(addressesFinder);
-      await tester.tap(addressesFinder);
-      await tester.pumpAndSettle();
+        // Find and tap addresses section
+        final addressesFinder = find.text('Addresses');
+        await tester.ensureVisible(addressesFinder);
+        await tester.tap(addressesFinder);
+        await tester.pumpAndSettle();
 
-      // Verify that navigation occurred
-      expect(navigatedToAddresses, isTrue);
-    });
+        // Verify that navigation occurred
+        expect(navigatedToAddresses, isTrue);
+      },
+    );
 
-    testWidgets('navigates to payment methods screen when payment methods section is tapped', (WidgetTester tester) async {
-      bool navigatedToPaymentMethods = false;
+    testWidgets(
+      'navigates to payment methods screen when payment methods section is tapped',
+      (WidgetTester tester) async {
+        bool navigatedToPaymentMethods = false;
 
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: ProfileScreen(),
-            onGenerateRoute: (settings) {
-              if (settings.name == '/profile/payment-methods') {
-                navigatedToPaymentMethods = true;
-                return MaterialPageRoute(
-                  builder: (context) => Scaffold(
-                    appBar: AppBar(title: Text('Payment Methods')),
-                  ),
-                );
-              }
-              return null;
-            },
+        await tester.pumpWidget(
+          ProviderScope(
+            child: MaterialApp(
+              home: ProfileScreen(),
+              onGenerateRoute: (settings) {
+                if (settings.name == '/profile/payment-methods') {
+                  navigatedToPaymentMethods = true;
+                  return MaterialPageRoute(
+                    builder: (context) => Scaffold(
+                      appBar: AppBar(title: Text('Payment Methods')),
+                    ),
+                  );
+                }
+                return null;
+              },
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      // Find and tap payment methods section
-      final paymentMethodsFinder = find.text('Payment Methods');
-      await tester.ensureVisible(paymentMethodsFinder);
-      await tester.tap(paymentMethodsFinder);
-      await tester.pumpAndSettle();
+        // Find and tap payment methods section
+        final paymentMethodsFinder = find.text('Payment Methods');
+        await tester.ensureVisible(paymentMethodsFinder);
+        await tester.tap(paymentMethodsFinder);
+        await tester.pumpAndSettle();
 
-      // Verify that navigation occurred
-      expect(navigatedToPaymentMethods, isTrue);
-    });
+        // Verify that navigation occurred
+        expect(navigatedToPaymentMethods, isTrue);
+      },
+    );
 
-    testWidgets('navigates to order history screen when order history section is tapped', (WidgetTester tester) async {
-      bool navigatedToOrderHistory = false;
+    testWidgets(
+      'navigates to order history screen when order history section is tapped',
+      (WidgetTester tester) async {
+        bool navigatedToOrderHistory = false;
 
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: ProfileScreen(),
-            onGenerateRoute: (settings) {
-              if (settings.name == '/order/history') {
-                navigatedToOrderHistory = true;
-                return MaterialPageRoute(
-                  builder: (context) => Scaffold(
-                    appBar: AppBar(title: Text('Order History')),
-                  ),
-                );
-              }
-              return null;
-            },
+        await tester.pumpWidget(
+          ProviderScope(
+            child: MaterialApp(
+              home: ProfileScreen(),
+              onGenerateRoute: (settings) {
+                if (settings.name == '/order/history') {
+                  navigatedToOrderHistory = true;
+                  return MaterialPageRoute(
+                    builder: (context) =>
+                        Scaffold(appBar: AppBar(title: Text('Order History'))),
+                  );
+                }
+                return null;
+              },
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      // Find and tap order history section
-      final orderHistoryFinder = find.text('Order History');
-      await tester.ensureVisible(orderHistoryFinder);
-      await tester.tap(orderHistoryFinder);
-      await tester.pumpAndSettle();
+        // Find and tap order history section
+        final orderHistoryFinder = find.text('Order History');
+        await tester.ensureVisible(orderHistoryFinder);
+        await tester.tap(orderHistoryFinder);
+        await tester.pumpAndSettle();
 
-      // Verify that navigation occurred
-      expect(navigatedToOrderHistory, isTrue);
-    });
+        // Verify that navigation occurred
+        expect(navigatedToOrderHistory, isTrue);
+      },
+    );
 
-    testWidgets('toggles notification preference when switch is toggled', (WidgetTester tester) async {
+    testWidgets('toggles notification preference when switch is toggled', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: ProfileScreen(),
-          ),
-        ),
+        ProviderScope(child: MaterialApp(home: ProfileScreen())),
       );
       await tester.pumpAndSettle();
 
@@ -214,7 +216,9 @@ void main() {
       }
     });
 
-    testWidgets('logs out when logout button is tapped', (WidgetTester tester) async {
+    testWidgets('logs out when logout button is tapped', (
+      WidgetTester tester,
+    ) async {
       bool loggedOut = false;
 
       await tester.pumpWidget(
@@ -225,9 +229,8 @@ void main() {
               if (settings.name == '/auth/login') {
                 loggedOut = true;
                 return MaterialPageRoute(
-                  builder: (context) => Scaffold(
-                    appBar: AppBar(title: Text('Login Screen')),
-                  ),
+                  builder: (context) =>
+                      Scaffold(appBar: AppBar(title: Text('Login Screen'))),
                 );
               }
               return null;
@@ -252,13 +255,11 @@ void main() {
       expect(loggedOut, isTrue);
     });
 
-    testWidgets('shows confirmation dialog when logout is attempted', (WidgetTester tester) async {
+    testWidgets('shows confirmation dialog when logout is attempted', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: ProfileScreen(),
-          ),
-        ),
+        ProviderScope(child: MaterialApp(home: ProfileScreen())),
       );
       await tester.pumpAndSettle();
 

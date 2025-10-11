@@ -5,7 +5,7 @@ import 'package:food_delivery_app/core/services/database_service.dart';
 // Auth state class to represent the authentication state
 class AuthState {
   final User? user;
- final bool isAuthenticated;
+  final bool isAuthenticated;
   final bool isLoading;
   final String? errorMessage;
 
@@ -44,24 +44,18 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
   void _initializeAuthListener() {
     try {
       final auth = DatabaseService().client.auth;
-      
+
       // Listen to auth state changes
       auth.onAuthStateChange.listen((data) {
         final session = data.session;
         final user = session?.user;
-        
+
         if (user != null) {
           // User is signed in
-          state = AuthState(
-            user: user,
-            isAuthenticated: true,
-          );
+          state = AuthState(user: user, isAuthenticated: true);
         } else {
           // User is signed out
-          state = AuthState(
-            user: null,
-            isAuthenticated: false,
-          );
+          state = AuthState(user: null, isAuthenticated: false);
         }
       });
     } catch (e) {
@@ -91,12 +85,12 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
           'created_at': DateTime.now().toIso8601String(),
         },
       );
-      
+
       // If sign up is successful, create user profile in user_profiles table
       if (response.user != null) {
         await _createUserProfile(response.user!, fullName);
       }
-      
+
       state = state.copyWith(isLoading: false);
       return response;
     } catch (e) {
@@ -104,7 +98,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
       rethrow;
     }
   }
-  
+
   // Create user profile in database
   Future<void> _createUserProfile(User user, String fullName) async {
     try {
@@ -121,8 +115,8 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
     }
   }
 
- // Sign in method
- Future<AuthResponse> signIn({
+  // Sign in method
+  Future<AuthResponse> signIn({
     required String email,
     required String password,
   }) async {
@@ -140,7 +134,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
     }
   }
 
- // Sign out method
+  // Sign out method
   Future<void> signOut() async {
     state = state.copyWith(isLoading: true);
     try {

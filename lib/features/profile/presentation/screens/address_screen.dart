@@ -88,11 +88,11 @@ class AddressScreen extends ConsumerWidget {
                   border: Border.all(color: Colors.deepOrange),
                 ),
                 child: Icon(
-                  address['label'] == 'Home' 
-                      ? Icons.home 
-                      : address['label'] == 'Work' 
-                          ? Icons.work 
-                          : Icons.fitness_center,
+                  address['label'] == 'Home'
+                      ? Icons.home
+                      : address['label'] == 'Work'
+                      ? Icons.work
+                      : Icons.fitness_center,
                   color: Colors.deepOrange,
                 ),
               ),
@@ -100,14 +100,15 @@ class AddressScreen extends ConsumerWidget {
                 children: [
                   Text(
                     address['label'] as String,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   if (address['isDefault'] as bool)
                     Container(
                       margin: const EdgeInsets.only(left: 8),
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.green.shade50,
                         borderRadius: BorderRadius.circular(4),
@@ -132,7 +133,10 @@ class AddressScreen extends ConsumerWidget {
                   if (value == 'edit') {
                     _navigateToEditAddress(context, address['id'] as String);
                   } else if (value == 'delete') {
-                    _showDeleteConfirmationDialog(context, address['id'] as String);
+                    _showDeleteConfirmationDialog(
+                      context,
+                      address['id'] as String,
+                    );
                   } else if (value == 'set_default') {
                     // TODO: Implement set as default functionality
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -184,11 +188,13 @@ class AddressScreen extends ConsumerWidget {
     // Navigate to address screen
     // For now, show a snackbar
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Add new address functionality coming soon')),
+      const SnackBar(
+        content: Text('Add new address functionality coming soon'),
+      ),
     );
   }
 
- void _navigateToEditAddress(BuildContext context, String addressId) {
+  void _navigateToEditAddress(BuildContext context, String addressId) {
     // Navigate to edit address screen
     // For now, show a snackbar
     ScaffoldMessenger.of(context).showSnackBar(
@@ -196,7 +202,7 @@ class AddressScreen extends ConsumerWidget {
     );
   }
 
- void _showDeleteConfirmationDialog(BuildContext context, String addressId) {
+  void _showDeleteConfirmationDialog(BuildContext context, String addressId) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -210,14 +216,14 @@ class AddressScreen extends ConsumerWidget {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Address deleted')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('Address deleted')));
             },
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
     );
- }
+  }
 }

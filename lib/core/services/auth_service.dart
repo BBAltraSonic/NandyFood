@@ -19,7 +19,7 @@ class AuthService {
     auth.onAuthStateChange.listen((data) {
       final session = data.session;
       final user = session?.user;
-      
+
       // Handle auth state changes
       if (user != null) {
         // User is signed in
@@ -45,12 +45,12 @@ class AuthService {
         'created_at': DateTime.now().toIso8601String(),
       },
     );
-    
+
     // If sign up is successful, create user profile
     if (response.user != null) {
       await _createUserProfile(response.user!, fullName);
     }
-    
+
     return response;
   }
 
@@ -71,7 +71,7 @@ class AuthService {
     try {
       // Initialize Google Sign-In if not already done
       _googleSignIn ??= GoogleSignIn(
-        serverClientId: Platform.isAndroid 
+        serverClientId: Platform.isAndroid
             ? 'YOUR_ANDROID_CLIENT_ID.apps.googleusercontent.com'
             : null,
       );
@@ -83,7 +83,8 @@ class AuthService {
       }
 
       // Get authentication details
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       final String? accessToken = googleAuth.accessToken;
       final String? idToken = googleAuth.idToken;
 
@@ -141,7 +142,9 @@ class AuthService {
 
       // Create/update user profile with name if available
       if (response.user != null) {
-        final fullName = '${credential.givenName ?? ''} ${credential.familyName ?? ''}'.trim();
+        final fullName =
+            '${credential.givenName ?? ''} ${credential.familyName ?? ''}'
+                .trim();
         await _ensureUserProfileExists(
           response.user!,
           fullName.isNotEmpty ? fullName : response.user!.email ?? 'Apple User',
@@ -182,11 +185,7 @@ class AuthService {
     Map<String, dynamic>? data,
   }) async {
     final response = await auth.updateUser(
-      UserAttributes(
-        email: email,
-        password: password,
-        data: data,
-      ),
+      UserAttributes(email: email, password: password, data: data),
     );
     return response.user!;
   }

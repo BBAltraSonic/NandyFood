@@ -26,7 +26,9 @@ void main() {
       );
 
       // Add item to cart
-      await container.read(cartProvider.notifier).addItem(menuItem, quantity: 2);
+      await container
+          .read(cartProvider.notifier)
+          .addItem(menuItem, quantity: 2);
 
       // Apply promo code (simulating 10% discount on $40 subtotal)
       // Since we're not connected to a real backend, this will fail
@@ -58,7 +60,9 @@ void main() {
       );
 
       // Add item to cart
-      await container.read(cartProvider.notifier).addItem(menuItem, quantity: 1);
+      await container
+          .read(cartProvider.notifier)
+          .addItem(menuItem, quantity: 1);
 
       // Apply invalid promo code
       await container.read(cartProvider.notifier).applyPromoCode('INVALID');
@@ -88,11 +92,13 @@ void main() {
       );
 
       // Add item to cart
-      await container.read(cartProvider.notifier).addItem(menuItem, quantity: 1);
+      await container
+          .read(cartProvider.notifier)
+          .addItem(menuItem, quantity: 1);
 
       // Apply promo code
       await container.read(cartProvider.notifier).applyPromoCode('SAVE10');
-      
+
       // Clear promo code
       await container.read(cartProvider.notifier).applyPromoCode('');
 

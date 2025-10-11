@@ -31,8 +31,8 @@ class RatingWidget extends StatelessWidget {
               index < rating.floor()
                   ? Icons.star
                   : (index < rating.ceil()
-                      ? Icons.star_half
-                      : Icons.star_border),
+                        ? Icons.star_half
+                        : Icons.star_border),
               color: color ?? Colors.amber,
               size: size,
             );
@@ -52,10 +52,7 @@ class RatingWidget extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             '($reviewCount)',
-            style: TextStyle(
-              fontSize: size * 0.8,
-              color: Colors.grey,
-            ),
+            style: TextStyle(fontSize: size * 0.8, color: Colors.grey),
           ),
         ],
       ],

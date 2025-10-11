@@ -56,20 +56,20 @@ class _LocationSelectorWidgetState extends State<LocationSelectorWidget> {
           throw Exception('Location permissions are denied');
         }
       }
-      
+
       if (permission == LocationPermission.deniedForever) {
         throw Exception('Location permissions are permanently denied');
       }
 
       // Get current position
       Position position = await Geolocator.getCurrentPosition();
-      
+
       // Convert coordinates to address
       List<Placemark> placemarks = await placemarkFromCoordinates(
         position.latitude,
         position.longitude,
       );
-      
+
       if (placemarks.isNotEmpty) {
         final placemark = placemarks.first;
         final location = {
@@ -81,12 +81,12 @@ class _LocationSelectorWidgetState extends State<LocationSelectorWidget> {
           'country': placemark.country ?? '',
           'postalCode': placemark.postalCode ?? '',
         };
-        
+
         setState(() {
           _selectedLocation = location;
           _isLoading = false;
         });
-        
+
         if (widget.onLocationSelected != null) {
           widget.onLocationSelected!(location);
         }
@@ -103,7 +103,7 @@ class _LocationSelectorWidgetState extends State<LocationSelectorWidget> {
 
   Future<void> _searchLocation(String query) async {
     if (query.isEmpty) return;
-    
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -112,14 +112,14 @@ class _LocationSelectorWidgetState extends State<LocationSelectorWidget> {
     try {
       // Search for location
       List<Location> locations = await locationFromAddress(query);
-      
+
       if (locations.isNotEmpty) {
         final location = locations.first;
         List<Placemark> placemarks = await placemarkFromCoordinates(
           location.latitude,
           location.longitude,
         );
-        
+
         if (placemarks.isNotEmpty) {
           final placemark = placemarks.first;
           final selectedLocation = {
@@ -131,12 +131,12 @@ class _LocationSelectorWidgetState extends State<LocationSelectorWidget> {
             'country': placemark.country ?? '',
             'postalCode': placemark.postalCode ?? '',
           };
-          
+
           setState(() {
             _selectedLocation = selectedLocation;
             _isLoading = false;
           });
-          
+
           if (widget.onLocationSelected != null) {
             widget.onLocationSelected!(selectedLocation);
           }
@@ -176,9 +176,7 @@ class _LocationSelectorWidgetState extends State<LocationSelectorWidget> {
                     },
                   )
                 : null,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
           onChanged: (value) {
             // Debounce search
@@ -191,7 +189,7 @@ class _LocationSelectorWidgetState extends State<LocationSelectorWidget> {
           onSubmitted: _searchLocation,
         ),
         const SizedBox(height: 16),
-        
+
         // Current location button
         ElevatedButton.icon(
           onPressed: _isLoading ? null : _getCurrentLocation,
@@ -205,7 +203,7 @@ class _LocationSelectorWidgetState extends State<LocationSelectorWidget> {
           ),
         ),
         const SizedBox(height: 16),
-        
+
         // Selected location display
         if (_selectedLocation != null) ...[
           Card(
@@ -220,26 +218,18 @@ class _LocationSelectorWidgetState extends State<LocationSelectorWidget> {
                 children: [
                   const Text(
                     'Selected Location',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     '${_selectedLocation!['street']}, ${_selectedLocation!['city']}, ${_selectedLocation!['state']}',
-                    style: const TextStyle(
-                      fontSize: 14,
-                    ),
+                    style: const TextStyle(fontSize: 14),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Lat: ${_selectedLocation!['latitude'].toStringAsFixed(6)}, '
                     'Lng: ${_selectedLocation!['longitude'].toStringAsFixed(6)}',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey,
-                    ),
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ],
               ),
@@ -247,15 +237,13 @@ class _LocationSelectorWidgetState extends State<LocationSelectorWidget> {
           ),
           const SizedBox(height: 16),
         ],
-        
+
         // Loading indicator
         if (_isLoading) ...[
-          const Center(
-            child: CircularProgressIndicator(),
-          ),
+          const Center(child: CircularProgressIndicator()),
           const SizedBox(height: 16),
         ],
-        
+
         // Error message
         if (_errorMessage != null) ...[
           Card(
@@ -268,9 +256,7 @@ class _LocationSelectorWidgetState extends State<LocationSelectorWidget> {
               padding: const EdgeInsets.all(16),
               child: Text(
                 _errorMessage!,
-                style: const TextStyle(
-                  color: Colors.red,
-                ),
+                style: const TextStyle(color: Colors.red),
               ),
             ),
           ),

@@ -8,7 +8,7 @@ class UserProfile {
   final String email;
   final String? fullName;
   final String? phoneNumber;
- final DateTime createdAt;
+  final DateTime createdAt;
   final DateTime updatedAt;
   final Map<String, dynamic>? preferences;
   final Map<String, dynamic>? defaultAddress;
@@ -29,7 +29,7 @@ class UserProfile {
 
   Map<String, dynamic> toJson() => _$UserProfileToJson(this);
 
- UserProfile copyWith({
+  UserProfile copyWith({
     String? id,
     String? email,
     String? fullName,
@@ -49,5 +49,5 @@ class UserProfile {
       preferences: preferences ?? this.preferences,
       defaultAddress: defaultAddress ?? this.defaultAddress,
     );
- }
+  }
 }

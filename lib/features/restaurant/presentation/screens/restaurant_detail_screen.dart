@@ -10,28 +10,35 @@ import 'package:food_delivery_app/shared/widgets/error_message_widget.dart';
 class RestaurantDetailScreen extends ConsumerStatefulWidget {
   final Restaurant restaurant;
 
-  const RestaurantDetailScreen({
-    super.key,
-    required this.restaurant,
-  });
+  const RestaurantDetailScreen({super.key, required this.restaurant});
 
   @override
-  ConsumerState<RestaurantDetailScreen> createState() => _RestaurantDetailScreenState();
+  ConsumerState<RestaurantDetailScreen> createState() =>
+      _RestaurantDetailScreenState();
 }
 
-class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen> {
+class _RestaurantDetailScreenState
+    extends ConsumerState<RestaurantDetailScreen> {
   final ScrollController _scrollController = ScrollController();
   final List<GlobalKey> _categoryKeys = [];
   String? _selectedCategory;
-  final List<String> _menuCategories = ['Popular', 'Appetizers', 'Mains', 'Desserts', 'Drinks'];
+  final List<String> _menuCategories = [
+    'Popular',
+    'Appetizers',
+    'Mains',
+    'Desserts',
+    'Drinks',
+  ];
 
   @override
   void initState() {
     super.initState();
     // Initialize keys for categories
-    _categoryKeys.addAll(List.generate(_menuCategories.length, (_) => GlobalKey()));
+    _categoryKeys.addAll(
+      List.generate(_menuCategories.length, (_) => GlobalKey()),
+    );
     _selectedCategory = _menuCategories.first;
-    
+
     // Select this restaurant in the provider and load menu items
     Future.microtask(() {
       ref.read(restaurantProvider.notifier).selectRestaurant(widget.restaurant);
@@ -66,27 +73,32 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
       body: restaurantState.isLoading
           ? const LoadingIndicator()
           : restaurantState.errorMessage != null
-              ? ErrorMessageWidget(
-                  message: restaurantState.errorMessage!,
-                  onRetry: () => ref.read(restaurantProvider.notifier).loadMenuItems(widget.restaurant.id),
-                )
-              : _buildRestaurantDetailContent(restaurantState, context),
+          ? ErrorMessageWidget(
+              message: restaurantState.errorMessage!,
+              onRetry: () => ref
+                  .read(restaurantProvider.notifier)
+                  .loadMenuItems(widget.restaurant.id),
+            )
+          : _buildRestaurantDetailContent(restaurantState, context),
     );
   }
 
-  Widget _buildRestaurantDetailContent(RestaurantState restaurantState, BuildContext context) {
+  Widget _buildRestaurantDetailContent(
+    RestaurantState restaurantState,
+    BuildContext context,
+  ) {
     return CustomScrollView(
       controller: _scrollController,
       slivers: [
         // Hero image with parallax effect
         _buildParallaxHeroImage(context),
-        
+
         // Sticky menu categories header
         _buildStickyCategories(),
-        
+
         // Restaurant info section
         _buildRestaurantInfo(restaurantState),
-        
+
         // Popular items section
         if (restaurantState.popularItems.isNotEmpty)
           SliverToBoxAdapter(
@@ -100,7 +112,7 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
               },
             ),
           ),
-        
+
         // Menu items by category
         ..._buildMenuItemsByCategory(restaurantState, context),
       ],
@@ -143,10 +155,7 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withOpacity(0.7),
-                  ],
+                  colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
                   stops: const [0.5, 1.0],
                 ),
               ),
@@ -190,12 +199,7 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
                       color: Colors.white,
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      shadows: [
-                        Shadow(
-                          blurRadius: 10,
-                          color: Colors.black54,
-                        ),
-                      ],
+                      shadows: [Shadow(blurRadius: 10, color: Colors.black54)],
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -214,7 +218,11 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
                         ),
                       ),
                       const SizedBox(width: 16),
-                      const Icon(Icons.access_time, color: Colors.white70, size: 16),
+                      const Icon(
+                        Icons.access_time,
+                        color: Colors.white70,
+                        size: 16,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         '${widget.restaurant.estimatedDeliveryTime} min',
@@ -250,7 +258,8 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: _menuCategories.length,
                   itemBuilder: (context, index) {
-                    final isSelected = _selectedCategory == _menuCategories[index];
+                    final isSelected =
+                        _selectedCategory == _menuCategories[index];
                     return Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: ChoiceChip(
@@ -259,8 +268,12 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
                         onSelected: (_) => _scrollToCategory(index),
                         selectedColor: Colors.deepOrange,
                         labelStyle: TextStyle(
-                          color: isSelected ? Colors.white : Colors.grey.shade700,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          color: isSelected
+                              ? Colors.white
+                              : Colors.grey.shade700,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
                         ),
                       ),
                     );
@@ -318,7 +331,10 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.deepOrange.shade50,
                     borderRadius: BorderRadius.circular(20),
@@ -365,9 +381,12 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
     );
   }
 
-  List<Widget> _buildMenuItemsByCategory(RestaurantState restaurantState, BuildContext context) {
+  List<Widget> _buildMenuItemsByCategory(
+    RestaurantState restaurantState,
+    BuildContext context,
+  ) {
     final List<Widget> widgets = [];
-    
+
     // Group menu items by category
     final Map<String, List> itemsByCategory = {};
     for (var item in restaurantState.menuItems) {
@@ -376,12 +395,12 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
       }
       itemsByCategory[item.category]!.add(item);
     }
-    
+
     // Skip the first category (Popular) as it's already shown
     for (int i = 1; i < _menuCategories.length; i++) {
       final category = _menuCategories[i];
       final items = itemsByCategory[category] ?? [];
-      
+
       if (items.isNotEmpty) {
         // Category header
         widgets.add(
@@ -399,32 +418,32 @@ class _RestaurantDetailScreenState extends ConsumerState<RestaurantDetailScreen>
             ),
           ),
         );
-        
+
         // Category items
         widgets.add(
           SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final menuItem = items[index];
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-                  child: MenuItemCard(
-                    menuItem: menuItem,
-                    onAddToCart: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('${menuItem.name} added to cart')),
-                      );
-                    },
-                  ),
-                );
-              },
-              childCount: items.length,
-            ),
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final menuItem = items[index];
+              return Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 4.0,
+                ),
+                child: MenuItemCard(
+                  menuItem: menuItem,
+                  onAddToCart: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('${menuItem.name} added to cart')),
+                    );
+                  },
+                ),
+              );
+            }, childCount: items.length),
           ),
         );
       }
     }
-    
+
     return widgets;
   }
 }
@@ -442,7 +461,11 @@ class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
   double get maxExtent => 61;
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     return child;
   }
 

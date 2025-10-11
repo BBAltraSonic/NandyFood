@@ -22,11 +22,7 @@ void main() {
 
     testWidgets('displays home screen correctly', (WidgetTester tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: HomeScreen(),
-          ),
-        ),
+        ProviderScope(child: MaterialApp(home: HomeScreen())),
       );
 
       // Verify that welcome message is displayed
@@ -44,11 +40,7 @@ void main() {
 
     testWidgets('search functionality works', (WidgetTester tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: HomeScreen(),
-          ),
-        ),
+        ProviderScope(child: MaterialApp(home: HomeScreen())),
       );
 
       // Enter search query
@@ -62,7 +54,9 @@ void main() {
       expect(find.text('pizza'), findsOneWidget);
     });
 
-    testWidgets('navigates to cart when cart icon is tapped', (WidgetTester tester) async {
+    testWidgets('navigates to cart when cart icon is tapped', (
+      WidgetTester tester,
+    ) async {
       bool navigatedToCart = false;
 
       await tester.pumpWidget(
@@ -73,9 +67,8 @@ void main() {
               if (settings.name == '/order/cart') {
                 navigatedToCart = true;
                 return MaterialPageRoute(
-                  builder: (context) => Scaffold(
-                    appBar: AppBar(title: Text('Cart Screen')),
-                  ),
+                  builder: (context) =>
+                      Scaffold(appBar: AppBar(title: Text('Cart Screen'))),
                 );
               }
               return null;
@@ -92,7 +85,9 @@ void main() {
       expect(navigatedToCart, isTrue);
     });
 
-    testWidgets('navigates to profile when profile icon is tapped', (WidgetTester tester) async {
+    testWidgets('navigates to profile when profile icon is tapped', (
+      WidgetTester tester,
+    ) async {
       bool navigatedToProfile = false;
 
       await tester.pumpWidget(
@@ -103,9 +98,8 @@ void main() {
               if (settings.name == '/profile') {
                 navigatedToProfile = true;
                 return MaterialPageRoute(
-                  builder: (context) => Scaffold(
-                    appBar: AppBar(title: Text('Profile Screen')),
-                  ),
+                  builder: (context) =>
+                      Scaffold(appBar: AppBar(title: Text('Profile Screen'))),
                 );
               }
               return null;
@@ -124,11 +118,7 @@ void main() {
 
     testWidgets('category items are displayed', (WidgetTester tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: HomeScreen(),
-          ),
-        ),
+        ProviderScope(child: MaterialApp(home: HomeScreen())),
       );
 
       // Verify that category items are displayed
@@ -141,11 +131,7 @@ void main() {
 
     testWidgets('pull to refresh works', (WidgetTester tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: HomeScreen(),
-          ),
-        ),
+        ProviderScope(child: MaterialApp(home: HomeScreen())),
       );
 
       // Perform pull to refresh gesture

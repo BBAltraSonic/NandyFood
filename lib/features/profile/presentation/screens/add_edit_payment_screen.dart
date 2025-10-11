@@ -14,7 +14,8 @@ class AddEditPaymentScreen extends ConsumerStatefulWidget {
   }) : super(key: key);
 
   @override
-  ConsumerState<AddEditPaymentScreen> createState() => _AddEditPaymentScreenState();
+  ConsumerState<AddEditPaymentScreen> createState() =>
+      _AddEditPaymentScreenState();
 }
 
 class _AddEditPaymentScreenState extends ConsumerState<AddEditPaymentScreen> {
@@ -25,7 +26,7 @@ class _AddEditPaymentScreenState extends ConsumerState<AddEditPaymentScreen> {
   final _cvcController = TextEditingController();
   final _cardholderNameController = TextEditingController();
 
- String _selectedBrand = 'Unknown';
+  String _selectedBrand = 'Unknown';
   bool _isLoading = false;
 
   @override
@@ -44,7 +45,9 @@ class _AddEditPaymentScreenState extends ConsumerState<AddEditPaymentScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.isEditing ? 'Edit Payment Method' : 'Add Payment Method'),
+        title: Text(
+          widget.isEditing ? 'Edit Payment Method' : 'Add Payment Method',
+        ),
         centerTitle: true,
       ),
       body: Padding(
@@ -56,13 +59,10 @@ class _AddEditPaymentScreenState extends ConsumerState<AddEditPaymentScreen> {
             children: [
               const Text(
                 'Card Information',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
-              
+
               // Card number field
               TextFormField(
                 controller: _cardNumberController,
@@ -92,7 +92,7 @@ class _AddEditPaymentScreenState extends ConsumerState<AddEditPaymentScreen> {
                   if (formattedValue.length > 16) {
                     formattedValue = formattedValue.substring(0, 16);
                   }
-                  
+
                   // Add spaces every 4 digits
                   String displayValue = '';
                   for (int i = 0; i < formattedValue.length; i++) {
@@ -101,12 +101,14 @@ class _AddEditPaymentScreenState extends ConsumerState<AddEditPaymentScreen> {
                     }
                     displayValue += formattedValue[i];
                   }
-                  
+
                   _cardNumberController.value = TextEditingValue(
                     text: displayValue,
-                    selection: TextSelection.collapsed(offset: displayValue.length),
+                    selection: TextSelection.collapsed(
+                      offset: displayValue.length,
+                    ),
                   );
-                  
+
                   // Update brand based on card number
                   setState(() {
                     _selectedBrand = _getCardBrand(formattedValue);
@@ -114,7 +116,7 @@ class _AddEditPaymentScreenState extends ConsumerState<AddEditPaymentScreen> {
                 },
               ),
               const SizedBox(height: 16),
-              
+
               // Cardholder name field
               TextFormField(
                 controller: _cardholderNameController,
@@ -133,7 +135,7 @@ class _AddEditPaymentScreenState extends ConsumerState<AddEditPaymentScreen> {
                 },
               ),
               const SizedBox(height: 16),
-              
+
               // Expiry date and CVC row
               Row(
                 children: [
@@ -167,7 +169,7 @@ class _AddEditPaymentScreenState extends ConsumerState<AddEditPaymentScreen> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  
+
                   // Expiry year
                   Expanded(
                     child: TextFormField(
@@ -193,7 +195,7 @@ class _AddEditPaymentScreenState extends ConsumerState<AddEditPaymentScreen> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  
+
                   // CVC
                   Expanded(
                     child: TextFormField(
@@ -220,7 +222,7 @@ class _AddEditPaymentScreenState extends ConsumerState<AddEditPaymentScreen> {
                 ],
               ),
               const SizedBox(height: 24),
-              
+
               // Loading indicator or save button
               if (_isLoading)
                 const Center(child: LoadingIndicator())
@@ -230,7 +232,11 @@ class _AddEditPaymentScreenState extends ConsumerState<AddEditPaymentScreen> {
                   height: 50,
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _savePaymentMethod,
-                    child: Text(widget.isEditing ? 'Update Payment Method' : 'Add Payment Method'),
+                    child: Text(
+                      widget.isEditing
+                          ? 'Update Payment Method'
+                          : 'Add Payment Method',
+                    ),
                   ),
                 ),
             ],
@@ -242,10 +248,11 @@ class _AddEditPaymentScreenState extends ConsumerState<AddEditPaymentScreen> {
 
   String _getCardBrand(String cardNumber) {
     final cleanCardNumber = cardNumber.replaceAll(RegExp(r'\s+'), '');
-    
+
     if (cleanCardNumber.startsWith('4')) {
       return 'Visa';
-    } else if (cleanCardNumber.startsWith('5') || cleanCardNumber.startsWith('2')) {
+    } else if (cleanCardNumber.startsWith('5') ||
+        cleanCardNumber.startsWith('2')) {
       return 'Mastercard';
     } else if (cleanCardNumber.startsWith('3')) {
       return 'Amex';
@@ -278,7 +285,7 @@ class _AddEditPaymentScreenState extends ConsumerState<AddEditPaymentScreen> {
 
     try {
       final paymentMethodsNotifier = ref.read(paymentMethodsProvider.notifier);
-      
+
       await paymentMethodsNotifier.addPaymentMethod(
         cardNumber: _cardNumberController.text.replaceAll(RegExp(r'\s+'), ''),
         expiryMonth: int.parse(_expiryMonthController.text),
@@ -295,7 +302,7 @@ class _AddEditPaymentScreenState extends ConsumerState<AddEditPaymentScreen> {
             backgroundColor: Colors.green,
           ),
         );
-        
+
         // Navigate back to the payment methods screen
         Navigator.of(context).pop();
       }

@@ -10,15 +10,18 @@ final recentRestaurantsProvider = FutureProvider<List<Restaurant>>((ref) async {
   try {
     final authService = AuthService();
     final currentUser = authService.currentUser;
-    
+
     if (currentUser == null) {
       return [];
     }
-    
+
     final databaseService = DatabaseService();
-    final recentRestaurantsData = await databaseService.getUserRecentRestaurants(currentUser.id);
-    
-    return recentRestaurantsData.map((data) => Restaurant.fromJson(data)).toList();
+    final recentRestaurantsData = await databaseService
+        .getUserRecentRestaurants(currentUser.id);
+
+    return recentRestaurantsData
+        .map((data) => Restaurant.fromJson(data))
+        .toList();
   } catch (e) {
     print('Error loading recent restaurants: $e');
     return [];
@@ -112,7 +115,8 @@ class OrderAgainSection extends ConsumerWidget {
           ],
         );
       },
-      loading: () => const SizedBox.shrink(), // Don't show loading for this optional section
+      loading: () =>
+          const SizedBox.shrink(), // Don't show loading for this optional section
       error: (error, stack) {
         print('Error in OrderAgainSection: $error');
         return const SizedBox.shrink(); // Silently fail for better UX
@@ -126,10 +130,7 @@ class _OrderAgainCard extends StatelessWidget {
   final Restaurant restaurant;
   final VoidCallback onTap;
 
-  const _OrderAgainCard({
-    required this.restaurant,
-    required this.onTap,
-  });
+  const _OrderAgainCard({required this.restaurant, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -222,7 +223,9 @@ class _OrderAgainCard extends StatelessWidget {
                             child: Text(
                               restaurant.cuisineType,
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                color: theme.colorScheme.onSurface.withOpacity(
+                                  0.6,
+                                ),
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -233,7 +236,10 @@ class _OrderAgainCard extends StatelessWidget {
                       const SizedBox(height: 8),
                       // Order Again button
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
