@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:food_delivery_app/features/restaurant/presentation/providers/restaurant_provider.dart';
 import 'package:food_delivery_app/features/restaurant/presentation/widgets/menu_item_card.dart';
 import 'package:food_delivery_app/features/restaurant/presentation/widgets/popular_items_section.dart';
+import 'package:food_delivery_app/features/restaurant/presentation/widgets/reviews_section.dart';
+import 'package:food_delivery_app/features/restaurant/presentation/widgets/operating_hours_widget.dart';
 import 'package:food_delivery_app/shared/models/restaurant.dart';
 import 'package:food_delivery_app/shared/widgets/loading_indicator.dart';
 import 'package:food_delivery_app/shared/widgets/error_message_widget.dart';
@@ -115,6 +117,22 @@ class _RestaurantDetailScreenState
 
         // Menu items by category
         ..._buildMenuItemsByCategory(restaurantState, context),
+
+        // Reviews Section
+        if (restaurantState.totalReviews > 0 ||
+            restaurantState.reviews.isNotEmpty)
+          SliverToBoxAdapter(
+            child: ReviewsSection(
+              restaurantId: widget.restaurant.id,
+              overallRating: widget.restaurant.rating,
+              ratingBreakdown: restaurantState.ratingBreakdown,
+              initialReviews: restaurantState.reviews,
+              totalReviews: restaurantState.totalReviews,
+              onLoadMore: (offset) => ref
+                  .read(restaurantProvider.notifier)
+                  .loadMoreReviews(widget.restaurant.id, offset),
+            ),
+          ),
       ],
     );
   }
@@ -373,6 +391,12 @@ class _RestaurantDetailScreenState
                 ),
               ),
             ],
+            const SizedBox(height: 16),
+
+            // Operating Hours
+            OperatingHoursWidget(
+              hoursData: widget.restaurant.openingHours,
+            ),
             const SizedBox(height: 16),
             const Divider(),
           ],

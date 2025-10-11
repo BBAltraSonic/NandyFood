@@ -359,6 +359,86 @@ class DatabaseService {
     }
   }
 
+  // Review Operations
+  /// Get reviews for a restaurant with pagination
+  /// Returns reviews with user information joined
+  Future<List<Map<String, dynamic>>> getRestaurantReviews(
+    String restaurantId, {
+    int limit = 10,
+    int offset = 0,
+  }) async {
+    try {
+      final response = await client
+          .from('reviews')
+          .select(
+            'id, restaurant_id, user_id, rating, comment, created_at, user_profiles!reviews_user_id_fkey(full_name, avatar_url)',
+          )
+          .eq('restaurant_id', restaurantId)
+          .order('created_at', ascending: false)
+          .range(offset, offset + limit - 1);
+
+      // Transform the response to flatten user data
+      return response.map<Map<String, dynamic>>((review) {
+        final userProfile = review['user_profiles'] as Map<String, dynamic>?;
+        return {
+          'id': review['id'],
+          'restaurant_id': review['restaurant_id'],
+          'user_id': review['user_id'],
+          'rating': review['rating'],
+          'comment': review['comment'],
+          'created_at': review['created_at'],
+          'user_name': userProfile?['full_name'] ?? 'Anonymous',
+          'user_avatar': userProfile?['avatar_url'],
+        };
+      }).toList();
+    } catch (e) {
+      print('Error getting restaurant reviews: $e');
+      return [];
+    }
+  }
+
+  /// Get rating breakdown for a restaurant
+  /// Returns count for each rating (1-5 stars)
+  Future<Map<int, int>> getRestaurantRatingBreakdown(
+    String restaurantId,
+  ) async {
+    try {
+      final reviews = await client
+          .from('reviews')
+          .select('rating')
+          .eq('restaurant_id', restaurantId);
+
+      final Map<int, int> breakdown = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
+
+      for (var review in reviews) {
+        final rating = review['rating'] as int;
+        breakdown[rating] = (breakdown[rating] ?? 0) + 1;
+      }
+
+      return breakdown;
+    } catch (e) {
+      print('Error getting rating breakdown: $e');
+      return {1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
+    }
+  }
+
+  /// Get total count of reviews for a restaurant
+  Future<int> getRestaurantReviewsCount(String restaurantId) async {
+    try {
+      final response = await client
+          .from('reviews')
+          .select('id')
+          .eq('restaurant_id', restaurantId)
+          .count();
+
+      // The count is returned in the response
+      return response.count;
+    } catch (e) {
+      print('Error getting reviews count: $e');
+      return 0;
+    }
+  }
+
   // Promotion Operations
   Future<List<Map<String, dynamic>>> getActivePromotions() async {
     try {

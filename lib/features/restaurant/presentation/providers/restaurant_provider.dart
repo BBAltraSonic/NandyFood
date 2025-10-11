@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:food_delivery_app/core/services/database_service.dart';
 import 'package:food_delivery_app/shared/models/restaurant.dart';
 import 'package:food_delivery_app/shared/models/menu_item.dart';
+import 'package:food_delivery_app/shared/models/review.dart';
 
 // Restaurant state class to represent the restaurant state
 class RestaurantState {
@@ -11,6 +12,9 @@ class RestaurantState {
   final List<MenuItem> menuItems;
   final List<MenuItem> filteredMenuItems; // Added for filtering
   final List<MenuItem> popularItems; // Added for popular items
+  final List<Review> reviews; // Added for reviews
+  final Map<int, int> ratingBreakdown; // Added for rating distribution
+  final int totalReviews; // Added for total reviews count
   final bool isLoading;
   final String? errorMessage;
   final List<String>
@@ -24,6 +28,9 @@ class RestaurantState {
     this.menuItems = const [],
     this.filteredMenuItems = const [],
     this.popularItems = const [],
+    this.reviews = const [],
+    this.ratingBreakdown = const {},
+    this.totalReviews = 0,
     this.isLoading = false,
     this.errorMessage,
     this.selectedDietaryRestrictions = const [],
@@ -37,6 +44,9 @@ class RestaurantState {
     List<MenuItem>? menuItems,
     List<MenuItem>? filteredMenuItems,
     List<MenuItem>? popularItems,
+    List<Review>? reviews,
+    Map<int, int>? ratingBreakdown,
+    int? totalReviews,
     bool? isLoading,
     String? errorMessage,
     List<String>? selectedDietaryRestrictions,
@@ -49,6 +59,9 @@ class RestaurantState {
       menuItems: menuItems ?? this.menuItems,
       filteredMenuItems: filteredMenuItems ?? this.filteredMenuItems,
       popularItems: popularItems ?? this.popularItems,
+      reviews: reviews ?? this.reviews,
+      ratingBreakdown: ratingBreakdown ?? this.ratingBreakdown,
+      totalReviews: totalReviews ?? this.totalReviews,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage ?? this.errorMessage,
       selectedDietaryRestrictions:
@@ -115,6 +128,9 @@ class RestaurantNotifier extends StateNotifier<RestaurantState> {
           .map((data) => MenuItem.fromJson(data))
           .toList();
 
+      // Load reviews and rating breakdown
+      await loadReviews(restaurantId);
+
       state = state.copyWith(
         menuItems: menuItems,
         filteredMenuItems: menuItems, // Initially show all menu items
@@ -123,6 +139,61 @@ class RestaurantNotifier extends StateNotifier<RestaurantState> {
       );
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
+    }
+  }
+
+  // Load reviews for a restaurant
+  Future<void> loadReviews(String restaurantId, {int limit = 10}) async {
+    try {
+      final dbService = DatabaseService();
+
+      // Load initial reviews
+      final reviewData = await dbService.getRestaurantReviews(
+        restaurantId,
+        limit: limit,
+        offset: 0,
+      );
+      final reviews = reviewData
+          .map((data) => Review.fromJson(data))
+          .toList();
+
+      // Load rating breakdown
+      final breakdown = await dbService.getRestaurantRatingBreakdown(
+        restaurantId,
+      );
+
+      // Get total count
+      final totalCount = await dbService.getRestaurantReviewsCount(
+        restaurantId,
+      );
+
+      state = state.copyWith(
+        reviews: reviews,
+        ratingBreakdown: breakdown,
+        totalReviews: totalCount,
+      );
+    } catch (e) {
+      print('Error loading reviews: $e');
+      // Don't set error state, reviews are optional
+    }
+  }
+
+  // Load more reviews with pagination
+  Future<List<Review>> loadMoreReviews(
+    String restaurantId,
+    int offset,
+  ) async {
+    try {
+      final dbService = DatabaseService();
+      final reviewData = await dbService.getRestaurantReviews(
+        restaurantId,
+        limit: 10,
+        offset: offset,
+      );
+      return reviewData.map((data) => Review.fromJson(data)).toList();
+    } catch (e) {
+      print('Error loading more reviews: $e');
+      return [];
     }
   }
 
