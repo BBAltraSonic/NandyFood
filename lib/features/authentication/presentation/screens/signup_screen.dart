@@ -41,9 +41,17 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               fullName: _nameController.text.trim(),
             );
 
-        // Navigate to home screen after successful signup
+        // Navigate to email verification screen after successful signup
         if (mounted) {
-          context.go('/home');
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Account created! Please verify your email.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          // Redirect to email verification
+          context.go('/auth/verify-email');
         }
       } catch (e) {
         if (mounted) {

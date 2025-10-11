@@ -232,7 +232,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () => context.go('/auth/forgot-password'),
+                      child: const Text('Forgot password?'),
+                    ),
+                  ),
                   TextFormField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,

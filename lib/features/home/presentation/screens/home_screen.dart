@@ -331,6 +331,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
       ),
+        ),
+        // Floating Cart Button
+        const FloatingCartButton(),
+      ],
     );
   }
 
@@ -561,10 +565,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
       ),
-        ),
-        // Floating Cart Button
-        const FloatingCartButton(),
-      ],
     );
   }
 }
