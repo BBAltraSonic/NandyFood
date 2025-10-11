@@ -76,7 +76,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (_sent) ..[
+            if (_sent) ...[
               Icon(
                 Icons.mark_email_read_rounded,
                 size: 64,
