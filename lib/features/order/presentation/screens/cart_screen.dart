@@ -320,7 +320,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                         ),
                       ),
                     ),
-                  if (item.specialInstructions != null) ..[
+                  if (item.specialInstructions != null) ...[
                     const SizedBox(height: 4),
                     Row(
                       children: [
@@ -675,7 +675,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               'Delivery Fee',
               '\$${cartState.deliveryFee.toStringAsFixed(2)}',
             ),
-            if (cartState.promoCode != null) ..[
+            if (cartState.promoCode != null) ...[
               _buildSummaryRow(
                 'Discount (${cartState.promoCode})',
                 '-\$${cartState.discountAmount.toStringAsFixed(2)}',
