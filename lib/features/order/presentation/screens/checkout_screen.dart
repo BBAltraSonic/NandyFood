@@ -10,6 +10,8 @@ import 'package:food_delivery_app/shared/widgets/loading_indicator.dart';
 import 'package:food_delivery_app/features/order/presentation/widgets/delivery_method_selector.dart';
 import 'package:food_delivery_app/features/order/presentation/widgets/address_selector.dart';
 import 'package:food_delivery_app/features/order/presentation/widgets/payment_method_selector_cash.dart';
+import 'package:food_delivery_app/features/order/presentation/widgets/tip_selector.dart';
+import 'package:food_delivery_app/features/order/presentation/screens/order_confirmation_screen.dart';
 
 class CheckoutScreen extends ConsumerWidget {
   const CheckoutScreen({super.key});
@@ -118,6 +120,17 @@ class CheckoutScreen extends ConsumerWidget {
 
                   const SizedBox(height: 32),
 
+                  // Tip Selector
+                  TipSelector(
+                    subtotal: cartState.subtotal,
+                    currentTip: cartState.tipAmount,
+                    onTipChanged: (tip) {
+                      ref.read(cartProvider.notifier).setTipAmount(tip);
+                    },
+                  ),
+
+                  const SizedBox(height: 24),
+
                   // Payment method selector (Cash only)
                   const PaymentMethodSelectorCash(),
                 ],
@@ -219,19 +232,17 @@ class CheckoutScreen extends ConsumerWidget {
             'Please ring the doorbell', // This would come from user input
       );
 
-      // Show success message
+      // Hide loading snackbar
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Order placed successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
 
-      // Navigate to order tracking
+      // Navigate to order confirmation screen
       final placedOrder = ref.read(placeOrderProvider).placedOrder;
-      if (placedOrder != null) {
-        Navigator.of(context).pushNamed('/order/track', arguments: placedOrder);
+      if (placedOrder != null && context.mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => OrderConfirmationScreen(order: placedOrder),
+          ),
+        );
       }
     } catch (e) {
       // Show error message

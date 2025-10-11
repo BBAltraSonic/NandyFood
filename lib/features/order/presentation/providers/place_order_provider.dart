@@ -3,6 +3,7 @@ import 'package:food_delivery_app/features/order/presentation/providers/cart_pro
 import 'package:food_delivery_app/features/order/presentation/providers/order_provider.dart';
 import 'package:food_delivery_app/shared/models/order.dart';
 import 'package:food_delivery_app/shared/models/order_item.dart';
+import 'package:uuid/uuid.dart';
 
 // Place order state class to represent the place order state
 class PlaceOrderState {
@@ -95,9 +96,16 @@ class PlaceOrderNotifier extends StateNotifier<PlaceOrderState> {
       final discountAmount = cartState.discountAmount;
       final totalAmount = cartState.totalAmount;
 
+      // Generate order ID and estimated delivery time
+      const uuid = Uuid();
+      final orderId = uuid.v4();
+      final estimatedDeliveryTime = DateTime.now().add(
+        const Duration(minutes: 30), // Default 30 minutes delivery time
+      );
+
       // Create order data
       final order = Order(
-        id: '', // Will be set by the database
+        id: orderId,
         userId: userId,
         restaurantId: restaurantId,
         deliveryAddress: deliveryAddress,
@@ -106,12 +114,13 @@ class PlaceOrderNotifier extends StateNotifier<PlaceOrderState> {
         subtotal: subtotal,
         deliveryFee: deliveryFee,
         taxAmount: taxAmount,
-        tipAmount: tipAmount ?? 0.0,
+        tipAmount: tipAmount ?? cartState.tipAmount,
         discountAmount: discountAmount,
-        promoCode: promoCode?.toUpperCase(),
-        paymentMethod: paymentMethod ?? 'Credit Card',
-        paymentStatus: PaymentStatus.pending,
+        promoCode: promoCode?.toUpperCase() ?? cartState.promoCode,
+        paymentMethod: paymentMethod ?? 'cash',
+        paymentStatus: PaymentStatus.completed, // Cash payment is completed on delivery
         placedAt: DateTime.now(),
+        estimatedDeliveryAt: estimatedDeliveryTime,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
         specialInstructions: specialInstructions,
