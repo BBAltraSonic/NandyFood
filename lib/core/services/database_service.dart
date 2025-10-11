@@ -256,6 +256,48 @@ class DatabaseService {
     }
   }
 
+  /// Get restaurants the user has ordered from recently (for Order Again section)
+  /// Returns up to 10 unique restaurants ordered by most recent order
+  Future<List<Map<String, dynamic>>> getUserRecentRestaurants(String userId) async {
+    try {
+      // Get recent orders with restaurant data
+      final orders = await client
+          .from('orders')
+          .select('restaurant_id, placed_at, restaurants(id, name, cuisine_type, rating, estimated_delivery_time, is_active)')
+          .eq('user_id', userId)
+          .order('placed_at', ascending: false)
+          .limit(50); // Get more orders to ensure variety after filtering
+      
+      // Extract unique restaurants (most recent first)
+      final Map<String, Map<String, dynamic>> uniqueRestaurants = {};
+      
+      for (var order in orders) {
+        final restaurantId = order['restaurant_id'] as String;
+        final restaurantData = order['restaurants'] as Map<String, dynamic>?;
+        
+        // Skip if restaurant data is missing or restaurant is inactive
+        if (restaurantData == null || restaurantData['is_active'] != true) {
+          continue;
+        }
+        
+        // Add if not already in map (keeps most recent)
+        if (!uniqueRestaurants.containsKey(restaurantId)) {
+          uniqueRestaurants[restaurantId] = restaurantData;
+        }
+        
+        // Stop once we have 10 unique restaurants
+        if (uniqueRestaurants.length >= 10) {
+          break;
+        }
+      }
+      
+      return uniqueRestaurants.values.toList();
+    } catch (e) {
+      print('Error getting recent restaurants: $e');
+      return [];
+    }
+  }
+
   // Delivery Operations
   Future<Map<String, dynamic>?> getDelivery(String orderId) async {
     try {
