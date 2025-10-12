@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_router/go_router.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:food_delivery_app/firebase_options.dart';
 import 'package:food_delivery_app/core/services/database_service.dart';
+import 'package:food_delivery_app/core/services/notification_service.dart';
 import 'package:food_delivery_app/core/providers/theme_provider.dart';
 import 'package:food_delivery_app/core/utils/app_logger.dart';
 import 'package:food_delivery_app/features/authentication/presentation/screens/login_screen.dart';
@@ -53,6 +57,34 @@ Future<void> main() async {
   } catch (e) {
     AppLogger.warning('.env file not found - using default configuration');
     AppLogger.debug('Will use hardcoded/default values for configuration');
+  }
+
+  // Initialize Firebase
+  AppLogger.init('Initializing Firebase...');
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    AppLogger.success('Firebase initialized successfully');
+    
+    // Set up FCM background message handler
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    AppLogger.success('FCM background handler registered');
+  } catch (e, stack) {
+    AppLogger.error('Failed to initialize Firebase', error: e, stack: stack);
+  }
+
+  // Initialize Notification Service
+  AppLogger.init('Initializing notification service...');
+  try {
+    final notificationService = NotificationService();
+    await notificationService.initialize();
+    AppLogger.success(
+      'Notification service initialized',
+      details: 'FCM token: ${notificationService.fcmToken?.substring(0, 20)}...',
+    );
+  } catch (e, stack) {
+    AppLogger.error('Failed to initialize notifications', error: e, stack: stack);
   }
 
   // Payment system - currently using cash on delivery

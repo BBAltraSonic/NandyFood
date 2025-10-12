@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -156,16 +157,45 @@ class NotificationService {
     if (token == null) return;
     
     try {
-      // TODO: Store token in Supabase
-      // await supabase.from('user_devices').upsert({
-      //   'user_id': userId,
-      //   'fcm_token': token,
-      //   'platform': Platform.isIOS ? 'ios' : 'android',
-      //   'updated_at': DateTime.now().toIso8601String(),
-      // });
-      debugPrint('Should send FCM token to backend');
+      final supabase = Supabase.instance.client;
+      final userId = supabase.auth.currentUser?.id;
+      
+      if (userId == null) {
+        debugPrint('No user logged in, FCM token not stored');
+        return;
+      }
+      
+      // Store token in Supabase user_devices table
+      await supabase.from('user_devices').upsert({
+        'user_id': userId,
+        'fcm_token': token,
+        'platform': Platform.isIOS ? 'ios' : 'android',
+        'device_name': await _getDeviceName(),
+        'app_version': '1.0.0', // TODO: Get from package_info
+        'is_active': true,
+        'last_used_at': DateTime.now().toIso8601String(),
+        'created_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      }, onConflict: 'fcm_token');
+      
+      debugPrint('FCM token stored in database for user: $userId');
     } catch (e) {
       debugPrint('Error sending FCM token to backend: $e');
+    }
+  }
+  
+  /// Get device name
+  Future<String> _getDeviceName() async {
+    try {
+      if (Platform.isIOS) {
+        return 'iOS Device';
+      } else if (Platform.isAndroid) {
+        return 'Android Device';
+      } else {
+        return 'Unknown Device';
+      }
+    } catch (e) {
+      return 'Unknown Device';
     }
   }
 
