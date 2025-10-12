@@ -462,66 +462,66 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                     ),
                   ),
-                  // Apple Sign-In Button (iOS only)
-                  if (Platform.isIOS) const SizedBox(height: 16),
-                  if (Platform.isIOS)
-                    Container(
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: Colors.black,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.2),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: OutlinedButton(
-                        onPressed: _isAppleLoading || authState.isLoading
-                            ? null
-                            : _handleAppleSignIn,
-                        style: OutlinedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          side: BorderSide.none,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        child: _isAppleLoading
-                            ? const SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(4),
-                                    child: const Icon(
-                                      Icons.apple,
-                                      size: 28,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  const Text(
-                                    'Continue with Apple',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                      ),
-                    ),
+                  // Apple Sign-In Button - Hidden for now
+                  // if (Platform.isIOS) const SizedBox(height: 16),
+                  // if (Platform.isIOS)
+                  //   Container(
+                  //     height: 56,
+                  //     decoration: BoxDecoration(
+                  //       color: Colors.black,
+                  //       borderRadius: BorderRadius.circular(16),
+                  //       boxShadow: [
+                  //         BoxShadow(
+                  //           color: Colors.black.withValues(alpha: 0.2),
+                  //           blurRadius: 10,
+                  //           offset: const Offset(0, 4),
+                  //         ),
+                  //       ],
+                  //     ),
+                  //     child: OutlinedButton(
+                  //       onPressed: _isAppleLoading || authState.isLoading
+                  //           ? null
+                  //           : _handleAppleSignIn,
+                  //       style: OutlinedButton.styleFrom(
+                  //         backgroundColor: Colors.transparent,
+                  //         side: BorderSide.none,
+                  //         shape: RoundedRectangleBorder(
+                  //           borderRadius: BorderRadius.circular(16),
+                  //         ),
+                  //       ),
+                  //       child: _isAppleLoading
+                  //           ? const SizedBox(
+                  //               width: 24,
+                  //               height: 24,
+                  //               child: CircularProgressIndicator(
+                  //                 strokeWidth: 2,
+                  //                 color: Colors.white,
+                  //               ),
+                  //             )
+                  //           : Row(
+                  //               mainAxisAlignment: MainAxisAlignment.center,
+                  //               children: [
+                  //                 Container(
+                  //                   padding: const EdgeInsets.all(4),
+                  //                   child: const Icon(
+                  //                     Icons.apple,
+                  //                     size: 28,
+                  //                     color: Colors.white,
+                  //                   ),
+                  //                 ),
+                  //                 const SizedBox(width: 12),
+                  //                 const Text(
+                  //                   'Continue with Apple',
+                  //                   style: TextStyle(
+                  //                     fontSize: 16,
+                  //                     fontWeight: FontWeight.w600,
+                  //                     color: Colors.white,
+                  //                   ),
+                  //                 ),
+                  //               ],
+                  //             ),
+                  //     ),
+                  //   ),
                   const SizedBox(height: 40),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
