@@ -156,19 +156,19 @@ class _CategoryChip extends StatelessWidget {
           border: Border.all(
             color: isSelected
                 ? Colors.transparent
-                : theme.colorScheme.onSurface.withOpacity(0.1),
+                : theme.colorScheme.onSurface.withValues(alpha: 0.1),
             width: 1.5,
           ),
           boxShadow: [
             if (isSelected)
               BoxShadow(
-                color: theme.colorScheme.primary.withOpacity(0.3),
+                color: theme.colorScheme.primary.withValues(alpha: 0.3),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               )
             else
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),

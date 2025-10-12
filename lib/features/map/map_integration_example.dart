@@ -161,7 +161,7 @@ class _MapIntegrationExampleState extends State<MapIntegrationExample> {
                     MapConfig.createDeliveryRadius(
                       center: _userLocation!,
                       radiusInMeters: 5000, // 5km
-                      color: Colors.blue.withOpacity(0.1),
+                      color: Colors.blue.withValues(alpha: 0.1),
                     ),
                   ],
                 ),

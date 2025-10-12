@@ -124,7 +124,7 @@ class ProfileScreen extends ConsumerWidget {
   Widget _buildProfileHeader(dynamic userProfile) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.deepOrange.withOpacity(0.1)),
+      decoration: BoxDecoration(color: Colors.deepOrange.withValues(alpha: 0.1)),
       child: Row(
         children: [
           // Profile picture

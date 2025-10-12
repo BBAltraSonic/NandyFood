@@ -130,7 +130,7 @@ class AccessibleMenuItemCard extends StatelessWidget {
                                     vertical: 4,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: badgeColor.withOpacity(0.1),
+                                    color: badgeColor.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(color: badgeColor),
                                   ),

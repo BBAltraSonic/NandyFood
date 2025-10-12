@@ -129,7 +129,7 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
                     BoxShadow(
                       color: Theme.of(
                         context,
-                      ).colorScheme.primary.withOpacity(0.4),
+                      ).colorScheme.primary.withValues(alpha: 0.4),
                       blurRadius: isSelected ? 8 : 4,
                       offset: const Offset(0, 2),
                       spreadRadius: isSelected ? 2 : 0,
@@ -183,7 +183,7 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
           point: widget.userLocation!,
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.3),
+              color: Colors.blue.withValues(alpha: 0.3),
               shape: BoxShape.circle,
               border: Border.all(color: Colors.blue, width: 3),
             ),
@@ -241,7 +241,7 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -271,7 +271,7 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -308,7 +308,7 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: theme.colorScheme.primary.withOpacity(0.3),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.3),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -352,7 +352,7 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
 
     return Card(
       elevation: 12,
-      shadowColor: theme.colorScheme.primary.withOpacity(0.3),
+      shadowColor: theme.colorScheme.primary.withValues(alpha: 0.3),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Stack(
         children: [
@@ -376,8 +376,8 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              theme.colorScheme.primary.withOpacity(0.1),
-                              theme.colorScheme.secondary.withOpacity(0.1),
+                              theme.colorScheme.primary.withValues(alpha: 0.1),
+                              theme.colorScheme.secondary.withValues(alpha: 0.1),
                             ],
                           ),
                         ),
@@ -420,7 +420,7 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
                                 restaurant.cuisineType,
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: theme.colorScheme.onSurface
-                                      .withOpacity(0.6),
+                                      .withValues(alpha: 0.6),
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -438,7 +438,7 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.amber.withOpacity(0.2),
+                                color: Colors.amber.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Row(
@@ -487,7 +487,7 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withOpacity(0.1),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
@@ -512,7 +512,7 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
                 child: Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.surface.withOpacity(0.9),
+                    color: theme.colorScheme.surface.withValues(alpha: 0.9),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(

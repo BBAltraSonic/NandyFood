@@ -401,7 +401,7 @@ class _DishCustomizationModalState extends State<DishCustomizationModal> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: _getSpiceLevelColor().withOpacity(0.1),
+                color: _getSpiceLevelColor().withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -432,7 +432,7 @@ class _DishCustomizationModalState extends State<DishCustomizationModal> {
             activeTrackColor: _getSpiceLevelColor(),
             inactiveTrackColor: Colors.grey.shade200,
             thumbColor: _getSpiceLevelColor(),
-            overlayColor: _getSpiceLevelColor().withOpacity(0.2),
+            overlayColor: _getSpiceLevelColor().withValues(alpha: 0.2),
             trackHeight: 6,
           ),
           child: Slider(
@@ -585,7 +585,7 @@ class _DishCustomizationModalState extends State<DishCustomizationModal> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),

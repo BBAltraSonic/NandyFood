@@ -30,7 +30,7 @@ class UserProfileWidget extends StatelessWidget {
                   width: 60,
                   height: 60,
                   decoration: BoxDecoration(
-                    color: Colors.deepOrange.withOpacity(0.1),
+                    color: Colors.deepOrange.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(Icons.person, color: Colors.deepOrange, size: 30),

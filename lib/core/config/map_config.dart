@@ -94,7 +94,7 @@ class MapConfig {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 0.3),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -136,7 +136,7 @@ class MapConfig {
           border: Border.all(color: Colors.white, width: 3),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -166,7 +166,7 @@ class MapConfig {
             border: Border.all(color: Colors.white, width: 3),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -207,7 +207,7 @@ class MapConfig {
       point: center,
       radius: radiusInMeters,
       useRadiusInMeter: true,
-      color: (color ?? Colors.blue).withOpacity(0.1),
+      color: (color ?? Colors.blue).withValues(alpha: 0.1),
       borderColor: color ?? Colors.blue,
       borderStrokeWidth: 2.0,
     );

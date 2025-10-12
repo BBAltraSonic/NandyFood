@@ -59,8 +59,8 @@ class OrderAgainSection extends ConsumerWidget {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              theme.colorScheme.primary.withOpacity(0.2),
-                              theme.colorScheme.secondary.withOpacity(0.2),
+                              theme.colorScheme.primary.withValues(alpha: 0.2),
+                              theme.colorScheme.secondary.withValues(alpha: 0.2),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(12),
@@ -144,7 +144,7 @@ class _OrderAgainCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -168,8 +168,8 @@ class _OrderAgainCard extends StatelessWidget {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        theme.colorScheme.primary.withOpacity(0.3),
-                        theme.colorScheme.secondary.withOpacity(0.3),
+                        theme.colorScheme.primary.withValues(alpha: 0.3),
+                        theme.colorScheme.secondary.withValues(alpha: 0.3),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(16),
@@ -178,7 +178,7 @@ class _OrderAgainCard extends StatelessWidget {
                     child: Icon(
                       Icons.restaurant_menu_rounded,
                       size: 36,
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                     ),
                   ),
                 ),
@@ -216,7 +216,7 @@ class _OrderAgainCard extends StatelessWidget {
                           Icon(
                             Icons.circle,
                             size: 4,
-                            color: theme.colorScheme.onSurface.withOpacity(0.3),
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
@@ -250,7 +250,7 @@ class _OrderAgainCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                           boxShadow: [
                             BoxShadow(
-                              color: theme.colorScheme.primary.withOpacity(0.3),
+                              color: theme.colorScheme.primary.withValues(alpha: 0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),

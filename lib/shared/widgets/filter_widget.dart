@@ -51,7 +51,7 @@ class _FilterWidgetState extends State<FilterWidget> {
               onSelected: (selected) {
                 _toggleOption(option);
               },
-              selectedColor: Colors.deepOrange.withOpacity(0.2),
+              selectedColor: Colors.deepOrange.withValues(alpha: 0.2),
               backgroundColor: Colors.grey.shade100,
               labelStyle: TextStyle(
                 color: option.isSelected

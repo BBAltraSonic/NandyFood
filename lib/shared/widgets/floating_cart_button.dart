@@ -127,7 +127,7 @@ class _FloatingCartButtonState extends ConsumerState<FloatingCartButton>
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.deepOrange.withOpacity(0.4),
+                  color: Colors.deepOrange.withValues(alpha: 0.4),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -203,7 +203,7 @@ class _CartPreviewOverlay extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -269,8 +269,8 @@ class _CartPreviewOverlay extends StatelessWidget {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            const Color(0xFFFF6B6B).withOpacity(0.1),
-                            const Color(0xFFFF8E53).withOpacity(0.1),
+                            const Color(0xFFFF6B6B).withValues(alpha: 0.1),
+                            const Color(0xFFFF8E53).withValues(alpha: 0.1),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(12),

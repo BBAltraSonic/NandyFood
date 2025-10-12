@@ -92,7 +92,7 @@ class MenuItemCardWidget extends StatelessWidget {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.deepOrange.withOpacity(0.1),
+                                  color: Colors.deepOrange.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(

@@ -158,7 +158,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
           colors: [
             widget.pageData.backgroundColor ?? theme.colorScheme.primary,
             (widget.pageData.backgroundColor ?? theme.colorScheme.primary)
-                .withOpacity(0.7),
+                .withValues(alpha: 0.7),
           ],
         ),
       ),
@@ -212,7 +212,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
                   child: Text(
                     widget.pageData.description,
                     style: theme.textTheme.bodyLarge?.copyWith(
-                      color: Colors.white.withOpacity(0.95),
+                      color: Colors.white.withValues(alpha: 0.95),
                       height: 1.6,
                     ),
                     textAlign: TextAlign.center,
@@ -261,7 +261,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
                     child: Text(
                       'Skip for now',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -310,11 +310,11 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
       height: size,
       padding: const EdgeInsets.all(40),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withValues(alpha: 0.2),
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 30,
             spreadRadius: 10,
           ),

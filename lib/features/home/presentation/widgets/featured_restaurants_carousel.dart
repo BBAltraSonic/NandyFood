@@ -152,7 +152,7 @@ class _FeaturedRestaurantsCarouselState
               Text(
                 'Top picks near you',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
             ],
@@ -215,7 +215,7 @@ class _FeaturedRestaurantsCarouselState
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: theme.colorScheme.primary.withOpacity(0.2),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
                     blurRadius: isCurrentPage ? 20 : 10,
                     offset: const Offset(0, 4),
                     spreadRadius: isCurrentPage ? 2 : 0,
@@ -263,9 +263,9 @@ class _FeaturedRestaurantsCarouselState
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            theme.colorScheme.primary.withOpacity(0.3),
-            theme.colorScheme.secondary.withOpacity(0.3),
-            theme.colorScheme.tertiary.withOpacity(0.3),
+            theme.colorScheme.primary.withValues(alpha: 0.3),
+            theme.colorScheme.secondary.withValues(alpha: 0.3),
+            theme.colorScheme.tertiary.withValues(alpha: 0.3),
           ],
         ),
       ),
@@ -273,7 +273,7 @@ class _FeaturedRestaurantsCarouselState
         child: Icon(
           Icons.restaurant,
           size: 80,
-          color: Colors.white.withOpacity(0.3),
+          color: Colors.white.withValues(alpha: 0.3),
         ),
       ),
     );
@@ -291,8 +291,8 @@ class _FeaturedRestaurantsCarouselState
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              theme.colorScheme.primary.withOpacity(0.3),
-              theme.colorScheme.secondary.withOpacity(0.3),
+              theme.colorScheme.primary.withValues(alpha: 0.3),
+              theme.colorScheme.secondary.withValues(alpha: 0.3),
             ],
           ),
         ),
@@ -310,8 +310,8 @@ class _FeaturedRestaurantsCarouselState
           end: Alignment.bottomCenter,
           colors: [
             Colors.transparent,
-            Colors.black.withOpacity(0.3),
-            Colors.black.withOpacity(0.7),
+            Colors.black.withValues(alpha: 0.3),
+            Colors.black.withValues(alpha: 0.7),
           ],
           stops: const [0.0, 0.5, 1.0],
         ),
@@ -335,7 +335,7 @@ class _FeaturedRestaurantsCarouselState
               color: Colors.white,
               fontWeight: FontWeight.bold,
               shadows: [
-                Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 4),
+                Shadow(color: Colors.black.withValues(alpha: 0.5), blurRadius: 4),
               ],
             ),
             maxLines: 2,
@@ -349,9 +349,9 @@ class _FeaturedRestaurantsCarouselState
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.white.withOpacity(0.3)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                 ),
                 child: Text(
                   restaurant.cuisineType,
@@ -365,13 +365,13 @@ class _FeaturedRestaurantsCarouselState
               Icon(
                 Icons.access_time,
                 size: 14,
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
               ),
               const SizedBox(width: 4),
               Text(
                 '${restaurant.estimatedDeliveryTime} min',
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                 ),
               ),
             ],
@@ -384,7 +384,7 @@ class _FeaturedRestaurantsCarouselState
             Text(
               restaurant.description!,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -408,7 +408,7 @@ class _FeaturedRestaurantsCarouselState
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -446,7 +446,7 @@ class _FeaturedRestaurantsCarouselState
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -486,7 +486,7 @@ class _FeaturedRestaurantsCarouselState
             decoration: BoxDecoration(
               color: index == _currentPage
                   ? theme.colorScheme.primary
-                  : theme.colorScheme.onSurface.withOpacity(0.2),
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(4),
             ),
           ),
@@ -505,20 +505,20 @@ class _FeaturedRestaurantsCarouselState
           Icon(
             Icons.restaurant_menu,
             size: 64,
-            color: theme.colorScheme.onSurface.withOpacity(0.3),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 16),
           Text(
             'No Featured Restaurants',
             style: theme.textTheme.titleMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Check back soon for our top picks!',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.5),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
             ),
             textAlign: TextAlign.center,
           ),

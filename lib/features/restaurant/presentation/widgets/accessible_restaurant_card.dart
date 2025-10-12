@@ -116,7 +116,7 @@ class AccessibleRestaurantCard extends StatelessWidget {
                               decoration: BoxDecoration(
                                 color: _getDietaryBadgeColor(
                                   option,
-                                ).withOpacity(0.1),
+                                ).withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color: _getDietaryBadgeColor(option),

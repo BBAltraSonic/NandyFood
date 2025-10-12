@@ -348,7 +348,7 @@ class _FoodDeliveryAppState extends ConsumerState<FoodDeliveryApp> {
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: primaryColor.withOpacity(0.1),
+        backgroundColor: primaryColor.withValues(alpha: 0.1),
         labelStyle: const TextStyle(
           color: primaryColor,
           fontWeight: FontWeight.w600,
@@ -501,7 +501,7 @@ class _FoodDeliveryAppState extends ConsumerState<FoodDeliveryApp> {
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: primaryColor.withOpacity(0.2),
+        backgroundColor: primaryColor.withValues(alpha: 0.2),
         labelStyle: const TextStyle(
           color: primaryColor,
           fontWeight: FontWeight.w600,
