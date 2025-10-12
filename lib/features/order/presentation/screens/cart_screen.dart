@@ -303,23 +303,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                   const SizedBox(height: 4),
                   if (item.customizations != null &&
                       item.customizations.isNotEmpty)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.orange[50],
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        _formatCustomizations(item.customizations),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.orange[700],
-                        ),
-                      ),
-                    ),
+                    _buildCustomizationsDisplay(item.customizations),
                   if (item.specialInstructions != null) ...[
                     const SizedBox(height: 4),
                     Row(
@@ -809,7 +793,139 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     );
   }
 
-  /// Format customizations for display
+  /// Build enhanced customizations display
+  Widget _buildCustomizationsDisplay(Map<String, dynamic> customizations) {
+    return Container(
+      padding: const EdgeInsets.only(top: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Size selection
+          if (customizations.containsKey('size'))
+            _buildCustomizationChip(
+              icon: Icons.format_size,
+              label: 'Size: ${customizations['size']}',
+              color: Colors.blue,
+            ),
+          // Toppings
+          if (customizations.containsKey('toppings') &&
+              customizations['toppings'] is List)
+            ..._buildToppingsChips(customizations['toppings'] as List),
+          // Spice level
+          if (customizations.containsKey('spiceLevel'))
+            _buildCustomizationChip(
+              icon: Icons.local_fire_department,
+              label: _getSpiceLevelDisplay(customizations['spiceLevel']),
+              color: _getSpiceLevelDisplayColor(customizations['spiceLevel']),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Build individual customization chip
+  Widget _buildCustomizationChip({
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: color),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build toppings chips
+  List<Widget> _buildToppingsChips(List toppings) {
+    if (toppings.isEmpty) return [];
+    return [
+      Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: Wrap(
+          spacing: 4,
+          runSpacing: 4,
+          children: toppings.map((topping) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.add_circle_outline, size: 12, color: Colors.orange[700]),
+                  const SizedBox(width: 4),
+                  Text(
+                    topping.toString(),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.orange[700],
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    ];
+  }
+
+  /// Get spice level display text
+  String _getSpiceLevelDisplay(dynamic level) {
+    final spiceLevel = level is int ? level : (level as double).toInt();
+    switch (spiceLevel) {
+      case 1:
+        return 'Mild';
+      case 2:
+        return 'Medium';
+      case 3:
+        return 'Spicy';
+      case 4:
+        return 'Hot';
+      case 5:
+        return 'Extra Hot';
+      default:
+        return 'Spice: $spiceLevel';
+    }
+  }
+
+  /// Get spice level display color
+  Color _getSpiceLevelDisplayColor(dynamic level) {
+    final spiceLevel = level is int ? level : (level as double).toInt();
+    if (spiceLevel <= 1) return Colors.green;
+    if (spiceLevel <= 2) return Colors.orange;
+    if (spiceLevel <= 3) return Colors.deepOrange;
+    if (spiceLevel <= 4) return Colors.red;
+    return Colors.red.shade900;
+  }
+
+  /// Format customizations for display (fallback)
   String _formatCustomizations(Map<String, dynamic> customizations) {
     final parts = <String>[];
     
