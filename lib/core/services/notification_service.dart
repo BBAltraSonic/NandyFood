@@ -1,8 +1,20 @@
+import 'dart:io';
+
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+
+/// Top-level function for handling background FCM messages
+@pragma('vm:entry-point')
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  if (kDebugMode) {
+    debugPrint('Handling background FCM message: ${message.messageId}');
+  }
+}
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -11,8 +23,13 @@ class NotificationService {
 
   final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
+  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+  
   bool _isInitialized = false;
   bool _timezoneInitialized = false;
+  String? _fcmToken;
+  
+  String? get fcmToken => _fcmToken;
 
   int _normalizeId(int id) => id & 0x7fffffff;
 
@@ -55,10 +72,169 @@ class NotificationService {
         );
 
     await _safeOperation(() async {
-      await _notifications.initialize(initializationSettings);
+      await _notifications.initialize(
+        initializationSettings,
+        onDidReceiveNotificationResponse: _onNotificationTapped,
+      );
     });
 
+    // Initialize FCM
+    await _initializeFCM();
+
     _isInitialized = true;
+  }
+
+  /// Initialize Firebase Cloud Messaging
+  Future<void> _initializeFCM() async {
+    try {
+      // Request FCM permissions
+      final settings = await _firebaseMessaging.requestPermission(
+        alert: true,
+        announcement: false,
+        badge: true,
+        carPlay: false,
+        criticalAlert: false,
+        provisional: false,
+        sound: true,
+      );
+
+      if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+        debugPrint('FCM permission granted');
+
+        // Get FCM token
+        await _getFCMToken();
+
+        // Configure foreground notification presentation
+        await _firebaseMessaging.setForegroundNotificationPresentationOptions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+
+        // Set up FCM message handlers
+        _setupFCMHandlers();
+
+        // Listen for token refresh
+        _firebaseMessaging.onTokenRefresh.listen(_onTokenRefresh);
+      }
+    } catch (e) {
+      debugPrint('Error initializing FCM: $e');
+    }
+  }
+
+  /// Get FCM token
+  Future<void> _getFCMToken() async {
+    try {
+      // For iOS, ensure APNs token is available
+      if (Platform.isIOS) {
+        final apnsToken = await _firebaseMessaging.getAPNSToken();
+        if (apnsToken == null) {
+          debugPrint('Waiting for APNs token...');
+          await Future<void>.delayed(const Duration(seconds: 3));
+        }
+      }
+
+      _fcmToken = await _firebaseMessaging.getToken();
+      debugPrint('FCM Token: $_fcmToken');
+
+      // TODO: Send token to backend
+      await _sendTokenToBackend(_fcmToken);
+    } catch (e) {
+      debugPrint('Error getting FCM token: $e');
+    }
+  }
+
+  /// Handle FCM token refresh
+  void _onTokenRefresh(String token) {
+    _fcmToken = token;
+    debugPrint('FCM Token refreshed: $token');
+    _sendTokenToBackend(token);
+  }
+
+  /// Send FCM token to backend
+  Future<void> _sendTokenToBackend(String? token) async {
+    if (token == null) return;
+    
+    try {
+      // TODO: Store token in Supabase
+      // await supabase.from('user_devices').upsert({
+      //   'user_id': userId,
+      //   'fcm_token': token,
+      //   'platform': Platform.isIOS ? 'ios' : 'android',
+      //   'updated_at': DateTime.now().toIso8601String(),
+      // });
+      debugPrint('Should send FCM token to backend');
+    } catch (e) {
+      debugPrint('Error sending FCM token to backend: $e');
+    }
+  }
+
+  /// Set up FCM message handlers
+  void _setupFCMHandlers() {
+    // Handle foreground messages
+    FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
+
+    // Handle notification taps (background)
+    FirebaseMessaging.onMessageOpenedApp.listen(_handleMessageOpenedApp);
+
+    // Check for initial message (terminated)
+    _checkInitialMessage();
+  }
+
+  /// Handle FCM message in foreground
+  Future<void> _handleForegroundMessage(RemoteMessage message) async {
+    debugPrint('Foreground FCM message: ${message.messageId}');
+    
+    if (message.notification != null) {
+      // Show local notification
+      await showNotification(
+        id: message.hashCode,
+        title: message.notification!.title ?? 'Notification',
+        body: message.notification!.body ?? '',
+        payload: message.data.toString(),
+      );
+    }
+  }
+
+  /// Handle notification tap from background
+  void _handleMessageOpenedApp(RemoteMessage message) {
+    debugPrint('Notification tapped: ${message.messageId}');
+    _navigateFromNotification(message.data);
+  }
+
+  /// Check for initial message when app was terminated
+  Future<void> _checkInitialMessage() async {
+    final initialMessage = await _firebaseMessaging.getInitialMessage();
+    if (initialMessage != null) {
+      debugPrint('App opened from notification: ${initialMessage.messageId}');
+      _navigateFromNotification(initialMessage.data);
+    }
+  }
+
+  /// Handle local notification tap
+  void _onNotificationTapped(NotificationResponse response) {
+    debugPrint('Local notification tapped: ${response.payload}');
+    if (response.payload != null) {
+      // Parse payload and navigate
+      _handlePayload(response.payload!);
+    }
+  }
+
+  /// Handle notification payload
+  void _handlePayload(String payload) {
+    if (payload.startsWith('order:')) {
+      final orderId = payload.replaceFirst('order:', '');
+      debugPrint('Should navigate to order: $orderId');
+      // TODO: Implement navigation
+    }
+  }
+
+  /// Navigate based on notification data
+  void _navigateFromNotification(Map<String, dynamic> data) {
+    if (data['type'] == 'order_update' && data['order_id'] != null) {
+      debugPrint('Should navigate to order: ${data["order_id"]}');
+      // TODO: Implement navigation
+    }
   }
 
   Future<void> showNotification({
@@ -264,5 +440,36 @@ class NotificationService {
     });
 
     return isGranted;
+  }
+
+  /// Subscribe to FCM topic
+  Future<void> subscribeToTopic(String topic) async {
+    try {
+      await _firebaseMessaging.subscribeToTopic(topic);
+      debugPrint('Subscribed to topic: $topic');
+    } catch (e) {
+      debugPrint('Error subscribing to topic: $e');
+    }
+  }
+
+  /// Unsubscribe from FCM topic
+  Future<void> unsubscribeFromTopic(String topic) async {
+    try {
+      await _firebaseMessaging.unsubscribeFromTopic(topic);
+      debugPrint('Unsubscribed from topic: $topic');
+    } catch (e) {
+      debugPrint('Error unsubscribing from topic: $e');
+    }
+  }
+
+  /// Delete FCM token
+  Future<void> deleteFCMToken() async {
+    try {
+      await _firebaseMessaging.deleteToken();
+      _fcmToken = null;
+      debugPrint('FCM token deleted');
+    } catch (e) {
+      debugPrint('Error deleting FCM token: $e');
+    }
   }
 }
