@@ -3,9 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:food_delivery_app/shared/widgets/loading_indicator.dart';
 
 class AddEditAddressScreen extends ConsumerStatefulWidget {
+  final String? addressId; // Null for add, populated for edit
   final Map<String, dynamic>? address; // Null for add, populated for edit
 
-  const AddEditAddressScreen({super.key, this.address});
+  const AddEditAddressScreen({super.key, this.addressId, this.address});
 
   @override
   ConsumerState<AddEditAddressScreen> createState() =>

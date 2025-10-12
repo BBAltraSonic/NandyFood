@@ -4,17 +4,25 @@ import 'package:food_delivery_app/shared/models/order.dart';
 import 'package:intl/intl.dart';
 
 class OrderConfirmationScreen extends StatelessWidget {
-  final Order order;
+  final Order? order;
 
   const OrderConfirmationScreen({
     super.key,
-    required this.order,
+    this.order,
   });
 
   @override
   Widget build(BuildContext context) {
+    // If no order provided, show error and go back
+    if (order == null) {
+      Future.microtask(() => Navigator.of(context).pushReplacementNamed('/home'));
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     final theme = Theme.of(context);
-    final estimatedDeliveryTime = order.estimatedDeliveryAt ??
+    final estimatedDeliveryTime = order!.estimatedDeliveryAt ??
         DateTime.now().add(const Duration(minutes: 30));
 
     return Scaffold(
@@ -93,7 +101,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                           _buildDetailRow(
                             context,
                             'Order Number',
-                            '#${order.id.substring(0, 8).toUpperCase()}',
+                            '#${order!.id.substring(0, 8).toUpperCase()}',
                             icon: Icons.receipt_long,
                             valueColor: theme.primaryColor,
                             isBold: true,
@@ -116,7 +124,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                           _buildDetailRow(
                             context,
                             'Total Amount',
-                            '\$${order.totalAmount.toStringAsFixed(2)}',
+                            '\$${order!.totalAmount.toStringAsFixed(2)}',
                             icon: Icons.attach_money,
                             isBold: true,
                           ),
@@ -127,13 +135,13 @@ class OrderConfirmationScreen extends StatelessWidget {
                           _buildDetailRow(
                             context,
                             'Payment Method',
-                            _formatPaymentMethod(order.paymentMethod),
+                            _formatPaymentMethod(order!.paymentMethod),
                             icon: Icons.payment,
                           ),
 
-                          if (order.deliveryAddress.isNotEmpty) ...[
+                          if (order!.deliveryAddress.isNotEmpty) ...[
                             const Divider(height: 24),
-                            _buildAddressRow(context, order.deliveryAddress),
+                            _buildAddressRow(context, order!.deliveryAddress),
                           ],
                         ],
                       ),

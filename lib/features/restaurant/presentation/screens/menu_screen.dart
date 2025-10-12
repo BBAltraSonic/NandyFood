@@ -8,9 +8,14 @@ import 'package:food_delivery_app/shared/widgets/error_message_widget.dart';
 import 'package:food_delivery_app/shared/widgets/filter_widget.dart';
 
 class MenuScreen extends ConsumerWidget {
-  final Restaurant restaurant;
+  final Restaurant? restaurant;
+  final String restaurantId;
 
-  const MenuScreen({super.key, required this.restaurant});
+  const MenuScreen({
+    super.key,
+    this.restaurant,
+    required this.restaurantId,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -18,14 +23,16 @@ class MenuScreen extends ConsumerWidget {
 
     // Load menu items for this restaurant
     ref.listen<RestaurantState>(restaurantProvider, (previous, next) {
-      if (previous?.selectedRestaurant?.id != restaurant.id &&
-          next.selectedRestaurant?.id == restaurant.id) {
-        ref.read(restaurantProvider.notifier).loadMenuItems(restaurant.id);
+      if (previous?.selectedRestaurant?.id != restaurantId &&
+          next.selectedRestaurant?.id == restaurantId) {
+        ref.read(restaurantProvider.notifier).loadMenuItems(restaurantId);
       }
     });
 
     // Select this restaurant in the provider
-    ref.read(restaurantProvider.notifier).selectRestaurant(restaurant);
+    if (restaurant != null) {
+      ref.read(restaurantProvider.notifier).selectRestaurant(restaurant!);
+    }
 
     // Define dietary restriction options
     final dietaryOptions = [
@@ -53,7 +60,12 @@ class MenuScreen extends ConsumerWidget {
     ];
 
     return Scaffold(
-      appBar: AppBar(title: Text('${restaurant.name} Menu'), centerTitle: true),
+      appBar: AppBar(
+        title: Text(
+          '${restaurant?.name ?? restaurantState.selectedRestaurant?.name ?? "Menu"}',
+        ),
+        centerTitle: true,
+      ),
       body: Column(
         children: [
           // Filter widget for dietary restrictions
@@ -104,7 +116,7 @@ class MenuScreen extends ConsumerWidget {
                     message: restaurantState.errorMessage!,
                     onRetry: () => ref
                         .read(restaurantProvider.notifier)
-                        .loadMenuItems(restaurant.id),
+                        .loadMenuItems(restaurantId),
                   )
                 : _buildMenuContent(restaurantState, context, ref),
           ),
@@ -152,7 +164,7 @@ class MenuScreen extends ConsumerWidget {
         ); // Simulate network delay
         await ref
             .read(restaurantProvider.notifier)
-            .loadMenuItems(restaurant.id);
+            .loadMenuItems(restaurantId);
       },
       child: ListView.builder(
         itemCount: categories.length,

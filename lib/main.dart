@@ -11,11 +11,26 @@ import 'package:food_delivery_app/features/authentication/presentation/screens/s
 import 'package:food_delivery_app/features/authentication/presentation/screens/forgot_password_screen.dart';
 import 'package:food_delivery_app/features/authentication/presentation/screens/verify_email_screen.dart';
 import 'package:food_delivery_app/features/home/presentation/screens/home_screen.dart';
+import 'package:food_delivery_app/features/home/presentation/screens/search_screen.dart';
 import 'package:food_delivery_app/features/onboarding/presentation/screens/onboarding_screen.dart';
+import 'package:food_delivery_app/features/restaurant/presentation/screens/restaurant_detail_screen.dart';
+import 'package:food_delivery_app/features/restaurant/presentation/screens/restaurant_list_screen.dart';
+import 'package:food_delivery_app/features/restaurant/presentation/screens/menu_screen.dart';
+import 'package:food_delivery_app/features/order/presentation/screens/cart_screen.dart';
+import 'package:food_delivery_app/features/order/presentation/screens/checkout_screen.dart';
+import 'package:food_delivery_app/features/order/presentation/screens/order_confirmation_screen.dart';
+import 'package:food_delivery_app/features/order/presentation/screens/order_tracking_screen.dart';
+import 'package:food_delivery_app/features/order/presentation/screens/order_history_screen.dart' as order_history;
+import 'package:food_delivery_app/features/profile/presentation/screens/profile_screen.dart';
+import 'package:food_delivery_app/features/profile/presentation/screens/profile_settings_screen.dart';
+import 'package:food_delivery_app/features/profile/presentation/screens/settings_screen.dart';
+import 'package:food_delivery_app/features/profile/presentation/screens/order_history_screen.dart' as profile_order_history;
+import 'package:food_delivery_app/features/profile/presentation/screens/address_screen.dart';
+import 'package:food_delivery_app/features/profile/presentation/screens/add_edit_address_screen.dart';
 import 'package:food_delivery_app/features/profile/presentation/screens/payment_methods_screen.dart';
 import 'package:food_delivery_app/features/profile/presentation/screens/add_edit_payment_screen.dart';
-import 'package:food_delivery_app/features/order/presentation/screens/order_tracking_screen.dart';
 import 'package:food_delivery_app/shared/models/order.dart';
+import 'package:food_delivery_app/shared/models/restaurant.dart';
 
 Future<void> main() async {
   AppLogger.section('🚀 NANDYFOOD APP STARTING');
@@ -84,11 +99,14 @@ GoRouter createRouter() {
   final router = GoRouter(
     initialLocation: '/',
     routes: [
+      // Splash & Onboarding
       GoRoute(path: '/', builder: (context, state) => const SplashScreen()),
       GoRoute(
         path: '/onboarding',
         builder: (context, state) => const OnboardingScreen(),
       ),
+
+      // Authentication
       GoRoute(
         path: '/auth/login',
         builder: (context, state) => const LoginScreen(),
@@ -105,7 +123,103 @@ GoRouter createRouter() {
         path: '/auth/verify-email',
         builder: (context, state) => const VerifyEmailScreen(),
       ),
+
+      // Home & Search
       GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
+      GoRoute(
+        path: '/search',
+        builder: (context, state) => const SearchScreen(),
+      ),
+
+      // Restaurants
+      GoRoute(
+        path: '/restaurants',
+        builder: (context, state) => const RestaurantListScreen(),
+      ),
+      GoRoute(
+        path: '/restaurant/:id',
+        builder: (context, state) {
+          final restaurantId = state.pathParameters['id']!;
+          final restaurant = state.extra as Restaurant?;
+          return RestaurantDetailScreen(
+            restaurantId: restaurantId,
+            restaurant: restaurant,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/restaurant/:id/menu',
+        builder: (context, state) {
+          final restaurantId = state.pathParameters['id']!;
+          final restaurant = state.extra as Restaurant?;
+          return MenuScreen(
+            restaurantId: restaurantId,
+            restaurant: restaurant,
+          );
+        },
+      ),
+
+      // Cart & Checkout
+      GoRoute(
+        path: '/cart',
+        builder: (context, state) => const CartScreen(),
+      ),
+      GoRoute(
+        path: '/checkout',
+        builder: (context, state) => const CheckoutScreen(),
+      ),
+      GoRoute(
+        path: '/order/confirmation',
+        builder: (context, state) {
+          final order = state.extra as Order?;
+          return OrderConfirmationScreen(order: order);
+        },
+      ),
+      GoRoute(
+        path: '/order/track',
+        builder: (context, state) {
+          final order = state.extra as Order?;
+          return OrderTrackingScreen(order: order);
+        },
+      ),
+      GoRoute(
+        path: '/order/history',
+        builder: (context, state) => const order_history.OrderHistoryScreen(),
+      ),
+
+      // Profile
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: '/profile/settings',
+        builder: (context, state) => const ProfileSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/profile/app-settings',
+        builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/profile/order-history',
+        builder: (context, state) =>
+            const profile_order_history.OrderHistoryScreen(),
+      ),
+      GoRoute(
+        path: '/profile/addresses',
+        builder: (context, state) => const AddressScreen(),
+      ),
+      GoRoute(
+        path: '/profile/add-address',
+        builder: (context, state) => const AddEditAddressScreen(),
+      ),
+      GoRoute(
+        path: '/profile/edit-address/:id',
+        builder: (context, state) {
+          final addressId = state.pathParameters['id'];
+          return AddEditAddressScreen(addressId: addressId);
+        },
+      ),
       GoRoute(
         path: '/profile/payment-methods',
         builder: (context, state) => const PaymentMethodsScreen(),
@@ -115,9 +229,11 @@ GoRouter createRouter() {
         builder: (context, state) => const AddEditPaymentScreen(),
       ),
       GoRoute(
-        path: '/order/track',
-        builder: (context, state) =>
-            OrderTrackingScreen(order: state.extra as Order?),
+        path: '/profile/edit-payment/:id',
+        builder: (context, state) {
+          final paymentId = state.pathParameters['id'];
+          return AddEditPaymentScreen(paymentMethodId: paymentId);
+        },
       ),
     ],
     redirect: (BuildContext context, GoRouterState state) {
@@ -166,7 +282,7 @@ GoRouter createRouter() {
     },
   );
 
-  AppLogger.success('Router created with 7 routes configured');
+  AppLogger.success('Router created with ${router.configuration.routes.length} routes configured');
   AppLogger.function('createRouter', 'EXIT', result: 'GoRouter instance');
   return router;
 }

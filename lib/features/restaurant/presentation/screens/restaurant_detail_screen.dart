@@ -11,9 +11,14 @@ import 'package:food_delivery_app/shared/widgets/error_message_widget.dart';
 import 'package:food_delivery_app/shared/widgets/floating_cart_button.dart';
 
 class RestaurantDetailScreen extends ConsumerStatefulWidget {
-  final Restaurant restaurant;
+  final Restaurant? restaurant;
+  final String restaurantId;
 
-  const RestaurantDetailScreen({super.key, required this.restaurant});
+  const RestaurantDetailScreen({
+    super.key,
+    this.restaurant,
+    required this.restaurantId,
+  });
 
   @override
   ConsumerState<RestaurantDetailScreen> createState() =>
@@ -44,8 +49,10 @@ class _RestaurantDetailScreenState
 
     // Select this restaurant in the provider and load menu items
     Future.microtask(() {
-      ref.read(restaurantProvider.notifier).selectRestaurant(widget.restaurant);
-      ref.read(restaurantProvider.notifier).loadMenuItems(widget.restaurant.id);
+      if (widget.restaurant != null) {
+        ref.read(restaurantProvider.notifier).selectRestaurant(widget.restaurant!);
+      }
+      ref.read(restaurantProvider.notifier).loadMenuItems(widget.restaurantId);
     });
   }
 
@@ -82,7 +89,7 @@ class _RestaurantDetailScreenState
               message: restaurantState.errorMessage!,
               onRetry: () => ref
                   .read(restaurantProvider.notifier)
-                  .loadMenuItems(widget.restaurant.id),
+                  .loadMenuItems(widget.restaurantId),
             )
           : _buildRestaurantDetailContent(restaurantState, context),
         ),
@@ -100,7 +107,7 @@ class _RestaurantDetailScreenState
       controller: _scrollController,
       slivers: [
         // Hero image with parallax effect
-        _buildParallaxHeroImage(context),
+        _buildParallaxHeroImage(context, restaurantState),
 
         // Sticky menu categories header
         _buildStickyCategories(),
@@ -130,21 +137,21 @@ class _RestaurantDetailScreenState
             restaurantState.reviews.isNotEmpty)
           SliverToBoxAdapter(
             child: ReviewsSection(
-              restaurantId: widget.restaurant.id,
-              overallRating: widget.restaurant.rating,
+              restaurantId: widget.restaurantId,
+              overallRating: restaurantState.selectedRestaurant?.rating ?? 0.0,
               ratingBreakdown: restaurantState.ratingBreakdown,
               initialReviews: restaurantState.reviews,
               totalReviews: restaurantState.totalReviews,
               onLoadMore: (offset) => ref
                   .read(restaurantProvider.notifier)
-                  .loadMoreReviews(widget.restaurant.id, offset),
+                  .loadMoreReviews(widget.restaurantId, offset),
             ),
           ),
       ],
     );
   }
 
-  Widget _buildParallaxHeroImage(BuildContext context) {
+  Widget _buildParallaxHeroImage(BuildContext context, RestaurantState restaurantState) {
     return SliverAppBar(
       expandedHeight: 300,
       pinned: false,
@@ -153,9 +160,9 @@ class _RestaurantDetailScreenState
         background: Stack(
           fit: StackFit.expand,
           children: [
-            // Hero image with gradient
+            // Hero image with tag
             Hero(
-              tag: 'restaurant_${widget.restaurant.id}',
+              tag: 'restaurant_${widget.restaurantId}',
               child: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -219,7 +226,7 @@ class _RestaurantDetailScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.restaurant.name,
+                    restaurantState.selectedRestaurant?.name ?? widget.restaurant?.name ?? 'Restaurant',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 24,
@@ -235,7 +242,7 @@ class _RestaurantDetailScreenState
                       const Icon(Icons.star, color: Colors.amber, size: 16),
                       const SizedBox(width: 4),
                       Text(
-                        '${widget.restaurant.rating}',
+                        '${restaurantState.selectedRestaurant?.rating ?? widget.restaurant?.rating ?? 0.0}',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 14,
@@ -250,7 +257,7 @@ class _RestaurantDetailScreenState
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '${widget.restaurant.estimatedDeliveryTime} min',
+                        '${restaurantState.selectedRestaurant?.estimatedDeliveryTime ?? widget.restaurant?.estimatedDeliveryTime ?? 30} min',
                         style: const TextStyle(
                           color: Colors.white70,
                           fontSize: 14,
@@ -327,7 +334,7 @@ class _RestaurantDetailScreenState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.restaurant.cuisineType,
+                        restaurantState.selectedRestaurant?.cuisineType ?? widget.restaurant?.cuisineType ?? '',
                         style: TextStyle(
                           fontSize: 16,
                           color: Colors.grey.shade600,
@@ -387,10 +394,10 @@ class _RestaurantDetailScreenState
                 ),
               ],
             ),
-            if (widget.restaurant.description != null) ...[
+            if ((restaurantState.selectedRestaurant?.description ?? widget.restaurant?.description) != null) ...[
               const SizedBox(height: 12),
               Text(
-                widget.restaurant.description!,
+                restaurantState.selectedRestaurant?.description ?? widget.restaurant?.description ?? '',
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.grey.shade700,
@@ -401,9 +408,10 @@ class _RestaurantDetailScreenState
             const SizedBox(height: 16),
 
             // Operating Hours
-            OperatingHoursWidget(
-              hoursData: widget.restaurant.openingHours,
-            ),
+            if ((restaurantState.selectedRestaurant?.openingHours ?? widget.restaurant?.openingHours) != null)
+              OperatingHoursWidget(
+                hoursData: restaurantState.selectedRestaurant?.openingHours ?? widget.restaurant!.openingHours,
+              ),
             const SizedBox(height: 16),
             const Divider(),
           ],
