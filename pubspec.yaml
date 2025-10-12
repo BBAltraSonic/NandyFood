@@ -90,6 +90,7 @@ dependencies:
   intl: ^0.18.1
   uuid: ^4.2.1
   collection: ^1.17.2
+  url_launcher: ^6.2.2
 
   # Charts and Analytics
   fl_chart: ^0.65.0
