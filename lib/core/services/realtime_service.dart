@@ -319,8 +319,10 @@ class RealtimeService {
   }
 
   /// Check channel status
-  RealtimeChannelStates? getChannelStatus(String channelName) {
-    return _channels[channelName]?.status;
+  String? getChannelStatus(String channelName) {
+    // RealtimeChannel doesn't expose status in current version
+    // Return simple presence indicator instead
+    return _channels.containsKey(channelName) ? 'subscribed' : null;
   }
 
   /// Get all active channels
