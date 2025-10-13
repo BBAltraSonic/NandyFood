@@ -502,4 +502,181 @@ class NotificationService {
       debugPrint('Error deleting FCM token: $e');
     }
   }
+
+  // ========================================
+  // Restaurant-Specific Notifications
+  // ========================================
+
+  /// Subscribe to restaurant notifications
+  Future<void> subscribeToRestaurantNotifications(String restaurantId) async {
+    await subscribeToTopic('restaurant_$restaurantId');
+    await subscribeToTopic('restaurant_${restaurantId}_orders');
+  }
+
+  /// Unsubscribe from restaurant notifications
+  Future<void> unsubscribeFromRestaurantNotifications(String restaurantId) async {
+    await unsubscribeFromTopic('restaurant_$restaurantId');
+    await unsubscribeFromTopic('restaurant_${restaurantId}_orders');
+  }
+
+  /// Show new order notification for restaurant owners
+  Future<void> showNewOrderNotification({
+    required String orderId,
+    required String customerName,
+    required double orderTotal,
+    int? itemCount,
+  }) async {
+    String title = 'New Order Received!';
+    String body = 'Order from $customerName';
+    
+    if (itemCount != null) {
+      body += ' - $itemCount item${itemCount > 1 ? "s" : ""}';
+    }
+    
+    body += ' - \$${orderTotal.toStringAsFixed(2)}';
+
+    await showNotification(
+      id: orderId.hashCode,
+      title: title,
+      body: body,
+      payload: 'restaurant_order:$orderId',
+    );
+  }
+
+  /// Show order cancellation notification for restaurants
+  Future<void> showOrderCancellationNotification({
+    required String orderId,
+    required String customerName,
+    String? reason,
+  }) async {
+    String title = 'Order Cancelled';
+    String body = 'Order from $customerName has been cancelled';
+    
+    if (reason != null && reason.isNotEmpty) {
+      body += ' - Reason: $reason';
+    }
+
+    await showNotification(
+      id: orderId.hashCode + 2000,
+      title: title,
+      body: body,
+      payload: 'restaurant_order:$orderId',
+    );
+  }
+
+  /// Show customer message notification
+  Future<void> showCustomerMessageNotification({
+    required String orderId,
+    required String customerName,
+    required String message,
+  }) async {
+    await showNotification(
+      id: orderId.hashCode + 3000,
+      title: 'Message from $customerName',
+      body: message,
+      payload: 'restaurant_order:$orderId',
+    );
+  }
+
+  /// Show daily summary notification for restaurant
+  Future<void> showRestaurantDailySummaryNotification({
+    required int totalOrders,
+    required double totalRevenue,
+    int? completedOrders,
+  }) async {
+    String title = "Today's Performance";
+    String body = '$totalOrders order${totalOrders != 1 ? "s" : ""}, '
+        '\$${totalRevenue.toStringAsFixed(2)} revenue';
+    
+    if (completedOrders != null) {
+      body += ' ($completedOrders completed)';
+    }
+
+    await showNotification(
+      id: DateTime.now().day.hashCode + 5000,
+      title: title,
+      body: body,
+      payload: 'restaurant_analytics',
+    );
+  }
+
+  /// Show order ready for pickup notification (internal use)
+  Future<void> showOrderReadyReminderNotification({
+    required String orderId,
+    int delayMinutes = 5,
+  }) async {
+    await showNotification(
+      id: orderId.hashCode + 4000,
+      title: 'Order Ready',
+      body: 'Order is ready for pickup. Notify driver!',
+      payload: 'restaurant_order:$orderId',
+      secondsDelay: delayMinutes * 60,
+    );
+  }
+
+  /// Show low stock alert for restaurant
+  Future<void> showLowStockAlert({
+    required String itemName,
+    String? currentStock,
+  }) async {
+    String body = 'Low stock alert for $itemName';
+    
+    if (currentStock != null) {
+      body += ' - Current stock: $currentStock';
+    }
+
+    await showNotification(
+      id: itemName.hashCode + 6000,
+      title: 'Low Stock Alert',
+      body: body,
+      payload: 'restaurant_inventory',
+    );
+  }
+
+  /// Show restaurant verification status notification
+  Future<void> showRestaurantVerificationNotification({
+    required String status,
+    String? message,
+  }) async {
+    String title;
+    String body;
+
+    switch (status.toLowerCase()) {
+      case 'approved':
+        title = 'Restaurant Approved!';
+        body = message ?? 'Your restaurant has been verified and approved.';
+        break;
+      case 'rejected':
+        title = 'Verification Rejected';
+        body = message ?? 'Your restaurant verification was rejected. Please review and resubmit.';
+        break;
+      case 'pending':
+        title = 'Verification Pending';
+        body = message ?? 'Your restaurant is under review.';
+        break;
+      default:
+        title = 'Verification Update';
+        body = message ?? 'Your restaurant verification status has been updated.';
+    }
+
+    await showNotification(
+      id: 7000,
+      title: title,
+      body: body,
+      payload: 'restaurant_verification',
+    );
+  }
+
+  /// Show staff invitation notification
+  Future<void> showStaffInvitationNotification({
+    required String restaurantName,
+    required String role,
+  }) async {
+    await showNotification(
+      id: DateTime.now().millisecondsSinceEpoch,
+      title: 'Restaurant Staff Invitation',
+      body: 'You\'ve been invited to join $restaurantName as $role',
+      payload: 'restaurant_staff_invitation',
+    );
+  }
 }

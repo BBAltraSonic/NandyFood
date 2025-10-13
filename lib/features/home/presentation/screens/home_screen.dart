@@ -8,6 +8,7 @@ import 'package:food_delivery_app/features/home/presentation/widgets/categories_
 import 'package:food_delivery_app/features/home/presentation/widgets/order_again_section.dart';
 import 'package:food_delivery_app/core/services/location_service.dart';
 import 'package:food_delivery_app/shared/widgets/floating_cart_button.dart';
+import 'package:food_delivery_app/core/providers/auth_provider.dart';
 import 'package:latlong2/latlong.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -102,6 +103,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     Row(
                       children: [
+                        // Restaurant Dashboard Button (if user is restaurant owner)
+                        Consumer(
+                          builder: (context, ref, _) {
+                            final authState = ref.watch(authStateProvider);
+                            if (authState.canAccessRestaurantDashboard) {
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Colors.orange.withValues(alpha: 0.3),
+                                    ),
+                                  ),
+                                  child: IconButton(
+                                    icon: const Icon(
+                                      Icons.store_rounded,
+                                      color: Colors.orange,
+                                    ),
+                                    onPressed: () => context.push('/restaurant/dashboard'),
+                                    tooltip: 'Restaurant Dashboard',
+                                  ),
+                                ),
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          },
+                        ),
                         Container(
                           decoration: BoxDecoration(
                             color: Colors.white,

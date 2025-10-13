@@ -26,7 +26,7 @@ class RestaurantManagementService {
           .eq('id', restaurantId)
           .single();
 
-      final restaurant = Restaurant.fromJson(response as Map<String, dynamic>);
+      final restaurant = Restaurant.fromJson(response);
       AppLogger.function('RestaurantManagementService.getRestaurant', 'EXIT');
       return restaurant;
     } catch (e, stack) {
@@ -135,7 +135,7 @@ class RestaurantManagementService {
           .select()
           .single();
 
-      final createdItem = MenuItem.fromJson(response as Map<String, dynamic>);
+      final createdItem = MenuItem.fromJson(response);
       AppLogger.success('Menu item created: ${createdItem.name}');
       return createdItem;
     } catch (e, stack) {

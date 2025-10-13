@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:food_delivery_app/core/services/database_service.dart';
 import 'package:food_delivery_app/core/services/auth_service.dart';
+import 'package:food_delivery_app/core/services/role_service.dart';
+import 'package:food_delivery_app/shared/models/user_role.dart';
 
 // Auth state class to represent the authentication state
 class AuthState {
@@ -9,25 +11,48 @@ class AuthState {
   final bool isAuthenticated;
   final bool isLoading;
   final String? errorMessage;
+  final UserRole? primaryRole;
+  final List<UserRole> allRoles;
 
   AuthState({
     this.user,
     this.isAuthenticated = false,
     this.isLoading = false,
     this.errorMessage,
+    this.primaryRole,
+    this.allRoles = const [],
   });
+
+  // Role-based helper getters
+  bool get canAccessRestaurantDashboard =>
+      primaryRole?.role == UserRoleType.restaurantOwner ||
+      primaryRole?.role == UserRoleType.restaurantStaff;
+
+  bool get canAccessAdminDashboard => primaryRole?.role == UserRoleType.admin;
+
+  bool get isConsumer =>
+      primaryRole?.role == UserRoleType.consumer || primaryRole == null;
+
+  bool get isRestaurantOwner =>
+      primaryRole?.role == UserRoleType.restaurantOwner;
+
+  bool get hasMultipleRoles => allRoles.length > 1;
 
   AuthState copyWith({
     User? user,
     bool? isAuthenticated,
     bool? isLoading,
     String? errorMessage,
+    UserRole? primaryRole,
+    List<UserRole>? allRoles,
   }) {
     return AuthState(
       user: user ?? this.user,
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage ?? this.errorMessage,
+      primaryRole: primaryRole ?? this.primaryRole,
+      allRoles: allRoles ?? this.allRoles,
     );
   }
 }
@@ -39,8 +64,11 @@ final authStateProvider = StateNotifierProvider<AuthStateNotifier, AuthState>(
 
 class AuthStateNotifier extends StateNotifier<AuthState> {
   AuthStateNotifier() : super(AuthState()) {
+    _roleService = RoleService();
     _initializeAuthListener();
   }
+
+  late final RoleService _roleService;
 
   void _initializeAuthListener() {
     try {
@@ -54,13 +82,13 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
       final auth = DatabaseService().client.auth;
 
       // Listen to auth state changes
-      auth.onAuthStateChange.listen((data) {
+      auth.onAuthStateChange.listen((data) async {
         final session = data.session;
         final user = session?.user;
 
         if (user != null) {
-          // User is signed in
-          state = AuthState(user: user, isAuthenticated: true);
+          // User is signed in - load roles
+          await _loadUserRoles(user);
         } else {
           // User is signed out
           state = AuthState(user: null, isAuthenticated: false);
@@ -73,6 +101,29 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
         user: null,
         isAuthenticated: false,
         errorMessage: 'Failed to initialize auth: $e',
+      );
+    }
+  }
+
+  /// Load user roles after authentication
+  Future<void> _loadUserRoles(User user) async {
+    try {
+      final roles = await _roleService.getUserRoles(user.id);
+      final primaryRole = await _roleService.getPrimaryRole(user.id);
+
+      state = AuthState(
+        user: user,
+        isAuthenticated: true,
+        primaryRole: primaryRole,
+        allRoles: roles,
+      );
+    } catch (e) {
+      print('Error loading user roles: $e');
+      // Set authenticated but without roles (default to consumer)
+      state = AuthState(
+        user: user,
+        isAuthenticated: true,
+        errorMessage: 'Failed to load user roles',
       );
     }
   }
@@ -223,7 +274,8 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true);
     try {
       await AuthService().signOut();
-      state = state.copyWith(isLoading: false);
+      // Clear all state including roles
+      state = AuthState(user: null, isAuthenticated: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
       rethrow;
@@ -277,4 +329,37 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
   }
 
   bool get isEmailVerified => state.user?.emailConfirmedAt != null;
+
+  /// Get initial route based on user role
+  Future<String> getInitialRoute() async {
+    if (!state.isAuthenticated || state.user == null) {
+      return '/auth/login';
+    }
+
+    // Use RoleService for consistent routing logic
+    return _roleService.getInitialRoute(state.user!.id);
+  }
+
+  /// Refresh user roles
+  Future<void> refreshRoles() async {
+    if (state.user != null) {
+      await _loadUserRoles(state.user!);
+    }
+  }
+
+  /// Switch primary role
+  Future<void> switchRole(UserRoleType roleType) async {
+    if (state.user == null) return;
+
+    try {
+      state = state.copyWith(isLoading: true);
+      await _roleService.switchPrimaryRole(state.user!.id, roleType);
+      await _loadUserRoles(state.user!);
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: 'Failed to switch role: ${e.toString()}',
+      );
+    }
+  }
 }

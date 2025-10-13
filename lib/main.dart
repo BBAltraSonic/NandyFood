@@ -36,6 +36,13 @@ import 'package:food_delivery_app/features/profile/presentation/screens/payment_
 import 'package:food_delivery_app/features/profile/presentation/screens/add_edit_payment_screen.dart';
 import 'package:food_delivery_app/shared/models/order.dart';
 import 'package:food_delivery_app/shared/models/restaurant.dart';
+import 'package:food_delivery_app/features/role_management/presentation/screens/role_selection_screen.dart';
+import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_dashboard_screen.dart';
+import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_registration_screen.dart';
+import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_orders_screen.dart';
+import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_menu_screen.dart';
+import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_analytics_screen.dart';
+import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_settings_screen.dart';
 
 Future<void> main() async {
   AppLogger.section('🚀 NANDYFOOD APP STARTING');
@@ -268,6 +275,41 @@ GoRouter createRouter() {
           return AddEditPaymentScreen(paymentMethodId: paymentId);
         },
       ),
+
+      // Role Management
+      GoRoute(
+        path: '/role/select',
+        builder: (context, state) => const RoleSelectionScreen(),
+      ),
+
+      // Restaurant Dashboard
+      GoRoute(
+        path: '/restaurant/dashboard',
+        builder: (context, state) => const RestaurantDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/restaurant/register',
+        builder: (context, state) => const RestaurantRegistrationScreen(),
+      ),
+      GoRoute(
+        path: '/restaurant/orders',
+        builder: (context, state) {
+          final status = state.uri.queryParameters['status'];
+          return RestaurantOrdersScreen(initialStatus: status);
+        },
+      ),
+      GoRoute(
+        path: '/restaurant/menu',
+        builder: (context, state) => const RestaurantMenuScreen(),
+      ),
+      GoRoute(
+        path: '/restaurant/analytics',
+        builder: (context, state) => const RestaurantAnalyticsScreen(),
+      ),
+      GoRoute(
+        path: '/restaurant/settings',
+        builder: (context, state) => const RestaurantSettingsScreen(),
+      ),
     ],
     redirect: (BuildContext context, GoRouterState state) {
       final location = state.uri.toString();
@@ -294,6 +336,11 @@ GoRouter createRouter() {
         '/profile/addresses',
         '/profile/settings',
         '/order/history',
+        '/restaurant/dashboard',
+        '/restaurant/orders',
+        '/restaurant/menu',
+        '/restaurant/analytics',
+        '/restaurant/settings',
       ];
 
       // Check if current route requires authentication

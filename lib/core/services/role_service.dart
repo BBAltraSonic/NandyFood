@@ -145,8 +145,8 @@ class RoleService {
     }
   }
 
-  /// Get restaurants owned by user
-  Future<List<RestaurantOwner>> getUserRestaurants(String userId) async {
+  /// Get restaurants owned by user (returns restaurant IDs)
+  Future<List<String>> getUserRestaurants(String userId) async {
     try {
       AppLogger.function('RoleService.getUserRestaurants', 'ENTER',
           params: {'userId': userId});
@@ -158,13 +158,13 @@ class RoleService {
           .eq('status', 'active')
           .order('created_at', ascending: false);
 
-      final restaurants = (response as List)
-          .map((json) => RestaurantOwner.fromJson(json as Map<String, dynamic>))
+      final restaurantIds = (response as List)
+          .map((json) => json['restaurant_id'] as String)
           .toList();
 
       AppLogger.function('RoleService.getUserRestaurants', 'EXIT',
-          result: '${restaurants.length} restaurants');
-      return restaurants;
+          result: '${restaurantIds.length} restaurants');
+      return restaurantIds;
     } catch (e, stack) {
       AppLogger.error('Failed to get user restaurants',
           error: e, stack: stack);
