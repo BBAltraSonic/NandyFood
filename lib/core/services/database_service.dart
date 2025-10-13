@@ -22,6 +22,8 @@ class DatabaseService {
 
   bool _initialized = false;
 
+  bool get isInitialized => _initialized;
+
   SupabaseClient get client {
     if (!_initialized && !_isTestMode) {
       throw StateError(

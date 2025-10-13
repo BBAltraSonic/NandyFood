@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:food_delivery_app/firebase_options.dart';
 import 'package:food_delivery_app/core/services/database_service.dart';
 import 'package:food_delivery_app/core/services/notification_service.dart';
@@ -269,9 +270,16 @@ GoRouter createRouter() {
       ),
     ],
     redirect: (BuildContext context, GoRouterState state) {
-      final authState = DatabaseService().client.auth.currentSession;
       final location = state.uri.toString();
-      final isAuthenticated = authState != null;
+      
+      // Check if database is initialized before accessing client
+      Session? authState;
+      bool isAuthenticated = false;
+      
+      if (DatabaseService().isInitialized) {
+        authState = DatabaseService().client.auth.currentSession;
+        isAuthenticated = authState != null;
+      }
 
       AppLogger.navigation(
         location,

@@ -44,6 +44,13 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
 
   void _initializeAuthListener() {
     try {
+      // Check if database is initialized before accessing client
+      if (!DatabaseService().isInitialized) {
+        print('INFO: Database not yet initialized, skipping auth listener setup');
+        state = AuthState(user: null, isAuthenticated: false);
+        return;
+      }
+
       final auth = DatabaseService().client.auth;
 
       // Listen to auth state changes
