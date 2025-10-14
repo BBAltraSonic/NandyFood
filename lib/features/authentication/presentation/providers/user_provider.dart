@@ -171,4 +171,62 @@ class UserNotifier extends StateNotifier<UserState> {
   void clearError() {
     state = state.copyWith(errorMessage: null);
   }
+
+  /// Update user profile information
+  Future<void> updateProfile({
+    String? fullName,
+    String? email,
+    String? phoneNumber,
+  }) async {
+    state = state.copyWith(isLoading: true);
+
+    try {
+      // Simulate network delay
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // Get current profile and update with new values
+      final currentProfile = state.userProfile;
+      if (currentProfile != null) {
+        final updatedProfile = currentProfile.copyWith(
+          fullName: fullName ?? currentProfile.fullName,
+          email: email ?? currentProfile.email,
+          phoneNumber: phoneNumber ?? currentProfile.phoneNumber,
+          updatedAt: DateTime.now(),
+        );
+
+        state = state.copyWith(
+          userProfile: updatedProfile,
+          isLoading: false,
+        );
+      }
+    } catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+    }
+  }
+
+  /// Update user avatar
+  Future<void> updateAvatar(String avatarUrl) async {
+    state = state.copyWith(isLoading: true);
+
+    try {
+      // Simulate network delay
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // Get current profile and update with new avatar
+      final currentProfile = state.userProfile;
+      if (currentProfile != null) {
+        final updatedProfile = currentProfile.copyWith(
+          avatarUrl: avatarUrl,
+          updatedAt: DateTime.now(),
+        );
+
+        state = state.copyWith(
+          userProfile: updatedProfile,
+          isLoading: false,
+        );
+      }
+    } catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+    }
+  }
 }

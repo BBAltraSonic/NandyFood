@@ -12,6 +12,9 @@ class UserProfile {
   final DateTime updatedAt;
   final Map<String, dynamic>? preferences;
   final Map<String, dynamic>? defaultAddress;
+  final String? avatarUrl;
+  final List<String>? dietaryPreferences;
+  final List<dynamic>? addresses;
 
   UserProfile({
     required this.id,
@@ -22,6 +25,9 @@ class UserProfile {
     required this.updatedAt,
     this.preferences,
     this.defaultAddress,
+    this.avatarUrl,
+    this.dietaryPreferences,
+    this.addresses,
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) =>
@@ -38,6 +44,9 @@ class UserProfile {
     DateTime? updatedAt,
     Map<String, dynamic>? preferences,
     Map<String, dynamic>? defaultAddress,
+    String? avatarUrl,
+    List<String>? dietaryPreferences,
+    List<dynamic>? addresses,
   }) {
     return UserProfile(
       id: id ?? this.id,
@@ -48,6 +57,9 @@ class UserProfile {
       updatedAt: updatedAt ?? this.updatedAt,
       preferences: preferences ?? this.preferences,
       defaultAddress: defaultAddress ?? this.defaultAddress,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      dietaryPreferences: dietaryPreferences ?? this.dietaryPreferences,
+      addresses: addresses ?? this.addresses,
     );
   }
 }

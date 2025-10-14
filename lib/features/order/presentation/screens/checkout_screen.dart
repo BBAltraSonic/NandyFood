@@ -9,7 +9,7 @@ import 'package:food_delivery_app/features/profile/presentation/providers/addres
 import 'package:food_delivery_app/shared/widgets/loading_indicator.dart';
 import 'package:food_delivery_app/features/order/presentation/widgets/delivery_method_selector.dart';
 import 'package:food_delivery_app/features/order/presentation/widgets/address_selector.dart';
-import 'package:food_delivery_app/features/order/presentation/widgets/payment_method_selector_cash.dart';
+import 'package:food_delivery_app/features/order/presentation/widgets/payment_method_selector.dart';
 import 'package:food_delivery_app/features/order/presentation/widgets/tip_selector.dart';
 import 'package:food_delivery_app/features/order/presentation/screens/order_confirmation_screen.dart';
 
@@ -132,7 +132,7 @@ class CheckoutScreen extends ConsumerWidget {
                   const SizedBox(height: 24),
 
                   // Payment method selector (Cash only)
-                  const PaymentMethodSelectorCash(),
+                  const PaymentMethodSelector(),
                 ],
               ),
             ),

@@ -6,7 +6,7 @@ class InputValidator {
     AppLogger.function('InputValidator.isValidEmail', 'ENTER', params: {'email': email});
     
     const emailRegex = 
-      r'^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$';
+      r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$";
     
     final result = RegExp(emailRegex).hasMatch(email);
     
@@ -52,7 +52,7 @@ class InputValidator {
     }
     
     // Allow letters, spaces, hyphens, apostrophes, and common special characters
-    final result = RegExp(r"^[a-zA-Z\s\-\'\.\u00C0-\u017F]+$").hasMatch(name.trim());
+    final result = RegExp(r"^[a-zA-Z\s\-\'\.\\u00C0-\\u017F]+$").hasMatch(name.trim());
     
     AppLogger.function('InputValidator.isValidName', 'EXIT', result: result.toString());
     return result;
@@ -70,7 +70,7 @@ class InputValidator {
     }
     
     // Allow alphanumeric, spaces, and common address characters
-    final result = RegExp(r'^[a-zA-Z0-9\s\-\.,#&()]+$').hasMatch(address.trim());
+    final result = RegExp(r'^[a-zA-Z0-9\s\-\\.,#&()]+$').hasMatch(address.trim());
     
     AppLogger.function('InputValidator.isValidAddress', 'EXIT', result: result.toString());
     return result;
@@ -155,7 +155,7 @@ class InputValidator {
         .replaceAll(RegExp(r'&#x27;'), "'");
     
     // Remove potentially dangerous characters but keep useful ones
-    sanitized = sanitized.replaceAll(RegExp(r'[<>"\';\\]'), '');
+    sanitized = sanitized.replaceAll(RegExp('[<>"\';\\\\]'), '');
     
     final result = sanitized.trim();
     
@@ -224,8 +224,8 @@ class InputValidator {
     if (isRequired && value.trim().isEmpty) {
       final result = ValidationResult(
         isValid: false,
-        error: '${fieldName.titleCase()} is required',
-        sanitizedName: fieldName.titleCase(),
+        error: '${fieldName.titleCase} is required',
+        sanitizedName: fieldName.titleCase,
       );
       AppLogger.function('InputValidator.validateFormInput', 'EXIT', 
           result: 'false (required field empty)');
@@ -248,8 +248,8 @@ class InputValidator {
     if (minLength != null && value.length < minLength) {
       final result = ValidationResult(
         isValid: false,
-        error: '${fieldName.titleCase()} must be at least $minLength characters',
-        sanitizedName: fieldName.titleCase(),
+        error: '${fieldName.titleCase} must be at least $minLength characters',
+        sanitizedName: fieldName.titleCase,
       );
       AppLogger.function('InputValidator.validateFormInput', 'EXIT', 
           result: 'false (min length)');
@@ -259,8 +259,8 @@ class InputValidator {
     if (maxLength != null && value.length > maxLength) {
       final result = ValidationResult(
         isValid: false,
-        error: '${fieldName.titleCase()} must be no more than $maxLength characters',
-        sanitizedName: fieldName.titleCase(),
+        error: '${fieldName.titleCase} must be no more than $maxLength characters',
+        sanitizedName: fieldName.titleCase,
       );
       AppLogger.function('InputValidator.validateFormInput', 'EXIT', 
           result: 'false (max length)');
@@ -271,8 +271,8 @@ class InputValidator {
     if (pattern != null && !RegExp(pattern).hasMatch(value)) {
       final result = ValidationResult(
         isValid: false,
-        error: '${fieldName.titleCase()} format is invalid',
-        sanitizedName: fieldName.titleCase(),
+        error: '${fieldName.titleCase} format is invalid',
+        sanitizedName: fieldName.titleCase,
       );
       AppLogger.function('InputValidator.validateFormInput', 'EXIT', 
           result: 'false (pattern mismatch)');

@@ -1,6 +1,10 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:food_delivery_app/core/constants/config.dart';
 import 'package:food_delivery_app/core/utils/security/secure_storage_service.dart';
+import 'package:food_delivery_app/core/utils/logger.dart';
+import 'package:food_delivery_app/core/utils/performance_monitor.dart';
+import 'package:food_delivery_app/core/error/error_handler.dart';
+import 'package:food_delivery_app/core/error/result.dart';
 
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
@@ -77,17 +81,27 @@ class DatabaseService {
   }
 
   // User Profile Operations
-  Future<Map<String, dynamic>?> getUserProfile(String userId) async {
+  Future<Result<Map<String, dynamic>?>> getUserProfile(String userId) async {
     try {
-      final response = await client
+      final response = await DatabasePerformanceMonitor.measureQuery(
+        'user_profiles',
+        () => client
           .from('user_profiles')
           .select()
           .eq('id', userId)
-          .single();
-      return response;
+          .single(),
+      );
+      AppLogger.database('SELECT FROM user_profiles WHERE id=$userId');
+      return Result.success(response);
+    } on PostgrestException catch (e) {
+      AppLogger.e('Error getting user profile: ${e.message}', e);
+      return Result.error(DataError(
+        message: 'Failed to fetch user profile: ${e.message}',
+        statusCode: e.code,
+      ));
     } catch (e) {
-      // Handle error
-      return null;
+      AppLogger.e('Unexpected error getting user profile: $e');
+      return Result.error(ErrorHandler.mapExceptionToAppError(e));
     }
   }
 
@@ -120,13 +134,18 @@ class DatabaseService {
   }
 
   // Restaurant Operations
-  Future<List<Map<String, dynamic>>> getRestaurants({
+  Future<Result<List<Map<String, dynamic>>>> getRestaurants({
     String? cuisineType,
     double? minRating,
     int? maxDeliveryTime,
   }) async {
     try {
-      var query = client.from('restaurants').select().eq('is_active', true);
+      PerformanceMonitor.startTimer('getRestaurants');
+      
+      var query = client
+          .from('restaurants')
+          .select('id, name, cuisine_type, rating, estimated_delivery_time, delivery_fee, minimum_order_amount, is_active, logo_url, address')
+          .eq('is_active', true);
 
       if (cuisineType != null) {
         query = query.ilike('cuisine_type', '%$cuisineType%');
@@ -139,10 +158,22 @@ class DatabaseService {
       }
 
       final response = await query.order('rating', ascending: false);
-      return response;
+      
+      PerformanceMonitor.stopTimer('getRestaurants', description: 'Fetch restaurants');
+      AppLogger.database('SELECT FROM restaurants with filters - cuisine: $cuisineType, minRating: $minRating, maxDeliveryTime: $maxDeliveryTime (count: ${response.length})');
+      
+      return Result.success(response);
+    } on PostgrestException catch (e) {
+      PerformanceMonitor.stopTimer('getRestaurants', description: 'Failed');
+      AppLogger.e('Error getting restaurants: ${e.message}', e);
+      return Result.error(DataError(
+        message: 'Failed to fetch restaurants: ${e.message}',
+        statusCode: e.code,
+      ));
     } catch (e) {
-      // Handle error
-      return [];
+      PerformanceMonitor.stopTimer('getRestaurants', description: 'Failed');
+      AppLogger.e('Unexpected error getting restaurants: $e');
+      return Result.error(ErrorHandler.mapExceptionToAppError(e));
     }
   }
 
@@ -161,57 +192,103 @@ class DatabaseService {
   }
 
   /// Search restaurants by name or cuisine type
-  Future<List<Map<String, dynamic>>> searchRestaurants(String query) async {
+  Future<Result<List<Map<String, dynamic>>>> searchRestaurants(String query) async {
     try {
+      PerformanceMonitor.startTimer('searchRestaurants');
       final searchQuery = query.trim().toLowerCase();
-      final response = await client
+      
+      final response = await DatabasePerformanceMonitor.measureQuery(
+        'restaurants',
+        () => client
           .from('restaurants')
-          .select()
+          .select('id, name, cuisine_type, rating, estimated_delivery_time, delivery_fee, minimum_order_amount, is_active, logo_url, address')
           .eq('is_active', true)
           .or('name.ilike.%$searchQuery%,cuisine_type.ilike.%$searchQuery%')
           .order('rating', ascending: false)
-          .limit(50);
-      return response;
+          .limit(50),
+      );
+      
+      PerformanceMonitor.stopTimer('searchRestaurants', description: 'query: $searchQuery');
+      AppLogger.database('SEARCH restaurants with query: $searchQuery (count: ${response.length})');
+      
+      return Result.success(response);
+    } on PostgrestException catch (e) {
+      PerformanceMonitor.stopTimer('searchRestaurants', description: 'Failed');
+      AppLogger.e('Error searching restaurants: ${e.message}', e);
+      return Result.error(DataError(
+        message: 'Failed to search restaurants: ${e.message}',
+        statusCode: e.code,
+      ));
     } catch (e) {
-      // Handle error
-      return [];
+      PerformanceMonitor.stopTimer('searchRestaurants', description: 'Failed');
+      AppLogger.e('Unexpected error searching restaurants: $e');
+      return Result.error(ErrorHandler.mapExceptionToAppError(e));
     }
   }
 
   /// Filter restaurants by category (cuisine type)
-  Future<List<Map<String, dynamic>>> getRestaurantsByCategory(
+  Future<Result<List<Map<String, dynamic>>>> getRestaurantsByCategory(
     String category,
   ) async {
     try {
       if (category == 'all') {
-        return getRestaurants();
+        return await getRestaurants();
       }
 
-      final response = await client
+      final response = await DatabasePerformanceMonitor.measureQuery(
+        'restaurants',
+        () => client
           .from('restaurants')
-          .select()
+          .select('id, name, cuisine_type, rating, estimated_delivery_time, delivery_fee, minimum_order_amount, is_active, logo_url, address')
           .eq('is_active', true)
           .ilike('cuisine_type', '%$category%')
-          .order('rating', ascending: false);
-      return response;
+          .order('rating', ascending: false),
+      );
+      AppLogger.database('SELECT FROM restaurants by category: $category (count: ${response.length})');
+      return Result.success(response);
+    } on PostgrestException catch (e) {
+      AppLogger.e('Error getting restaurants by category: ${e.message}', e);
+      return Result.error(DataError(
+        message: 'Failed to fetch restaurants by category: ${e.message}',
+        statusCode: e.code,
+      ));
     } catch (e) {
-      // Handle error
-      return [];
+      AppLogger.e('Unexpected error getting restaurants by category: $e');
+      return Result.error(ErrorHandler.mapExceptionToAppError(e));
     }
   }
 
   // Menu Item Operations
-  Future<List<Map<String, dynamic>>> getMenuItems(String restaurantId) async {
+  Future<Result<List<Map<String, dynamic>>>> getMenuItems(String restaurantId) async {
     try {
-      final response = await client
+      PerformanceMonitor.startTimer('getMenuItems');
+      
+      final response = await DatabasePerformanceMonitor.measureQuery(
+        'menu_items',
+        () => client
           .from('menu_items')
-          .select()
+          .select('id, name, description, price, category, dietary_restrictions, image_url, is_available, restaurant_id')
           .eq('restaurant_id', restaurantId)
-          .eq('is_available', true);
-      return response;
+          .eq('is_available', true)
+          .order('category')
+          .order('name'),
+      );
+      
+      PerformanceMonitor.stopTimer('getMenuItems', description: 'restaurant_id: $restaurantId');
+      AppLogger.database('SELECT FROM menu_items WHERE restaurant_id=$restaurantId (count: ${response.length})');
+      
+      return Result.success(response);
+    } on PostgrestException catch (e) {
+      PerformanceMonitor.stopTimer('getMenuItems', description: 'Failed');
+      AppLogger.e('Error getting menu items: ${e.message}', e);
+      return Result.error(DataError(
+        message: 'Failed to fetch menu items: ${e.message}',
+        statusCode: e.code,
+      ));
     } catch (e) {
-      // Handle error
-      return [];
+      PerformanceMonitor.stopTimer('getMenuItems', description: 'Failed');
+      AppLogger.e('Unexpected error getting menu items: $e');
+      return Result.error(ErrorHandler.mapExceptionToAppError(e));
     }
   }
 
@@ -302,23 +379,40 @@ class DatabaseService {
     }
   }
 
-  Future<String> createOrder(Map<String, dynamic> orderData) async {
+  Future<Result<String>> createOrder(Map<String, dynamic> orderData) async {
     try {
-      final response = await client
+      PerformanceMonitor.startTimer('createOrder');
+      
+      final response = await DatabasePerformanceMonitor.measureInsert(
+        'orders',
+        () => client
           .from('orders')
           .insert(orderData)
           .select('id')
-          .single();
-      return response['id'];
+          .single(),
+      );
+      
+      PerformanceMonitor.stopTimer('createOrder');
+      AppLogger.database('INSERT INTO orders (id: ${response['id']})');
+      
+      return Result.success(response['id']);
+    } on PostgrestException catch (e) {
+      PerformanceMonitor.stopTimer('createOrder', description: 'Failed');
+      AppLogger.e('Error creating order: ${e.message}', e);
+      return Result.error(DataError(
+        message: 'Failed to create order: ${e.message}',
+        statusCode: e.code,
+      ));
     } catch (e) {
-      // Handle error
-      rethrow;
+      PerformanceMonitor.stopTimer('createOrder', description: 'Failed');
+      AppLogger.e('Unexpected error creating order: $e');
+      return Result.error(ErrorHandler.mapExceptionToAppError(e));
     }
   }
 
   /// Get restaurants the user has ordered from recently (for Order Again section)
   /// Returns up to 10 unique restaurants ordered by most recent order
-  Future<List<Map<String, dynamic>>> getUserRecentRestaurants(
+  Future<Result<List<Map<String, dynamic>>>> getUserRecentRestaurants(
     String userId,
   ) async {
     try {
@@ -355,10 +449,16 @@ class DatabaseService {
         }
       }
 
-      return uniqueRestaurants.values.toList();
+      return Result.success(uniqueRestaurants.values.toList());
+    } on PostgrestException catch (e) {
+      AppLogger.e('Error getting recent restaurants: ${e.message}', e);
+      return Result.error(DataError(
+        message: 'Failed to fetch recent restaurants: ${e.message}',
+        statusCode: e.code,
+      ));
     } catch (e) {
-      print('Error getting recent restaurants: $e');
-      return [];
+      AppLogger.e('Unexpected error getting recent restaurants: $e');
+      return Result.error(ErrorHandler.mapExceptionToAppError(e));
     }
   }
 

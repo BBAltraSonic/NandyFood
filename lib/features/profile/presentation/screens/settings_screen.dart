@@ -82,6 +82,13 @@ class SettingsScreen extends ConsumerWidget {
           ),
 
           ListTile(
+            leading: const Icon(Icons.privacy_tip),
+            title: const Text('Privacy Settings'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () => _showPrivacySettingsDialog(context),
+          ),
+
+          ListTile(
             leading: const Icon(Icons.location_on),
             title: const Text('Delivery Addresses'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
@@ -247,6 +254,93 @@ class SettingsScreen extends ConsumerWidget {
           'A modern food delivery application built with Flutter and Supabase.',
         ),
       ],
+    );
+  }
+
+  void _showPrivacySettingsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Privacy Settings'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: [
+                SwitchListTile(
+                  title: const Text('Share Location'),
+                  subtitle: const Text('Allow restaurants to access your location'),
+                  value: true, // This would be state in a real app
+                  onChanged: (value) {
+                    // Update location sharing preference
+                  },
+                ),
+                SwitchListTile(
+                  title: const Text('Personalized Ads'),
+                  subtitle: const Text('Receive targeted advertisements'),
+                  value: true, // This would be state in a real app
+                  onChanged: (value) {
+                    // Update ad preference
+                  },
+                ),
+                SwitchListTile(
+                  title: const Text('Data Usage Analytics'),
+                  subtitle: const Text('Help us improve with anonymous usage data'),
+                  value: true, // This would be state in a real app
+                  onChanged: (value) {
+                    // Update analytics preference
+                  },
+                ),
+                const Divider(),
+                ListTile(
+                  title: const Text('Delete Account'),
+                  subtitle: const Text('Permanently delete your account and data'),
+                  textColor: Colors.red,
+                  iconColor: Colors.red,
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showAccountDeletionDialog(context);
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showAccountDeletionDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Account'),
+          content: const Text(
+            'Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently removed.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                // In a real app, you would delete the account
+                Navigator.pop(context);
+                Navigator.pop(context);
+              },
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
     );
   }
 

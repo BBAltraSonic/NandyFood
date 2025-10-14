@@ -1,100 +1,130 @@
+import 'dart:developer';
 import 'package:flutter/foundation.dart';
-import 'dart:developer' as developer;
+import 'package:food_delivery_app/core/utils/logger.dart';
 
-/// Performance monitoring utility for tracking app performance
 class PerformanceMonitor {
-  static bool _isEnabled = kDebugMode;
+  static final Map<String, DateTime> _timers = {};
 
-  /// Enable or disable performance monitoring
-  static void setEnabled(bool enabled) {
-    _isEnabled = enabled;
+  /// Start timing a specific operation
+  static void startTimer(String operationName) {
+    _timers[operationName] = DateTime.now();
   }
 
-  /// Start timing an operation
-  static Stopwatch startTiming(String operationName) {
-    if (!_isEnabled) return Stopwatch();
-
-    final stopwatch = Stopwatch()..start();
-    developer.log(
-      'Starting operation: $operationName',
-      name: 'PerformanceMonitor',
-    );
-    return stopwatch;
-  }
-
-  /// End timing an operation and log the result
-  static void endTiming(Stopwatch stopwatch, String operationName) {
-    if (!_isEnabled) return;
-
-    stopwatch.stop();
-    final milliseconds = stopwatch.elapsedMilliseconds;
-    developer.log(
-      'Operation completed: $operationName took ${milliseconds}ms',
-      name: 'PerformanceMonitor',
-      level: milliseconds > 100
-          ? 900
-          : 800, // Warning level for slow operations
-    );
-
-    // Send warning for operations that take too long
-    if (milliseconds > 100) {
-      developer.log(
-        'WARNING: Slow operation detected: $operationName took ${milliseconds}ms (>100ms)',
-        name: 'PerformanceMonitor',
-        level: 1000,
-      );
+  /// Stop timing and log the duration of a specific operation
+  static Duration? stopTimer(String operationName, {String? description}) {
+    if (_timers.containsKey(operationName)) {
+      final startTime = _timers.remove(operationName)!;
+      final duration = DateTime.now().difference(startTime);
+      
+      final desc = description != null ? ' ($description)' : '';
+      AppLogger.i('PERFORMANCE: $operationName$desc took ${duration.inMilliseconds}ms');
+      
+      // Log slow operations (those taking more than 100ms)
+      if (duration.inMilliseconds > 100) {
+        AppLogger.w('PERFORMANCE WARNING: $operationName$desc took ${duration.inMilliseconds}ms (slow operation)');
+      }
+      
+      return duration;
     }
+    
+    return null;
   }
 
   /// Measure the execution time of a function
-  static Future<T> measureAsync<T>(
-    Future<T> Function() operation,
-    String operationName,
-  ) async {
-    if (!_isEnabled) return await operation();
-
-    final stopwatch = startTiming(operationName);
-    try {
-      final result = await operation();
-      endTiming(stopwatch, operationName);
-      return result;
-    } catch (e) {
-      endTiming(stopwatch, operationName);
-      rethrow;
-    }
-  }
-
-  /// Measure the execution time of a synchronous function
-  static T measureSync<T>(T Function() operation, String operationName) {
-    if (!_isEnabled) return operation();
-
-    final stopwatch = startTiming(operationName);
+  static T measure<T>(String operationName, T Function() operation, {String? description}) {
+    startTimer(operationName);
     try {
       final result = operation();
-      endTiming(stopwatch, operationName);
+      stopTimer(operationName, description: description);
       return result;
     } catch (e) {
-      endTiming(stopwatch, operationName);
+      stopTimer(operationName, description: description);
       rethrow;
     }
   }
 
-  /// Log a performance event
-  static void logEvent(String eventName, [Map<String, dynamic>? properties]) {
-    if (!_isEnabled) return;
+  /// Measure the execution time of an async function
+  static Future<T> measureAsync<T>(String operationName, Future<T> Function() operation, {String? description}) async {
+    startTimer(operationName);
+    try {
+      final result = await operation();
+      stopTimer(operationName, description: description);
+      return result;
+    } catch (e) {
+      stopTimer(operationName, description: description);
+      rethrow;
+    }
+  }
+}
 
-    developer.log(
-      'Event: $eventName${properties != null ? ' with properties: $properties' : ''}',
-      name: 'PerformanceMonitor',
-    );
+/// Memory usage monitoring
+class MemoryMonitor {
+  /// Get current memory usage in MB
+  static double get currentMemoryUsage {
+    if (kDebugMode) {
+      // In debug mode, we can access memory usage through the developer library
+      // This is a placeholder - actual implementation would require more specific tools
+      return 0.0; // Placeholder
+    }
+    return 0.0; // Not available in release mode
   }
 
-  /// Log memory usage information
-  static void logMemoryUsage() {
-    if (!_isEnabled) return;
+  /// Log memory usage if it exceeds threshold
+  static void checkMemoryUsage({double thresholdMB = 50.0}) {
+    final memory = currentMemoryUsage;
+    if (memory > thresholdMB) {
+      AppLogger.w('MEMORY WARNING: Current usage is ${memory.toStringAsFixed(2)}MB, exceeding threshold of ${thresholdMB}MB');
+    }
+  }
+}
 
-    // In a real implementation, we might use platform channels to get actual memory usage
-    // For now, we'll just log that we're checking memory
-    developer.log('Checking memory usage', name: 'PerformanceMonitor');
+/// Widget performance monitoring
+class WidgetPerformanceMonitor {
+  /// Monitor build times for widgets
+  static T measureBuild<T>(String widgetName, T Function() buildMethod) {
+    if (kDebugMode) {
+      return PerformanceMonitor.measure('WidgetBuild:$widgetName', buildMethod);
+    } else {
+      return buildMethod();
+    }
+  }
+}
+
+/// Database query performance monitoring
+class DatabasePerformanceMonitor {
+  /// Monitor the performance of a database query
+  static Future<List<Map<String, dynamic>>> measureQuery(
+    String query, 
+    Future<List<Map<String, dynamic>>> Function() queryFunction,
+  ) async {
+    return await PerformanceMonitor.measureAsync(
+      'DatabaseQuery',
+      queryFunction,
+      description: query.substring(0, query.length < 50 ? query.length : 50),
+    );
+  }
+  
+  /// Monitor the performance of a database insertion
+  static Future<void> measureInsert(
+    String tableName, 
+    Future<void> Function() insertFunction,
+  ) async {
+    await PerformanceMonitor.measureAsync(
+      'DatabaseInsert',
+      insertFunction,
+      description: 'INSERT INTO $tableName',
+    );
+  }
+  
+  /// Monitor the performance of a database update
+  static Future<void> measureUpdate(
+    String tableName, 
+    Future<void> Function() updateFunction,
+  ) async {
+    await PerformanceMonitor.measureAsync(
+      'DatabaseUpdate',
+      updateFunction,
+      description: 'UPDATE $tableName',
+    );
   }
 }

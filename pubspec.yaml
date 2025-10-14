@@ -69,6 +69,10 @@ dependencies:
 
   # Payments (currently using cash only)
   # Payment gateway integration can be added later
+  # stripe_payment: ^1.0.0  # Commented out for now
+  
+  # PayFast Payment Gateway
+  payfast: ^1.0.1
 
   # Images and media
   image_picker: ^1.0.4
@@ -97,6 +101,7 @@ dependencies:
 
   # Charts and Analytics
   fl_chart: ^0.65.0
+  flutter_stripe: ^12.0.2
 
 dev_dependencies:
   flutter_test:

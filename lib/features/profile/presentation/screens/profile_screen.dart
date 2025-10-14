@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:food_delivery_app/features/authentication/presentation/providers/user_provider.dart';
+import 'package:food_delivery_app/features/profile/presentation/widgets/avatar_upload_widget.dart';
+import 'package:food_delivery_app/features/profile/presentation/widgets/order_history_filter_widget.dart';
+import 'package:food_delivery_app/features/profile/presentation/widgets/favorites_section_widget.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -74,14 +78,42 @@ class ProfileScreen extends ConsumerWidget {
           ),
 
           const SizedBox(height: 10),
-          _buildProfileSection(
-            context,
-            'Order History',
-            Icons.history,
-            _buildOrderHistorySection(),
-            onTap: () {
-              // Navigate to order history screen
-            },
+          Card(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.history, color: Colors.deepOrange),
+                      const SizedBox(width: 12),
+                      const Text(
+                        'Order History',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Spacer(),
+                      InkWell(
+                        onTap: () => context.push('/profile/order-history'),
+                        child: const Icon(Icons.arrow_forward_ios, size: 16),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  OrderHistoryFilterWidget(
+                    onFilterChanged: (status) {
+                      // Handle filter change
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  _buildOrderHistorySection(),
+                ],
+              ),
+            ),
           ),
 
           const SizedBox(height: 10),
@@ -93,6 +125,44 @@ class ProfileScreen extends ConsumerWidget {
             onTap: () {
               // Navigate to preferences screen
             },
+          ),
+
+          const SizedBox(height: 10),
+          Card(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.favorite, color: Colors.deepOrange),
+                      const SizedBox(width: 12),
+                      const Text(
+                        'Favorites',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Spacer(),
+                      InkWell(
+                        onTap: () => context.push('/profile/favorites'),
+                        child: const Icon(Icons.arrow_forward_ios, size: 16),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  FavoritesSectionWidget(
+                    favorites: userProfile.favoriteRestaurants ?? [],
+                    onRemoveFavorite: (restaurantId) {
+                      // Handle removing favorite
+                    },
+                  ),
+                ],
+              ),
+            ),
           ),
 
           const SizedBox(height: 30),
@@ -127,15 +197,12 @@ class ProfileScreen extends ConsumerWidget {
       decoration: BoxDecoration(color: Colors.deepOrange.withValues(alpha: 0.1)),
       child: Row(
         children: [
-          // Profile picture
-          Container(
-            width: 80,
-            height: 80,
-            decoration: const BoxDecoration(
-              color: Colors.deepOrange,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.person, size: 40, color: Colors.white),
+          // Profile picture with upload
+          AvatarUploadWidget(
+            currentImageUrl: userProfile.avatarUrl,
+            onImageUploaded: (imageUrl) {
+              // Update user profile with new avatar
+            },
           ),
           const SizedBox(width: 20),
 
@@ -297,19 +364,55 @@ class ProfileScreen extends ConsumerWidget {
   Widget _buildPreferencesSection(WidgetRef ref, dynamic userProfile) {
     final preferences = userProfile.preferences ?? {};
     final notificationsEnabled = preferences['notifications'] as bool? ?? true;
+    final dietaryPrefs = preferences['dietaryPreferences'] as List<String>? ?? [];
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Notifications', style: TextStyle(fontSize: 16)),
-        Switch(
-          value: notificationsEnabled,
-          onChanged: (value) {
-            // Update notification preference
-          },
-          activeColor: Colors.deepOrange,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('Notifications', style: TextStyle(fontSize: 16)),
+            Switch(
+              value: notificationsEnabled,
+              onChanged: (value) {
+                // Update notification preference
+              },
+              activeColor: Colors.deepOrange,
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        const Text('Dietary Preferences', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 4,
+          children: [
+            _buildDietaryChip('Vegetarian', dietaryPrefs.contains('Vegetarian')),
+            _buildDietaryChip('Vegan', dietaryPrefs.contains('Vegan')),
+            _buildDietaryChip('Gluten-Free', dietaryPrefs.contains('Gluten-Free')),
+            _buildDietaryChip('Dairy-Free', dietaryPrefs.contains('Dairy-Free')),
+          ],
         ),
       ],
+    );
+  }
+
+  /// Build dietary preference chip
+  Widget _buildDietaryChip(String label, bool isSelected) {
+    return FilterChip(
+      label: Text(
+        label,
+        style: TextStyle(
+          color: isSelected ? Colors.white : Colors.black87,
+        ),
+      ),
+      selected: isSelected,
+      onSelected: (selected) {
+        // Handle dietary preference selection
+      },
+      selectedColor: Colors.deepOrange,
     );
   }
 
