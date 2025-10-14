@@ -43,6 +43,7 @@ import 'package:food_delivery_app/features/restaurant_dashboard/presentation/scr
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_menu_screen.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_analytics_screen.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_settings_screen.dart';
+import 'package:food_delivery_app/core/utils/security/secure_http_service.dart';
 
 Future<void> main() async {
   AppLogger.section('🚀 NANDYFOOD APP STARTING');
@@ -113,6 +114,25 @@ Future<void> main() async {
     );
   } catch (e, stack) {
     AppLogger.error('Failed to initialize database', error: e, stack: stack);
+  }
+
+  // Initialize Security Services
+  AppLogger.init('Initializing security services...');
+  try {
+    // Initialize secure HTTP service
+    final secureHttpService = SecureHttpService.instance;
+    await secureHttpService.initialize();
+    AppLogger.success('Secure HTTP service initialized');
+
+    // Validate Supabase connection with certificate pinning
+    final isConnectionSecure = await secureHttpService.validateSupabaseConnection();
+    if (isConnectionSecure) {
+      AppLogger.success('Supabase connection validated with certificate pinning');
+    } else {
+      AppLogger.warning('Supabase certificate validation failed - using fallback');
+    }
+  } catch (e, stack) {
+    AppLogger.error('Failed to initialize security services', error: e, stack: stack);
   }
 
   final totalTime = DateTime.now().difference(startTime);

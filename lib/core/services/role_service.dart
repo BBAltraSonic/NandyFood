@@ -175,7 +175,18 @@ class RoleService {
   /// Get user's primary restaurant (first active one)
   Future<RestaurantOwner?> getPrimaryRestaurant(String userId) async {
     try {
-      final restaurants = await getUserRestaurants(userId);
+      // Get the full restaurant owner records to check if primary
+      final response = await _supabase
+          .from('restaurant_owners')
+          .select()
+          .eq('user_id', userId)
+          .eq('status', 'active')
+          .order('created_at', ascending: false);
+
+      final restaurants = (response as List)
+          .map((json) => RestaurantOwner.fromJson(json as Map<String, dynamic>))
+          .toList();
+
       if (restaurants.isEmpty) return null;
 
       // Return first primary owner, otherwise first restaurant

@@ -21,6 +21,9 @@ Order _$OrderFromJson(Map<String, dynamic> json) => Order(
   promoCode: json['promoCode'] as String?,
   paymentMethod: json['paymentMethod'] as String,
   paymentStatus: $enumDecode(_$PaymentStatusEnumMap, json['paymentStatus']),
+  items: (json['items'] as List<dynamic>)
+      .map((e) => OrderItem.fromJson(e as Map<String, dynamic>))
+      .toList(),
   placedAt: DateTime.parse(json['placedAt'] as String),
   estimatedDeliveryAt: json['estimatedDeliveryAt'] == null
       ? null
@@ -53,6 +56,7 @@ Map<String, dynamic> _$OrderToJson(Order instance) => <String, dynamic>{
   'promoCode': instance.promoCode,
   'paymentMethod': instance.paymentMethod,
   'paymentStatus': _$PaymentStatusEnumMap[instance.paymentStatus]!,
+  'items': instance.items,
   'placedAt': instance.placedAt.toIso8601String(),
   'estimatedDeliveryAt': instance.estimatedDeliveryAt?.toIso8601String(),
   'deliveredAt': instance.deliveredAt?.toIso8601String(),

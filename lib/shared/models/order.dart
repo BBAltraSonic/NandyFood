@@ -1,3 +1,4 @@
+import 'package:food_delivery_app/shared/models/order_item.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'order.g.dart';
@@ -18,6 +19,7 @@ class Order {
   final String? promoCode;
   final String paymentMethod;
   final PaymentStatus paymentStatus;
+  final List<OrderItem> items;
   final DateTime placedAt;
   final DateTime? estimatedDeliveryAt;
   final DateTime? deliveredAt;
@@ -41,6 +43,7 @@ class Order {
     this.promoCode,
     required this.paymentMethod,
     required this.paymentStatus,
+    required this.items,
     required this.placedAt,
     this.estimatedDeliveryAt,
     this.deliveredAt,
@@ -70,6 +73,7 @@ class Order {
     String? promoCode,
     String? paymentMethod,
     PaymentStatus? paymentStatus,
+    List<OrderItem>? items,
     DateTime? placedAt,
     DateTime? estimatedDeliveryAt,
     DateTime? deliveredAt,
@@ -91,6 +95,7 @@ class Order {
       promoCode: promoCode ?? this.promoCode,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       paymentStatus: paymentStatus ?? this.paymentStatus,
+      items: items ?? this.items,
       placedAt: placedAt ?? this.placedAt,
       estimatedDeliveryAt: estimatedDeliveryAt ?? this.estimatedDeliveryAt,
       deliveredAt: deliveredAt ?? this.deliveredAt,
@@ -111,3 +116,5 @@ enum OrderStatus {
 }
 
 enum PaymentStatus { pending, completed, failed, refunded }
+
+

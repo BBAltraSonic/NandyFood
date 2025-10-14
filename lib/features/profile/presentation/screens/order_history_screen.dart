@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:food_delivery_app/shared/models/order.dart';
+import 'package:food_delivery_app/shared/models/order_item.dart';
 import 'package:food_delivery_app/shared/widgets/loading_indicator.dart';
 import 'package:food_delivery_app/shared/widgets/error_message_widget.dart';
 
@@ -22,6 +23,29 @@ class OrderHistoryScreen extends ConsumerWidget {
         taxAmount: 2.45,
         paymentMethod: 'credit_card',
         paymentStatus: PaymentStatus.completed,
+        items: [
+          OrderItem(
+            id: 'item_1',
+            orderId: 'order_12345678',
+            menuItemId: 'menu_1',
+            quantity: 1,
+            unitPrice: 12.99,
+          ),
+          OrderItem(
+            id: 'item_2',
+            orderId: 'order_12345678',
+            menuItemId: 'menu_2',
+            quantity: 1,
+            unitPrice: 8.99,
+          ),
+          OrderItem(
+            id: 'item_3',
+            orderId: 'order_12345678',
+            menuItemId: 'menu_3',
+            quantity: 2,
+            unitPrice: 4.49,
+          ),
+        ],
         placedAt: DateTime.now().subtract(const Duration(days: 1)),
       ),
       Order(
@@ -35,6 +59,29 @@ class OrderHistoryScreen extends ConsumerWidget {
         taxAmount: 1.95,
         paymentMethod: 'credit_card',
         paymentStatus: PaymentStatus.completed,
+        items: [
+          OrderItem(
+            id: 'item_4',
+            orderId: 'order_87654321',
+            menuItemId: 'menu_4',
+            quantity: 1,
+            unitPrice: 15.99,
+          ),
+          OrderItem(
+            id: 'item_5',
+            orderId: 'order_87654321',
+            menuItemId: 'menu_5',
+            quantity: 1,
+            unitPrice: 4.99,
+          ),
+          OrderItem(
+            id: 'item_6',
+            orderId: 'order_87654321',
+            menuItemId: 'menu_6',
+            quantity: 1,
+            unitPrice: 3.52,
+          ),
+        ],
         placedAt: DateTime.now().subtract(const Duration(days: 5)),
       ),
       Order(
@@ -48,6 +95,36 @@ class OrderHistoryScreen extends ConsumerWidget {
         taxAmount: 3.40,
         paymentMethod: 'credit_card',
         paymentStatus: PaymentStatus.completed,
+        items: [
+          OrderItem(
+            id: 'item_7',
+            orderId: 'order_1111111',
+            menuItemId: 'menu_7',
+            quantity: 1,
+            unitPrice: 16.99,
+          ),
+          OrderItem(
+            id: 'item_8',
+            orderId: 'order_1111111',
+            menuItemId: 'menu_8',
+            quantity: 1,
+            unitPrice: 7.99,
+          ),
+          OrderItem(
+            id: 'item_9',
+            orderId: 'order_1111111',
+            menuItemId: 'menu_9',
+            quantity: 2,
+            unitPrice: 2.99,
+          ),
+          OrderItem(
+            id: 'item_10',
+            orderId: 'order_1111111',
+            menuItemId: 'menu_10',
+            quantity: 1,
+            unitPrice: 6.79,
+          ),
+        ],
         placedAt: DateTime.now().subtract(const Duration(days: 12)),
       ),
       Order(
@@ -61,6 +138,22 @@ class OrderHistoryScreen extends ConsumerWidget {
         taxAmount: 1.45,
         paymentMethod: 'credit_card',
         paymentStatus: PaymentStatus.completed,
+        items: [
+          OrderItem(
+            id: 'item_11',
+            orderId: 'order_2222222',
+            menuItemId: 'menu_11',
+            quantity: 1,
+            unitPrice: 6.99,
+          ),
+          OrderItem(
+            id: 'item_12',
+            orderId: 'order_2222222',
+            menuItemId: 'menu_12',
+            quantity: 1,
+            unitPrice: 9.99,
+          ),
+        ],
         placedAt: DateTime.now().subtract(const Duration(days: 20)),
       ),
     ];

@@ -119,6 +119,15 @@ class PlaceOrderNotifier extends StateNotifier<PlaceOrderState> {
         promoCode: promoCode?.toUpperCase() ?? cartState.promoCode,
         paymentMethod: paymentMethod ?? 'cash',
         paymentStatus: PaymentStatus.completed, // Cash payment is completed on delivery
+        items: cartItems.map((cartItem) => OrderItem(
+          id: cartItem.id,
+          orderId: orderId,
+          menuItemId: cartItem.menuItemId,
+          quantity: cartItem.quantity,
+          unitPrice: cartItem.unitPrice,
+          customizations: cartItem.customizations,
+          specialInstructions: cartItem.specialInstructions,
+        )).toList(),
         placedAt: DateTime.now(),
         estimatedDeliveryAt: estimatedDeliveryTime,
         createdAt: DateTime.now(),

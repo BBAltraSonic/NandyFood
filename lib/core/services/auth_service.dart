@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:food_delivery_app/core/services/database_service.dart';
+import 'package:food_delivery_app/core/utils/security/secure_storage_service.dart';
 
 class AuthService {
   static final AuthService _instance = AuthService._internal();
@@ -10,25 +11,48 @@ class AuthService {
   AuthService._internal();
 
   GoogleSignIn? _googleSignIn;
+  final SecureStorageService _secureStorage = SecureStorageService.instance;
 
   SupabaseClient get _client => Supabase.instance.client;
   GoTrueClient get auth => _client.auth;
 
   Future<void> initialize() async {
     // Listen to auth state changes
-    auth.onAuthStateChange.listen((data) {
+    auth.onAuthStateChange.listen((data) async {
       final session = data.session;
       final user = session?.user;
 
       // Handle auth state changes
       if (user != null) {
-        // User is signed in
+        // User is signed in - store tokens securely
+        await _storeTokensFromSession(session);
         print('User signed in: ${user.email}');
       } else {
-        // User is signed out
+        // User is signed out - clear stored tokens
+        await _secureStorage.deleteAll();
         print('User signed out');
       }
     });
+  }
+
+  // Store tokens from session in secure storage
+  Future<void> _storeTokensFromSession(Session? session) async {
+    if (session != null) {
+      await _secureStorage.storeAuthToken(session.accessToken);
+      if (session.refreshToken != null) {
+        await _secureStorage.storeRefreshToken(session.refreshToken!);
+      }
+    }
+  }
+
+  // Get stored auth token
+  Future<String?> getStoredAuthToken() async {
+    return await _secureStorage.getAuthToken();
+  }
+
+  // Get stored refresh token
+  Future<String?> getStoredRefreshToken() async {
+    return await _secureStorage.getRefreshToken();
   }
 
   // Sign up with email and password
@@ -245,6 +269,9 @@ class AuthService {
 
     // Sign out from Supabase
     await auth.signOut();
+
+    // Clear secure storage
+    await _secureStorage.deleteAll();
   }
 
   // Get current user
@@ -283,6 +310,38 @@ class AuthService {
       print('Error refreshing session: $e');
       return null;
     }
+  }
+
+  // Check if session is expired or expiring soon (within 5 minutes)
+  bool isSessionExpiringSoon({int minutesThreshold = 5}) {
+    final session = auth.currentSession;
+    if (session == null) return true;
+
+    try {
+      final expiresAt = DateTime.fromMillisecondsSinceEpoch(
+        session.expiresAt! * 1000, // Convert seconds to milliseconds
+      );
+      final thresholdTime = DateTime.now().add(Duration(minutes: minutesThreshold));
+      
+      return thresholdTime.isAfter(expiresAt);
+    } catch (e) {
+      print('Error checking session expiration: $e');
+      return true; // Assume expired if we can't determine
+    }
+  }
+
+  // Get valid session, refreshing if needed
+  Future<Session?> getValidSession() async {
+    if (isSessionExpiringSoon()) {
+      // Try to refresh the session
+      final refreshedSession = await refreshSession();
+      if (refreshedSession != null) {
+        return refreshedSession;
+      }
+    }
+
+    // Return current session or null if invalid
+    return auth.currentSession;
   }
 
   // Create user profile in database

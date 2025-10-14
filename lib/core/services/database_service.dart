@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:food_delivery_app/core/constants/config.dart';
+import 'package:food_delivery_app/core/utils/security/secure_storage_service.dart';
 
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();

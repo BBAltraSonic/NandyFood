@@ -77,6 +77,9 @@ dependencies:
 
   # Security
   crypto: ^3.0.3
+  flutter_secure_storage: ^9.0.0
+  http_certificate_pinning: ^3.0.1
+  local_auth: ^2.2.0
   json_annotation: ^4.9.0
 
   # Environment variables
