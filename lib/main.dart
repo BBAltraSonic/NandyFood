@@ -304,7 +304,11 @@ GoRouter createRouter() {
       ),
       GoRoute(
         path: '/restaurant/analytics',
-        builder: (context, state) => const RestaurantAnalyticsScreen(),
+        builder: (context, state) {
+          // TODO: Get restaurantId from authenticated user's session instead of query params
+          final restaurantId = state.uri.queryParameters['restaurantId'] ?? 'default_restaurant';
+          return RestaurantAnalyticsScreen(restaurantId: restaurantId);
+        },
       ),
       GoRoute(
         path: '/restaurant/settings',

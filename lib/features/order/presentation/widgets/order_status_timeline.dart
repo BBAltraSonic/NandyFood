@@ -177,7 +177,7 @@ class _TimelineStep extends StatelessWidget {
                 color: isCompleted
                     ? primaryColor
                     : isCurrent
-                        ? primaryColor.withOpacity(0.2)
+                        ? primaryColor.withValues(alpha: 0.2)
                         : greyColor,
                 border: Border.all(
                   color: isCompleted || isCurrent ? primaryColor : greyColor,
@@ -273,7 +273,7 @@ class _TimelineStep extends StatelessWidget {
                       vertical: 6.h,
                     ),
                     decoration: BoxDecoration(
-                      color: primaryColor.withOpacity(0.1),
+                      color: primaryColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12.r),
                     ),
                     child: Text(

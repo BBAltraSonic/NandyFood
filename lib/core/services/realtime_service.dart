@@ -184,6 +184,47 @@ class RealtimeService {
     return controller.stream;
   }
 
+  /// Subscribe to all orders for a restaurant
+  Stream<Map<String, dynamic>> subscribeToRestaurantOrders(String restaurantId) {
+    final channelName = 'restaurant_orders:$restaurantId';
+
+    if (_controllers.containsKey(channelName)) {
+      return _controllers[channelName]!.stream;
+    }
+
+    final controller = StreamController<Map<String, dynamic>>.broadcast(
+      onCancel: () => _unsubscribe(channelName),
+    );
+    _controllers[channelName] = controller;
+
+    final channel = _supabase.channel(channelName);
+
+    channel
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'orders',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'restaurant_id',
+            value: restaurantId,
+          ),
+          callback: (payload) {
+            debugPrint('Restaurant order update: ${payload.newRecord}');
+            if (!controller.isClosed) {
+              controller.add(payload.newRecord);
+            }
+          },
+        )
+        .subscribe();
+
+    _channels[channelName] = channel;
+
+    debugPrint('Subscribed to restaurant orders: $restaurantId');
+
+    return controller.stream;
+  }
+
   /// Subscribe to restaurant availability changes
   Stream<Map<String, dynamic>> subscribeToRestaurant(String restaurantId) {
     final channelName = 'restaurant:$restaurantId';

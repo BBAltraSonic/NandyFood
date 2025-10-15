@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:food_delivery_app/shared/models/order_item.dart';
 
 part 'order.g.dart';
 
@@ -9,6 +10,7 @@ class Order {
   final String restaurantId;
   final Map<String, dynamic> deliveryAddress;
   final OrderStatus status;
+  final List<OrderItem>? orderItems;
   final double totalAmount;
   final double? subtotal;
   final double deliveryFee;
@@ -40,6 +42,7 @@ class Order {
     required this.restaurantId,
     required this.deliveryAddress,
     required this.status,
+    this.orderItems,
     required this.totalAmount,
     this.subtotal,
     required this.deliveryFee,
@@ -66,6 +69,9 @@ class Order {
   factory Order.fromJson(Map<String, dynamic> json) => _$OrderFromJson(json);
 
   Map<String, dynamic> toJson() => _$OrderToJson(this);
+  
+  /// Getter for items - returns orderItems or empty list
+  List<OrderItem> get items => orderItems ?? [];
 
   Order copyWith({
     String? id,
@@ -73,6 +79,7 @@ class Order {
     String? restaurantId,
     Map<String, dynamic>? deliveryAddress,
     OrderStatus? status,
+    List<OrderItem>? orderItems,
     double? totalAmount,
     double? subtotal,
     double? deliveryFee,
@@ -98,6 +105,7 @@ class Order {
       restaurantId: restaurantId ?? this.restaurantId,
       deliveryAddress: deliveryAddress ?? this.deliveryAddress,
       status: status ?? this.status,
+      orderItems: orderItems ?? this.orderItems,
       totalAmount: totalAmount ?? this.totalAmount,
       subtotal: subtotal ?? this.subtotal,
       deliveryFee: deliveryFee ?? this.deliveryFee,

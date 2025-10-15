@@ -55,7 +55,7 @@ class MonitoringService {
         AppLogger.debug('Performance trace started: $name');
       }
     } catch (e) {
-      AppLogger.warning('Failed to start trace', error: e);
+      AppLogger.warning('Failed to start trace: $e');
     }
   }
 
@@ -71,7 +71,7 @@ class MonitoringService {
         AppLogger.debug('Performance trace stopped: $name');
       }
     } catch (e) {
-      AppLogger.warning('Failed to stop trace', error: e);
+      AppLogger.warning('Failed to stop trace: $e');
     }
   }
 
@@ -81,7 +81,7 @@ class MonitoringService {
       final trace = _activeTraces[traceName];
       trace?.incrementMetric(metricName, value);
     } catch (e) {
-      AppLogger.warning('Failed to increment metric', error: e);
+      AppLogger.warning('Failed to increment metric: $e');
     }
   }
 
@@ -91,7 +91,7 @@ class MonitoringService {
       final trace = _activeTraces[traceName];
       trace?.putAttribute(attribute, value);
     } catch (e) {
-      AppLogger.warning('Failed to set trace attribute', error: e);
+      AppLogger.warning('Failed to set trace attribute: $e');
     }
   }
 
@@ -114,7 +114,7 @@ class MonitoringService {
         AppLogger.debug('HTTP metric started: $key');
       }
     } catch (e) {
-      AppLogger.warning('Failed to start HTTP metric', error: e);
+      AppLogger.warning('Failed to start HTTP metric: $e');
     }
   }
 
@@ -148,7 +148,7 @@ class MonitoringService {
         AppLogger.debug('HTTP metric stopped: $key');
       }
     } catch (e) {
-      AppLogger.warning('Failed to stop HTTP metric', error: e);
+      AppLogger.warning('Failed to stop HTTP metric: $e');
     }
   }
 
@@ -234,8 +234,7 @@ class MonitoringService {
     _alerts.add(alert);
 
     AppLogger.warning(
-      'Performance alert',
-      details: '${severity.name}: $message',
+      'Performance alert - ${severity.name}: $message',
     );
 
     // Keep only recent alerts (last 100)

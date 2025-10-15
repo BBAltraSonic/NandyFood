@@ -47,7 +47,7 @@ class CacheService {
   /// Check if cached data is still valid based on TTL
   bool _isCacheValid(String key, int ttlHours) {
     try {
-      final metadataBox = Hive.box(_metadataBox);
+      final metadataBox = Hive.box<dynamic>(_metadataBox);
       final timestamp = metadataBox.get('${key}_timestamp') as int?;
       
       if (timestamp == null) return false;
@@ -57,7 +57,7 @@ class CacheService {
       
       return cacheAge < maxAge;
     } catch (e) {
-      AppLogger.error('CacheService: Error checking cache validity', e);
+      AppLogger.error('CacheService: Error checking cache validity', error: e);
       return false;
     }
   }
@@ -65,10 +65,10 @@ class CacheService {
   /// Update cache timestamp
   void _updateTimestamp(String key) {
     try {
-      final metadataBox = Hive.box(_metadataBox);
+      final metadataBox = Hive.box<dynamic>(_metadataBox);
       metadataBox.put('${key}_timestamp', DateTime.now().millisecondsSinceEpoch);
     } catch (e) {
-      AppLogger.error('CacheService: Error updating timestamp', e);
+      AppLogger.error('CacheService: Error updating timestamp', error: e);
     }
   }
 
@@ -77,7 +77,7 @@ class CacheService {
   /// Cache restaurants list
   Future<void> cacheRestaurants(List<Map<String, dynamic>> restaurants) async {
     try {
-      final box = Hive.box(_restaurantsBox);
+      final box = Hive.box<dynamic>(_restaurantsBox);
       await box.put('all', restaurants);
       _updateTimestamp('restaurants');
       AppLogger.info('CacheService: Cached ${restaurants.length} restaurants');
@@ -94,7 +94,7 @@ class CacheService {
         return null;
       }
       
-      final box = Hive.box(_restaurantsBox);
+      final box = Hive.box<dynamic>(_restaurantsBox);
       final cached = box.get('all');
       
       if (cached == null) return null;
@@ -111,7 +111,7 @@ class CacheService {
   /// Cache single restaurant details
   Future<void> cacheRestaurant(String restaurantId, Map<String, dynamic> restaurant) async {
     try {
-      final box = Hive.box(_restaurantsBox);
+      final box = Hive.box<dynamic>(_restaurantsBox);
       await box.put(restaurantId, restaurant);
       _updateTimestamp('restaurant_$restaurantId');
       AppLogger.info('CacheService: Cached restaurant $restaurantId');
@@ -127,7 +127,7 @@ class CacheService {
         return null;
       }
       
-      final box = Hive.box(_restaurantsBox);
+      final box = Hive.box<dynamic>(_restaurantsBox);
       final cached = box.get(restaurantId);
       
       if (cached != null) {
@@ -136,7 +136,7 @@ class CacheService {
       
       return cached as Map<String, dynamic>?;
     } catch (e) {
-      AppLogger.error('CacheService: Failed to get cached restaurant', e);
+      AppLogger.error('CacheService: Failed to get cached restaurant', error: e);
       return null;
     }
   }
@@ -146,7 +146,7 @@ class CacheService {
   /// Cache menu items for a restaurant
   Future<void> cacheMenuItems(String restaurantId, List<Map<String, dynamic>> menuItems) async {
     try {
-      final box = Hive.box(_menuItemsBox);
+      final box = Hive.box<dynamic>(_menuItemsBox);
       await box.put(restaurantId, menuItems);
       _updateTimestamp('menu_$restaurantId');
       AppLogger.info('CacheService: Cached ${menuItems.length} menu items for restaurant $restaurantId');
@@ -163,7 +163,7 @@ class CacheService {
         return null;
       }
       
-      final box = Hive.box(_menuItemsBox);
+      final box = Hive.box<dynamic>(_menuItemsBox);
       final cached = box.get(restaurantId);
       
       if (cached == null) return null;
@@ -182,7 +182,7 @@ class CacheService {
   /// Cache user orders
   Future<void> cacheOrders(String userId, List<Map<String, dynamic>> orders) async {
     try {
-      final box = Hive.box(_ordersBox);
+      final box = Hive.box<dynamic>(_ordersBox);
       await box.put(userId, orders);
       _updateTimestamp('orders_$userId');
       AppLogger.info('CacheService: Cached ${orders.length} orders for user $userId');
@@ -199,7 +199,7 @@ class CacheService {
         return null;
       }
       
-      final box = Hive.box(_ordersBox);
+      final box = Hive.box<dynamic>(_ordersBox);
       final cached = box.get(userId);
       
       if (cached == null) return null;
@@ -218,7 +218,7 @@ class CacheService {
   /// Cache user profile
   Future<void> cacheUserProfile(String userId, Map<String, dynamic> profile) async {
     try {
-      final box = Hive.box(_userProfileBox);
+      final box = Hive.box<dynamic>(_userProfileBox);
       await box.put(userId, profile);
       _updateTimestamp('profile_$userId');
       AppLogger.info('CacheService: Cached profile for user $userId');
@@ -234,7 +234,7 @@ class CacheService {
         return null;
       }
       
-      final box = Hive.box(_userProfileBox);
+      final box = Hive.box<dynamic>(_userProfileBox);
       final cached = box.get(userId);
       
       if (cached != null) {
@@ -243,7 +243,7 @@ class CacheService {
       
       return cached as Map<String, dynamic>?;
     } catch (e) {
-      AppLogger.error('CacheService: Failed to get cached user profile', e);
+      AppLogger.error('CacheService: Failed to get cached user profile', error: e);
       return null;
     }
   }
@@ -253,11 +253,11 @@ class CacheService {
   /// Clear all cached data
   Future<void> clearAllCache() async {
     try {
-      await Hive.box(_restaurantsBox).clear();
-      await Hive.box(_menuItemsBox).clear();
-      await Hive.box(_ordersBox).clear();
-      await Hive.box(_userProfileBox).clear();
-      await Hive.box(_metadataBox).clear();
+      await Hive.box<dynamic>(_restaurantsBox).clear();
+      await Hive.box<dynamic>(_menuItemsBox).clear();
+      await Hive.box<dynamic>(_ordersBox).clear();
+      await Hive.box<dynamic>(_userProfileBox).clear();
+      await Hive.box<dynamic>(_metadataBox).clear();
       
       AppLogger.info('CacheService: Cleared all cache');
     } catch (e) {
@@ -268,7 +268,7 @@ class CacheService {
   /// Clear expired cache entries
   Future<void> clearExpiredCache() async {
     try {
-      final metadataBox = Hive.box(_metadataBox);
+      final metadataBox = Hive.box<dynamic>(_metadataBox);
       final now = DateTime.now().millisecondsSinceEpoch;
       
       final keysToDelete = <String>[];
@@ -307,14 +307,14 @@ class CacheService {
   Map<String, dynamic> getCacheStats() {
     try {
       return {
-        'restaurants': Hive.box(_restaurantsBox).length,
-        'menuItems': Hive.box(_menuItemsBox).length,
-        'orders': Hive.box(_ordersBox).length,
-        'userProfiles': Hive.box(_userProfileBox).length,
+        'restaurants': Hive.box<dynamic>(_restaurantsBox).length,
+        'menuItems': Hive.box<dynamic>(_menuItemsBox).length,
+        'orders': Hive.box<dynamic>(_ordersBox).length,
+        'userProfiles': Hive.box<dynamic>(_userProfileBox).length,
         'totalSize': _getTotalCacheSize(),
       };
     } catch (e) {
-      AppLogger.error('CacheService: Failed to get cache stats', e);
+      AppLogger.error('CacheService: Failed to get cache stats', error: e);
       return {};
     }
   }
@@ -322,10 +322,10 @@ class CacheService {
   int _getTotalCacheSize() {
     try {
       int total = 0;
-      total += Hive.box(_restaurantsBox).length;
-      total += Hive.box(_menuItemsBox).length;
-      total += Hive.box(_ordersBox).length;
-      total += Hive.box(_userProfileBox).length;
+      total += Hive.box<dynamic>(_restaurantsBox).length;
+      total += Hive.box<dynamic>(_menuItemsBox).length;
+      total += Hive.box<dynamic>(_ordersBox).length;
+      total += Hive.box<dynamic>(_userProfileBox).length;
       return total;
     } catch (e) {
       return 0;

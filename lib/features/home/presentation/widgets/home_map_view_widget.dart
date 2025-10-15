@@ -410,8 +410,8 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
                             Icon(
                               Icons.restaurant_menu,
                               size: 14,
-                              color: theme.colorScheme.onSurface.withOpacity(
-                                0.6,
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.6,
                               ),
                             ),
                             const SizedBox(width: 4),
@@ -464,16 +464,16 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
                             Icon(
                               Icons.access_time,
                               size: 14,
-                              color: theme.colorScheme.onSurface.withOpacity(
-                                0.6,
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.6,
                               ),
                             ),
                             const SizedBox(width: 4),
                             Text(
                               '${restaurant.estimatedDeliveryTime} min',
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withOpacity(
-                                  0.6,
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
                                 ),
                               ),
                             ),

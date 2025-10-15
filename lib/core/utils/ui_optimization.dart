@@ -112,11 +112,11 @@ class OptimizedListItem extends StatelessWidget {
 }
 
 /// Performance metrics display (debug mode only)
-class PerformanceOverlay extends StatelessWidget {
+class PerformanceMonitorOverlay extends StatelessWidget {
   final Widget child;
   final bool showOverlay;
 
-  const PerformanceOverlay({
+  const PerformanceMonitorOverlay({
     super.key,
     required this.child,
     this.showOverlay = false,
@@ -129,12 +129,13 @@ class PerformanceOverlay extends StatelessWidget {
     return Stack(
       children: [
         child,
-        const Positioned(
+        Positioned(
           top: 100,
           right: 10,
-          child: PerformanceOverlayWidget(
-            checkerboardRasterCacheImages: true,
-            checkerboardOffscreenLayers: true,
+          child: SizedBox(
+            width: 100,
+            height: 100,
+            child: PerformanceOverlay.allEnabled(),
           ),
         ),
       ],

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:food_delivery_app/shared/models/order.dart';
-import 'package:food_delivery_app/shared/widgets/loading_indicator.dart';
-import 'package:food_delivery_app/shared/widgets/error_message_widget.dart';
 import 'package:food_delivery_app/shared/widgets/empty_state_widget.dart';
 
 class OrderHistoryScreen extends ConsumerWidget {
@@ -159,7 +157,6 @@ class OrderHistoryScreen extends ConsumerWidget {
             );
           },
         ),
-      ),
       ),
     );
   }

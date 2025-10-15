@@ -316,8 +316,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: theme.colorScheme.primary.withOpacity(
-                                  0.4,
+                                color: theme.colorScheme.primary.withValues(
+                                  alpha: 0.4,
                                 ),
                                 blurRadius: 15,
                                 offset: const Offset(0, 8),

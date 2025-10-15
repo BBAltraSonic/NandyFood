@@ -206,8 +206,13 @@ class _PayFastPaymentScreenState extends ConsumerState<PayFastPaymentScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return WillPopScope(
-      onWillPop: _onWillPop,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, dynamic result) async {
+        if (!didPop) {
+          await _onWillPop();
+        }
+      },
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Secure Payment'),
@@ -250,7 +255,7 @@ class _PayFastPaymentScreenState extends ConsumerState<PayFastPaymentScreen> {
                   decoration: BoxDecoration(
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),

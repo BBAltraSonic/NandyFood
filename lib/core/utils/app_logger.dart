@@ -24,8 +24,11 @@ class AppLogger {
     }
   }
 
-  static void error(String message, {dynamic error, StackTrace? stack}) {
+  static void error(String message, {dynamic error, StackTrace? stack, String? details}) {
     _log('❌ ERROR', message, _red);
+    if (details != null) {
+      debugPrint('$_red   └─ $details$_reset');
+    }
     if (error != null) {
       debugPrint('$_red   └─ Error: $error$_reset');
     }
@@ -40,8 +43,11 @@ class AppLogger {
     _log('⚠️  WARNING', message, _yellow);
   }
 
-  static void info(String message, {Map<String, dynamic>? data}) {
+  static void info(String message, {Map<String, dynamic>? data, String? details}) {
     _log('📘 INFO', message, _blue);
+    if (details != null) {
+      debugPrint('$_blue   └─ $details$_reset');
+    }
     if (data != null && data.isNotEmpty) {
       data.forEach((key, value) {
         debugPrint('$_blue   └─ $key: $value$_reset');
@@ -49,9 +55,12 @@ class AppLogger {
     }
   }
 
-  static void debug(String message, {dynamic data}) {
+  static void debug(String message, {dynamic data, String? details}) {
     if (kDebugMode) {
       _log('🔍 DEBUG', message, _magenta);
+      if (details != null) {
+        debugPrint('$_magenta   └─ $details$_reset');
+      }
       if (data != null) {
         debugPrint('$_magenta   └─ Data: $data$_reset');
       }

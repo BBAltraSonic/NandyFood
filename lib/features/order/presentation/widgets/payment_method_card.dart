@@ -47,7 +47,7 @@ class PaymentMethodCard extends StatelessWidget {
                     height: 56,
                     decoration: BoxDecoration(
                       color: method.enabled
-                          ? colorScheme.primary.withOpacity(0.1)
+                          ? colorScheme.primary.withValues(alpha: 0.1)
                           : Colors.grey.shade200,
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -164,7 +164,7 @@ class PaymentMethodCard extends StatelessWidget {
               Positioned.fill(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.6),
+                    color: Colors.white.withValues(alpha: 0.6),
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),

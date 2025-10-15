@@ -100,7 +100,7 @@ class CrashReportingService {
         details: reason,
       );
     } catch (e) {
-      AppLogger.warning('Failed to record error to crash reporting', error: e);
+      AppLogger.warning('Failed to record error to crash reporting: $e');
     }
   }
 
@@ -116,7 +116,7 @@ class CrashReportingService {
         stack: details.stack,
       );
     } catch (e) {
-      AppLogger.warning('Failed to record Flutter error', error: e);
+      AppLogger.warning('Failed to record Flutter error: $e');
     }
   }
 
@@ -173,7 +173,7 @@ class CrashReportingService {
     }
 
     AppLogger.warning('Triggering test crash...');
-    await _crashlytics?.crash();
+    _crashlytics?.crash();
   }
 
   /// Force send pending crash reports

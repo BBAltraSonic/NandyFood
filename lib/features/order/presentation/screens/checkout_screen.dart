@@ -12,7 +12,6 @@ import 'package:food_delivery_app/features/order/presentation/screens/payfast_pa
 import 'package:food_delivery_app/features/order/presentation/providers/payment_provider.dart';
 import 'package:food_delivery_app/features/order/presentation/providers/payment_method_provider.dart'
     as payment_method;
-import 'package:food_delivery_app/core/services/auth_service.dart';
 import 'package:food_delivery_app/core/utils/error_handler.dart';
 import 'package:food_delivery_app/features/order/presentation/widgets/tip_selector.dart';
 import 'package:food_delivery_app/features/order/presentation/screens/order_confirmation_screen.dart';

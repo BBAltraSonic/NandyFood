@@ -42,8 +42,7 @@ class SecurityMonitor {
     
     // Log to console/monitoring service
     AppLogger.warning(
-      'Security Event: ${type.name}',
-      details: 'User: $userId, Details: $details',
+      'Security Event: ${type.name} - User: $userId, Details: $details',
     );
 
     // Check for suspicious patterns

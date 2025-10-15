@@ -12,6 +12,9 @@ Order _$OrderFromJson(Map<String, dynamic> json) => Order(
   restaurantId: json['restaurantId'] as String,
   deliveryAddress: json['deliveryAddress'] as Map<String, dynamic>,
   status: $enumDecode(_$OrderStatusEnumMap, json['status']),
+  orderItems: (json['orderItems'] as List<dynamic>?)
+      ?.map((e) => OrderItem.fromJson(e as Map<String, dynamic>))
+      .toList(),
   totalAmount: (json['totalAmount'] as num).toDouble(),
   subtotal: (json['subtotal'] as num?)?.toDouble(),
   deliveryFee: (json['deliveryFee'] as num).toDouble(),
@@ -48,6 +51,7 @@ Map<String, dynamic> _$OrderToJson(Order instance) => <String, dynamic>{
   'restaurantId': instance.restaurantId,
   'deliveryAddress': instance.deliveryAddress,
   'status': _$OrderStatusEnumMap[instance.status]!,
+  'orderItems': instance.orderItems,
   'totalAmount': instance.totalAmount,
   'subtotal': instance.subtotal,
   'deliveryFee': instance.deliveryFee,

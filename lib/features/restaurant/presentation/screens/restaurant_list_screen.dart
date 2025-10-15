@@ -95,14 +95,14 @@ class RestaurantListScreen extends ConsumerWidget {
                     onRetry: () =>
                         ref.read(restaurantProvider.notifier).loadRestaurants(),
                   )
-                : _buildRestaurantList(restaurantState, context),
+                : _buildRestaurantList(restaurantState, context, ref),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildRestaurantList(restaurantState, BuildContext context) {
+  Widget _buildRestaurantList(restaurantState, BuildContext context, WidgetRef ref) {
     // Use filtered restaurants from state
     final restaurants =
         restaurantState.filteredRestaurants.isEmpty &&

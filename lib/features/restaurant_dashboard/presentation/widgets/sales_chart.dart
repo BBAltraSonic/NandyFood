@@ -100,7 +100,7 @@ class SalesChart extends StatelessWidget {
                       dotData: const FlDotData(show: true),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: (lineColor ?? Colors.blue).withOpacity(0.1),
+                        color: (lineColor ?? Colors.blue).withValues(alpha: 0.1),
                       ),
                     ),
                   ],

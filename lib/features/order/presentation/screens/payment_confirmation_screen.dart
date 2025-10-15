@@ -56,8 +56,8 @@ class _PaymentConfirmationScreenState
   Widget build(BuildContext context) {
     final paymentState = ref.watch(paymentProvider);
 
-    return WillPopScope(
-      onWillPop: () async => widget.success,
+    return PopScope(
+      canPop: widget.success,
       child: Scaffold(
         body: SafeArea(
           child: widget.success

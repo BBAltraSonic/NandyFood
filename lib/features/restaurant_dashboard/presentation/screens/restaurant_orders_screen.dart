@@ -464,19 +464,20 @@ class _RestaurantOrdersScreenState
     }
   }
 
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'pending':
+  Color _getStatusColor(OrderStatus status) {
+    switch (status) {
+      case OrderStatus.placed:
+      case OrderStatus.confirmed:
         return Colors.orange;
-      case 'confirmed':
-      case 'preparing':
+      case OrderStatus.preparing:
         return Colors.blue;
-      case 'ready':
+      case OrderStatus.ready_for_pickup:
         return Colors.purple;
-      case 'completed':
+      case OrderStatus.out_for_delivery:
+        return Colors.indigo;
+      case OrderStatus.delivered:
         return Colors.green;
-      case 'cancelled':
-      case 'rejected':
+      case OrderStatus.cancelled:
         return Colors.red;
       default:
         return Colors.grey;

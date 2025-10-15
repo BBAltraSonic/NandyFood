@@ -164,8 +164,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
-                                color: theme.colorScheme.primary.withOpacity(
-                                  0.3,
+                                color: theme.colorScheme.primary.withValues(
+                                  alpha: 0.3,
                                 ),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
@@ -538,8 +538,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           child: Text(
                             restaurant.cuisineType,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurface.withOpacity(
-                                0.6,
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.6,
                               ),
                             ),
                             maxLines: 1,

@@ -91,7 +91,7 @@ class _PaymentLoadingIndicatorState extends State<PaymentLoadingIndicator>
                       width: 80,
                       height: 80,
                       decoration: BoxDecoration(
-                        color: colorScheme.primary.withOpacity(0.1),
+                        color: colorScheme.primary.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -121,7 +121,7 @@ class _PaymentLoadingIndicatorState extends State<PaymentLoadingIndicator>
               SizedBox(
                 width: 200,
                 child: LinearProgressIndicator(
-                  backgroundColor: colorScheme.primary.withOpacity(0.2),
+                  backgroundColor: colorScheme.primary.withValues(alpha: 0.2),
                   valueColor: AlwaysStoppedAnimation<Color>(
                     colorScheme.primary,
                   ),

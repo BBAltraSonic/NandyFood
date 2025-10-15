@@ -157,7 +157,7 @@ class _LiveTrackingMapState extends State<LiveTrackingMap>
                       widget.destinationLocation,
                     ],
                     strokeWidth: 4,
-                    color: Theme.of(context).primaryColor.withOpacity(0.6),
+                    color: Theme.of(context).primaryColor.withValues(alpha: 0.6),
                     borderStrokeWidth: 2,
                     borderColor: Colors.white,
                     isDotted: true,
@@ -213,7 +213,7 @@ class _LiveTrackingMapState extends State<LiveTrackingMap>
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.green.withOpacity(0.5),
+              color: Colors.green.withValues(alpha: 0.5),
               blurRadius: 10,
               spreadRadius: 2,
             ),
@@ -235,7 +235,7 @@ class _LiveTrackingMapState extends State<LiveTrackingMap>
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: Colors.red.withOpacity(0.5),
+            color: Colors.red.withValues(alpha: 0.5),
             blurRadius: 8,
             spreadRadius: 2,
           ),

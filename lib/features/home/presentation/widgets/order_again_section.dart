@@ -223,8 +223,8 @@ class _OrderAgainCard extends StatelessWidget {
                             child: Text(
                               restaurant.cuisineType,
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withOpacity(
-                                  0.6,
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
                                 ),
                               ),
                               maxLines: 1,

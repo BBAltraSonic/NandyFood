@@ -33,7 +33,8 @@ class OfflineSyncService {
       await _loadQueueFromStorage();
       
       // Listen to connectivity changes
-      _connectivitySubscription = _connectivity.onConnectivityChanged.listen(
+      // Cast to List<ConnectivityResult> for v5.0+ compatibility
+      _connectivitySubscription = (_connectivity.onConnectivityChanged as Stream<List<ConnectivityResult>>).listen(
         _onConnectivityChanged,
       );
       
@@ -46,11 +47,12 @@ class OfflineSyncService {
   /// Check current connectivity status
   Future<void> _checkConnectivity() async {
     try {
-      final result = await _connectivity.checkConnectivity();
-      _isOnline = !result.contains(ConnectivityResult.none);
+      // connectivity_plus v5.0+ returns List<ConnectivityResult>
+      final results = await _connectivity.checkConnectivity() as List<ConnectivityResult>;
+      _isOnline = !results.contains(ConnectivityResult.none);
       AppLogger.info('OfflineSyncService: Connectivity status - ${_isOnline ? "Online" : "Offline"}');
     } catch (e) {
-      AppLogger.error('OfflineSyncService: Error checking connectivity', e);
+      AppLogger.error('OfflineSyncService: Error checking connectivity', error: e);
       _isOnline = true; // Assume online if check fails
     }
   }
@@ -160,7 +162,7 @@ class OfflineSyncService {
           final action = OfflineAction.fromJson(json);
           _syncQueue.add(action);
         } catch (e) {
-          AppLogger.error('OfflineSyncService: Failed to parse queued action', e);
+          AppLogger.error('OfflineSyncService: Failed to parse queued action', error: e);
         }
       }
       
