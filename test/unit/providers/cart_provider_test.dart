@@ -2,8 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:food_delivery_app/features/order/presentation/providers/cart_provider.dart';
 import 'package:food_delivery_app/shared/models/menu_item.dart';
-import 'package:food_delivery_app/shared/models/order_item.dart';
-import 'package:food_delivery_app/features/order/presentation/models/cart_item.dart';
 
 void main() {
   group('CartProvider', () {
@@ -51,9 +49,9 @@ void main() {
 
       final state = container.read(cartProvider);
       expect(state.items.length, 1);
-      expect(state.items[0].orderItem.menuItemId, 'item1');
-      expect(state.items[0].orderItem.quantity, 1);
-      expect(state.items[0].orderItem.unitPrice, 10.0);
+      expect(state.items[0].menuItemId, 'item1');
+      expect(state.items[0].quantity, 1);
+      expect(state.items[0].unitPrice, 10.0);
     });
 
     test('addItem should increment quantity for existing item', () async {
@@ -79,7 +77,7 @@ void main() {
 
       final state = container.read(cartProvider);
       expect(state.items.length, 1);
-      expect(state.items[0].orderItem.quantity, 2);
+      expect(state.items[0].quantity, 2);
     });
 
     test('removeItem should remove item from cart', () async {
@@ -100,7 +98,7 @@ void main() {
       );
 
       await notifier.addItem(menuItem);
-      final itemId = container.read(cartProvider).items[0].orderItem.id;
+      final itemId = container.read(cartProvider).items[0].id;
       await notifier.removeItem(itemId);
 
       final state = container.read(cartProvider);
@@ -125,12 +123,12 @@ void main() {
       );
 
       await notifier.addItem(menuItem);
-      final itemId = container.read(cartProvider).items[0].orderItem.id;
+      final itemId = container.read(cartProvider).items[0].id;
 
       await notifier.updateItemQuantity(itemId, 3);
 
       final state = container.read(cartProvider);
-      expect(state.items[0].orderItem.quantity, 3);
+      expect(state.items[0].quantity, 3);
     });
 
     test('updateItemQuantity should remove item when quantity is 0', () async {
@@ -151,7 +149,7 @@ void main() {
       );
 
       await notifier.addItem(menuItem);
-      final itemId = container.read(cartProvider).items[0].orderItem.id;
+      final itemId = container.read(cartProvider).items[0].id;
 
       await notifier.updateItemQuantity(itemId, 0);
 

@@ -31,9 +31,9 @@ void main() {
 
       // Perform signup
       await userNotifier.signUp(
-        email: 'test@example.com',
-        password: 'password123',
-        fullName: 'Test User',
+        'test@example.com',
+        'password123',
+        'Test User',
       );
 
       // Verify that user is authenticated
@@ -49,9 +49,9 @@ void main() {
 
       // First signup a user
       await userNotifier.signUp(
-        email: 'login_test@example.com',
-        password: 'password123',
-        fullName: 'Login Test User',
+        'login_test@example.com',
+        'password123',
+        'Login Test User',
       );
 
       // Sign out
@@ -63,8 +63,8 @@ void main() {
 
       // Login with the same credentials
       await userNotifier.signIn(
-        email: 'login_test@example.com',
-        password: 'password123',
+        'login_test@example.com',
+        'password123',
       );
 
       // Verify that user is authenticated
@@ -79,8 +79,8 @@ void main() {
       // Attempt login with invalid credentials
       try {
         await userNotifier.signIn(
-          email: 'invalid@example.com',
-          password: 'wrongpassword',
+          'invalid@example.com',
+          'wrongpassword',
         );
         fail('Expected exception was not thrown');
       } catch (e) {
@@ -96,9 +96,9 @@ void main() {
 
       // First signup a user
       await userNotifier.signUp(
-        email: 'duplicate@example.com',
-        password: 'password123',
-        fullName: 'Duplicate Test User',
+        'duplicate@example.com',
+        'password123',
+        'Duplicate Test User',
       );
 
       // Sign out
@@ -107,9 +107,9 @@ void main() {
       // Try to signup with the same email
       try {
         await userNotifier.signUp(
-          email: 'duplicate@example.com',
-          password: 'differentpassword',
-          fullName: 'Another User',
+          'duplicate@example.com',
+          'differentpassword',
+          'Another User',
         );
         fail('Expected exception was not thrown');
       } catch (e) {
@@ -125,9 +125,9 @@ void main() {
 
       // First signup a user
       await userNotifier.signUp(
-        email: 'profile_update@example.com',
-        password: 'password123',
-        fullName: 'Profile Update User',
+        'profile_update@example.com',
+        'password123',
+        'Profile Update User',
       );
 
       // Verify initial profile
@@ -153,9 +153,9 @@ void main() {
 
       // First signup a user
       await userNotifier.signUp(
-        email: 'logout_test@example.com',
-        password: 'password123',
-        fullName: 'Logout Test User',
+        'logout_test@example.com',
+        'password123',
+        'Logout Test User',
       );
 
       // Verify user is authenticated
@@ -176,9 +176,9 @@ void main() {
 
       // First signup a user
       await userNotifier.signUp(
-        email: 'session_test@example.com',
-        password: 'password123',
-        fullName: 'Session Test User',
+        'session_test@example.com',
+        'password123',
+        'Session Test User',
       );
 
       // Verify user is authenticated

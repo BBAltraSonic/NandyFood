@@ -42,7 +42,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            home: RestaurantDetailScreen(restaurant: mockRestaurant),
+            home: RestaurantDetailScreen(restaurant: mockRestaurant, restaurantId: 'test-restaurant-1'),
           ),
         ),
       );
@@ -64,7 +64,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            home: RestaurantDetailScreen(restaurant: mockRestaurant),
+            home: RestaurantDetailScreen(restaurant: mockRestaurant, restaurantId: 'test-restaurant-1'),
           ),
         ),
       );
@@ -79,7 +79,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            home: RestaurantDetailScreen(restaurant: mockRestaurant),
+            home: RestaurantDetailScreen(restaurant: mockRestaurant, restaurantId: 'test-restaurant-1'),
           ),
         ),
       );
@@ -100,7 +100,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            home: RestaurantDetailScreen(restaurant: mockRestaurant),
+            home: RestaurantDetailScreen(restaurant: mockRestaurant, restaurantId: 'test-restaurant-1'),
             onGenerateRoute: (settings) {
               if (settings.name == '/restaurant/${mockRestaurant.id}/menu') {
                 navigatedToMenu = true;
@@ -129,7 +129,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            home: RestaurantDetailScreen(restaurant: mockRestaurant),
+            home: RestaurantDetailScreen(restaurant: mockRestaurant, restaurantId: 'test-restaurant-1'),
           ),
         ),
       );
@@ -154,7 +154,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            home: RestaurantDetailScreen(restaurant: mockRestaurant),
+            home: RestaurantDetailScreen(restaurant: mockRestaurant, restaurantId: 'test-restaurant-1'),
           ),
         ),
       );

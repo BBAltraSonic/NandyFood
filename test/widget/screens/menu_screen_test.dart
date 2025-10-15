@@ -39,7 +39,7 @@ void main() {
     testWidgets('displays menu items correctly', (WidgetTester tester) async {
       await tester.pumpWidget(
         ProviderScope(
-          child: MaterialApp(home: MenuScreen(restaurant: mockRestaurant)),
+          child: MaterialApp(home: MenuScreen(restaurant: mockRestaurant, restaurantId: 'test-restaurant-1')),
         ),
       );
 
@@ -56,7 +56,7 @@ void main() {
     testWidgets('displays menu categories', (WidgetTester tester) async {
       await tester.pumpWidget(
         ProviderScope(
-          child: MaterialApp(home: MenuScreen(restaurant: mockRestaurant)),
+          child: MaterialApp(home: MenuScreen(restaurant: mockRestaurant, restaurantId: 'test-restaurant-1')),
         ),
       );
 
@@ -75,7 +75,7 @@ void main() {
     ) async {
       await tester.pumpWidget(
         ProviderScope(
-          child: MaterialApp(home: MenuScreen(restaurant: mockRestaurant)),
+          child: MaterialApp(home: MenuScreen(restaurant: mockRestaurant, restaurantId: 'test-restaurant-1')),
         ),
       );
 
@@ -98,7 +98,7 @@ void main() {
     ) async {
       await tester.pumpWidget(
         ProviderScope(
-          child: MaterialApp(home: MenuScreen(restaurant: mockRestaurant)),
+          child: MaterialApp(home: MenuScreen(restaurant: mockRestaurant, restaurantId: 'test-restaurant-1')),
         ),
       );
 
@@ -120,7 +120,7 @@ void main() {
     testWidgets('search functionality works', (WidgetTester tester) async {
       await tester.pumpWidget(
         ProviderScope(
-          child: MaterialApp(home: MenuScreen(restaurant: mockRestaurant)),
+          child: MaterialApp(home: MenuScreen(restaurant: mockRestaurant, restaurantId: 'test-restaurant-1')),
         ),
       );
 
@@ -145,7 +145,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            home: MenuScreen(restaurant: mockRestaurant),
+            home: MenuScreen(restaurant: mockRestaurant, restaurantId: 'test-restaurant-1'),
             onGenerateRoute: (settings) {
               if (settings.name == '/order/cart') {
                 navigatedToCart = true;
