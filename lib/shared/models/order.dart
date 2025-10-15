@@ -18,6 +18,14 @@ class Order {
   final String? promoCode;
   final String paymentMethod;
   final PaymentStatus paymentStatus;
+  @JsonKey(name: 'payfast_transaction_id')
+  final String? payfastTransactionId;
+  @JsonKey(name: 'payfast_signature')
+  final String? payfastSignature;
+  @JsonKey(name: 'payment_gateway')
+  final String? paymentGateway;
+  @JsonKey(name: 'payment_reference')
+  final String? paymentReference;
   final DateTime placedAt;
   final DateTime? estimatedDeliveryAt;
   final DateTime? deliveredAt;
@@ -41,6 +49,10 @@ class Order {
     this.promoCode,
     required this.paymentMethod,
     required this.paymentStatus,
+    this.payfastTransactionId,
+    this.payfastSignature,
+    this.paymentGateway,
+    this.paymentReference,
     required this.placedAt,
     this.estimatedDeliveryAt,
     this.deliveredAt,
@@ -70,6 +82,10 @@ class Order {
     String? promoCode,
     String? paymentMethod,
     PaymentStatus? paymentStatus,
+    String? payfastTransactionId,
+    String? payfastSignature,
+    String? paymentGateway,
+    String? paymentReference,
     DateTime? placedAt,
     DateTime? estimatedDeliveryAt,
     DateTime? deliveredAt,
@@ -91,6 +107,10 @@ class Order {
       promoCode: promoCode ?? this.promoCode,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       paymentStatus: paymentStatus ?? this.paymentStatus,
+      payfastTransactionId: payfastTransactionId ?? this.payfastTransactionId,
+      payfastSignature: payfastSignature ?? this.payfastSignature,
+      paymentGateway: paymentGateway ?? this.paymentGateway,
+      paymentReference: paymentReference ?? this.paymentReference,
       placedAt: placedAt ?? this.placedAt,
       estimatedDeliveryAt: estimatedDeliveryAt ?? this.estimatedDeliveryAt,
       deliveredAt: deliveredAt ?? this.deliveredAt,

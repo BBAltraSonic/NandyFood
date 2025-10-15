@@ -17,11 +17,56 @@ class AppException implements Exception {
   }
 }
 
+/// Payment-specific exceptions
+class PaymentException extends AppException {
+  PaymentException(super.message, {super.code, super.details});
+}
+
+class PaymentInitializationException extends PaymentException {
+  PaymentInitializationException(super.message, {super.code, super.details});
+}
+
+class PaymentProcessingException extends PaymentException {
+  PaymentProcessingException(super.message, {super.code, super.details});
+}
+
+class PaymentVerificationException extends PaymentException {
+  PaymentVerificationException(super.message, {super.code, super.details});
+}
+
+class PaymentCancelledException extends PaymentException {
+  PaymentCancelledException(super.message, {super.code, super.details});
+}
+
+class PaymentRefundException extends PaymentException {
+  PaymentRefundException(super.message, {super.code, super.details});
+}
+
+class NetworkException extends AppException {
+  NetworkException(super.message, {super.code, super.details});
+}
+
 /// Error handler utility class
 class ErrorHandler {
   /// Handle different types of errors and return user-friendly messages
   static String getErrorMessage(Object error) {
-    if (error is AppException) {
+    if (error is PaymentCancelledException) {
+      return 'Payment was cancelled. You can try again when ready.';
+    } else if (error is PaymentInitializationException) {
+      return 'Unable to initialize payment. Please try again.';
+    } else if (error is PaymentProcessingException) {
+      return 'Payment processing failed. Please check your payment details and try again.';
+    } else if (error is PaymentVerificationException) {
+      return 'Unable to verify payment status. Please contact support if you were charged.';
+    } else if (error is PaymentRefundException) {
+      return 'Unable to process refund. Please contact support.';
+    } else if (error is PaymentException) {
+      return error.message.isNotEmpty 
+          ? error.message 
+          : 'Payment error occurred. Please try again.';
+    } else if (error is NetworkException) {
+      return 'Network error. Please check your internet connection.';
+    } else if (error is AppException) {
       return error.message;
     } else if (error is TimeoutException) {
       return 'Request timed out. Please check your internet connection and try again.';

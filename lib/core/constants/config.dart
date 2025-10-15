@@ -7,11 +7,33 @@ class Config {
   static String get supabaseAnonKey =>
       dotenv.env['SUPABASE_ANON_KEY'] ?? 'your-anon-key';
 
-  // Paystack Configuration
-  static String get paystackPublicKey =>
-      dotenv.env['PAYSTACK_PUBLIC_KEY'] ?? 'pk_test_your_paystack_key';
-  static String get paystackSecretKey =>
-      dotenv.env['PAYSTACK_SECRET_KEY'] ?? 'sk_test_your_paystack_secret';
+  // PayFast Configuration
+  static String get payfastMerchantId =>
+      dotenv.env['PAYFAST_MERCHANT_ID'] ?? '10000100'; // Sandbox default
+  static String get payfastMerchantKey =>
+      dotenv.env['PAYFAST_MERCHANT_KEY'] ?? '46f0cd694581a'; // Sandbox default
+  static String get payfastPassphrase =>
+      dotenv.env['PAYFAST_PASSPHRASE'] ?? 'test_passphrase';
+  static String get payfastMode =>
+      dotenv.env['PAYFAST_MODE'] ?? 'sandbox'; // sandbox or live
+  static String get payfastReturnUrl =>
+      dotenv.env['PAYFAST_RETURN_URL'] ??
+      'https://nandyfood.com/payment/success';
+  static String get payfastCancelUrl =>
+      dotenv.env['PAYFAST_CANCEL_URL'] ??
+      'https://nandyfood.com/payment/cancel';
+  static String get payfastNotifyUrl =>
+      dotenv.env['PAYFAST_NOTIFY_URL'] ??
+      'https://nandyfood.com/api/payment/webhook';
+
+  // PayFast API URLs
+  static String get payfastApiUrl => payfastMode == 'live'
+      ? 'https://www.payfast.co.za/eng/process'
+      : 'https://sandbox.payfast.co.za/eng/process';
+
+  static String get payfastValidateUrl => payfastMode == 'live'
+      ? 'https://www.payfast.co.za/eng/query/validate'
+      : 'https://sandbox.payfast.co.za/eng/query/validate';
 
   // API Configuration
   static String get apiBaseUrl =>
@@ -20,4 +42,7 @@ class Config {
   // Environment Configuration
   static bool get isDebugMode =>
       dotenv.env['DEBUG_MODE']?.toLowerCase() == 'true';
+
+  static bool get isProduction => payfastMode == 'live';
+  static bool get isSandbox => payfastMode == 'sandbox';
 }

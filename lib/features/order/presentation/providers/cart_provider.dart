@@ -8,8 +8,9 @@ import 'package:food_delivery_app/shared/models/address.dart';
 // Enum for delivery method
 enum DeliveryMethod { delivery, pickup }
 
-// Enum for payment method
-enum PaymentMethod { cash, card }
+// Import payment method type from payment_method_provider
+// Note: We'll use string for backward compatibility
+typedef PaymentMethodType = String;
 
 // Cart state class to represent the cart state
 class CartState {
@@ -26,7 +27,7 @@ class CartState {
   final DeliveryMethod deliveryMethod;
   final Address? selectedAddress;
   final String? deliveryNotes;
-  final PaymentMethod paymentMethod;
+  final String paymentMethod; // 'cash' or 'payfast'
   final String? restaurantId;
 
   CartState({
@@ -43,7 +44,7 @@ class CartState {
     this.deliveryMethod = DeliveryMethod.delivery,
     this.selectedAddress,
     this.deliveryNotes,
-    this.paymentMethod = PaymentMethod.cash,
+    this.paymentMethod = 'cash', // Default to cash
     this.restaurantId,
   });
 
@@ -61,7 +62,7 @@ class CartState {
     DeliveryMethod? deliveryMethod,
     Address? selectedAddress,
     String? deliveryNotes,
-    PaymentMethod? paymentMethod,
+    String? paymentMethod,
     String? restaurantId,
   }) {
     return CartState(
@@ -242,39 +243,21 @@ class CartNotifier extends StateNotifier<CartState> {
 
       final promotion = Promotion.fromJson(promoData);
 
-      // Check if promotion is active
-      if (!promotion.isActive) {
-        throw Exception('Promo code is no longer active');
-      }
-
-      // Check if promotion is within valid dates
-      final now = DateTime.now();
-      if (now.isBefore(promotion.validFrom) ||
-          now.isAfter(promotion.validUntil)) {
-        throw Exception('Promo code is not valid at this time');
-      }
-
-      // Check if promotion has usage limits
-      if (promotion.usageLimit != null &&
-          promotion.usedCount >= promotion.usageLimit!) {
-        throw Exception('Promo code has reached its usage limit');
+      // Check if promotion is valid using new model
+      if (!promotion.isValid) {
+        throw Exception('Promo code is not valid or has expired');
       }
 
       // Check minimum order amount
-      if (promotion.minimumOrderAmount != null &&
-          state.subtotal < promotion.minimumOrderAmount!) {
+      if (promotion.minOrderAmount != null &&
+          state.subtotal < promotion.minOrderAmount!) {
         throw Exception(
-          'Minimum order amount of \$${promotion.minimumOrderAmount} required',
+          'Minimum order amount of R${promotion.minOrderAmount} required',
         );
       }
 
-      // Calculate discount based on promotion type
-      double discount = 0.0;
-      if (promotion.discountType == PromotionType.percentage) {
-        discount = state.subtotal * (promotion.discountValue / 100);
-      } else if (promotion.discountType == PromotionType.fixedAmount) {
-        discount = promotion.discountValue;
-      }
+      // Calculate discount using promotion method
+      double discount = promotion.calculateDiscount(state.subtotal);
 
       // Ensure discount doesn't exceed subtotal
       discount = discount > state.subtotal ? state.subtotal : discount;
@@ -358,8 +341,8 @@ class CartNotifier extends StateNotifier<CartState> {
     state = state.copyWith(deliveryNotes: notes);
   }
 
-  /// Set payment method
-  void setPaymentMethod(PaymentMethod method) {
+  /// Set payment method ('cash' or 'payfast')
+  void setPaymentMethod(String method) {
     state = state.copyWith(paymentMethod: method);
   }
 

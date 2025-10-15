@@ -133,20 +133,12 @@ class _RestaurantDetailScreenState
         ..._buildMenuItemsByCategory(restaurantState, context),
 
         // Reviews Section
-        if (restaurantState.totalReviews > 0 ||
-            restaurantState.reviews.isNotEmpty)
-          SliverToBoxAdapter(
-            child: ReviewsSection(
-              restaurantId: widget.restaurantId,
-              overallRating: restaurantState.selectedRestaurant?.rating ?? 0.0,
-              ratingBreakdown: restaurantState.ratingBreakdown,
-              initialReviews: restaurantState.reviews,
-              totalReviews: restaurantState.totalReviews,
-              onLoadMore: (offset) => ref
-                  .read(restaurantProvider.notifier)
-                  .loadMoreReviews(widget.restaurantId, offset),
-            ),
+        SliverToBoxAdapter(
+          child: ReviewsSection(
+            restaurantId: widget.restaurantId,
+            restaurantName: restaurantState.selectedRestaurant?.name ?? 'Restaurant',
           ),
+        ),
       ],
     );
   }

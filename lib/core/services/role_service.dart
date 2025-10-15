@@ -172,16 +172,43 @@ class RoleService {
     }
   }
 
+  /// Get user's restaurant owner records
+  Future<List<RestaurantOwner>> getUserRestaurantOwners(String userId) async {
+    try {
+      AppLogger.function('RoleService.getUserRestaurantOwners', 'ENTER',
+          params: {'userId': userId});
+
+      final response = await _supabase
+          .from('restaurant_owners')
+          .select()
+          .eq('user_id', userId)
+          .eq('status', 'active')
+          .order('created_at', ascending: false);
+
+      final owners = (response as List)
+          .map((json) => RestaurantOwner.fromJson(json as Map<String, dynamic>))
+          .toList();
+
+      AppLogger.function('RoleService.getUserRestaurantOwners', 'EXIT',
+          result: '${owners.length} restaurant owners');
+      return owners;
+    } catch (e, stack) {
+      AppLogger.error('Failed to get user restaurant owners',
+          error: e, stack: stack);
+      rethrow;
+    }
+  }
+
   /// Get user's primary restaurant (first active one)
   Future<RestaurantOwner?> getPrimaryRestaurant(String userId) async {
     try {
-      final restaurants = await getUserRestaurants(userId);
-      if (restaurants.isEmpty) return null;
+      final owners = await getUserRestaurantOwners(userId);
+      if (owners.isEmpty) return null;
 
       // Return first primary owner, otherwise first restaurant
-      return restaurants.firstWhere(
+      return owners.firstWhere(
         (r) => r.isPrimary,
-        orElse: () => restaurants.first,
+        orElse: () => owners.first,
       );
     } catch (e, stack) {
       AppLogger.error('Failed to get primary restaurant',

@@ -67,8 +67,12 @@ dependencies:
   firebase_performance: ^0.9.3
   firebase_crashlytics: ^3.4.0
 
-  # Payments (currently using cash only)
-  # Payment gateway integration can be added later
+  # Payments
+  # PayFast integration for South African payment processing
+  webview_flutter: ^4.4.2
+  connectivity_plus: ^5.0.2
+  package_info_plus: ^5.0.1
+  flutter_secure_storage: ^9.0.0
 
   # Images and media
   image_picker: ^1.0.4

@@ -10,8 +10,19 @@ import 'package:food_delivery_app/shared/widgets/loading_indicator.dart';
 import 'package:food_delivery_app/features/order/presentation/widgets/delivery_method_selector.dart';
 import 'package:food_delivery_app/features/order/presentation/widgets/address_selector.dart';
 import 'package:food_delivery_app/features/order/presentation/widgets/payment_method_selector_cash.dart';
+import 'package:food_delivery_app/features/order/presentation/screens/payment_method_screen.dart';
+import 'package:food_delivery_app/features/order/presentation/screens/payfast_payment_screen.dart';
+import 'package:food_delivery_app/features/order/presentation/providers/payment_provider.dart';
+import 'package:food_delivery_app/features/order/presentation/providers/payment_method_provider.dart'
+    as payment_method;
+import 'package:food_delivery_app/core/services/auth_service.dart';
+import 'package:food_delivery_app/core/utils/error_handler.dart';
 import 'package:food_delivery_app/features/order/presentation/widgets/tip_selector.dart';
 import 'package:food_delivery_app/features/order/presentation/screens/order_confirmation_screen.dart';
+import 'package:food_delivery_app/features/order/presentation/providers/promotion_provider.dart';
+import 'package:food_delivery_app/features/order/presentation/widgets/coupon_input_widget.dart';
+import 'package:food_delivery_app/features/order/presentation/screens/promotions_screen.dart';
+import 'package:food_delivery_app/core/providers/auth_provider.dart';
 
 class CheckoutScreen extends ConsumerWidget {
   const CheckoutScreen({super.key});
@@ -19,8 +30,16 @@ class CheckoutScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cartState = ref.watch(cartProvider);
+    final promotionState = ref.watch(promotionProvider);
+    final authState = ref.watch(authStateProvider);
     final orderNotifier = ref.read(orderProvider.notifier);
     final addressNotifier = ref.read(addressProvider.notifier);
+    
+    // Calculate discount
+    final discount = promotionState.appliedPromotion != null
+        ? promotionState.appliedPromotion!.calculateDiscount(cartState.totalAmount)
+        : 0.0;
+    final finalAmount = cartState.totalAmount - discount;
 
     // Load addresses when the screen is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -102,11 +121,19 @@ class CheckoutScreen extends ConsumerWidget {
                       '\$${cartState.tipAmount.toStringAsFixed(2)}',
                     ),
 
-                  // Discount
+                  // Discount from cart
                   if (cartState.discountAmount > 0)
                     _buildSummaryRow(
                       'Discount',
                       '-\$${cartState.discountAmount.toStringAsFixed(2)}',
+                    ),
+                    
+                  // Promotion discount
+                  if (discount > 0)
+                    _buildSummaryRow(
+                      'Promotion (${promotionState.appliedPromotion!.code})',
+                      '-R${discount.toStringAsFixed(2)}',
+                      color: Colors.green,
                     ),
 
                   const Divider(height: 32),
@@ -114,11 +141,76 @@ class CheckoutScreen extends ConsumerWidget {
                   // Total
                   _buildSummaryRow(
                     'Total',
-                    '\$${cartState.totalAmount.toStringAsFixed(2)}',
+                    'R${finalAmount.toStringAsFixed(2)}',
                     isTotal: true,
                   ),
 
                   const SizedBox(height: 32),
+                  
+                  // Coupon input
+                  CouponInputWidget(
+                    appliedCode: promotionState.appliedPromotion?.code,
+                    isLoading: promotionState.isLoading,
+                    onApply: (code) async {
+                      if (authState.user == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Please login to apply coupons')),
+                        );
+                        return;
+                      }
+                      
+                      await ref.read(promotionProvider.notifier).applyPromotionCode(
+                        code,
+                        userId: authState.user!.id,
+                        orderAmount: cartState.totalAmount,
+                        restaurantId: cartState.restaurantId,
+                      );
+                      
+                      if (promotionState.errorMessage != null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(promotionState.errorMessage!)),
+                        );
+                      } else if (promotionState.successMessage != null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(promotionState.successMessage!),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      }
+                    },
+                    onRemove: () {
+                      ref.read(promotionProvider.notifier).removePromotion();
+                    },
+                  ),
+                  
+                  // Browse promotions button
+                  TextButton.icon(
+                    onPressed: () async {
+                      final promotion = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PromotionsScreen(
+                            restaurantId: cartState.restaurantId,
+                            orderAmount: cartState.totalAmount,
+                          ),
+                        ),
+                      );
+                      
+                      if (promotion != null && mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Promotion applied successfully!'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.local_offer),
+                    label: const Text('Browse Available Promotions'),
+                  ),
+
+                  const SizedBox(height: 16),
 
                   // Tip Selector
                   TipSelector(
@@ -131,8 +223,8 @@ class CheckoutScreen extends ConsumerWidget {
 
                   const SizedBox(height: 24),
 
-                  // Payment method selector (Cash only)
-                  const PaymentMethodSelectorCash(),
+                  // Payment method selector
+                  _buildPaymentMethodSelector(context, ref, cartState),
                 ],
               ),
             ),
@@ -156,18 +248,76 @@ class CheckoutScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSummaryRow(String label, String value, {bool isTotal = false}) {
+  Widget _buildPaymentMethodSelector(
+    BuildContext context,
+    WidgetRef ref,
+    CartState cartState,
+  ) {
+    final theme = Theme.of(context);
+    String paymentMethodDisplay = 'Cash on Delivery';
+    IconData paymentIcon = Icons.money;
+
+    if (cartState.paymentMethod == 'payfast') {
+      paymentMethodDisplay = 'Card Payment (PayFast)';
+      paymentIcon = Icons.credit_card;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Payment Method',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 12),
+        Card(
+          child: ListTile(
+            leading: Icon(paymentIcon, color: theme.colorScheme.primary),
+            title: Text(paymentMethodDisplay),
+            subtitle: Text(
+              cartState.paymentMethod == 'cash'
+                  ? 'Pay with cash when order arrives'
+                  : 'Pay securely with your card',
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () async {
+              final selectedMethod =
+                  await Navigator.push<payment_method.PaymentMethodType>(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PaymentMethodScreen(
+                    orderId: 'temp-${DateTime.now().millisecondsSinceEpoch}',
+                    amount: cartState.totalAmount,
+                  ),
+                ),
+              );
+
+              if (selectedMethod != null) {
+                final methodStr =
+                    selectedMethod == payment_method.PaymentMethodType.cash
+                        ? 'cash'
+                        : 'payfast';
+                ref.read(cartProvider.notifier).setPaymentMethod(methodStr);
+              }
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSummaryRow(String label, String value, {bool isTotal = false, Color? color}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label),
+          Text(label, style: TextStyle(color: color)),
           Text(
             value,
             style: isTotal
-                ? const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)
-                : null,
+                ? TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color)
+                : TextStyle(color: color),
           ),
         ],
       ),
@@ -197,62 +347,146 @@ class CheckoutScreen extends ConsumerWidget {
 
   Future<void> _placeOrder(BuildContext context, WidgetRef ref) async {
     final cartState = ref.watch(cartProvider);
+    final paymentMethod = cartState.paymentMethod;
+
+    try {
+      if (paymentMethod == 'cash') {
+        // CASH FLOW: Place order directly
+        await _placeCashOrder(context, ref);
+      } else if (paymentMethod == 'payfast') {
+        // PAYFAST FLOW: Initialize payment first
+        await _initializePayFastPayment(context, ref);
+      }
+    } catch (e) {
+      // Show error message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(ErrorHandler.getErrorMessage(e)),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _placeCashOrder(BuildContext context, WidgetRef ref) async {
+    final cartState = ref.watch(cartProvider);
     final placeOrderNotifier = ref.read(placeOrderProvider.notifier);
-    final paymentService = PaymentService();
 
     // Show loading indicator
-    final snackBar = SnackBar(
-      content: Row(
-        children: const [
-          LoadingIndicator(),
-          SizedBox(width: 16),
-          Text('Processing your order...'),
-        ],
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Row(
+          children: [
+            LoadingIndicator(),
+            SizedBox(width: 16),
+            Text('Processing your order...'),
+          ],
+        ),
+        duration: Duration(seconds: 30),
       ),
-      duration: const Duration(seconds: 30),
     );
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
 
     try {
       // Place the order using the place order provider
       await placeOrderNotifier.placeOrder(
-        userId: 'user_123', // This would come from auth provider in a real app
-        restaurantId:
-            'restaurant_456', // This would come from the selected restaurant
-        deliveryAddress: {
+        userId: 'user_123', // Get from AuthService
+        restaurantId: cartState.restaurantId ?? 'restaurant_456',
+        deliveryAddress: cartState.selectedAddress?.toJson() ?? {
           'street': '123 Main Street',
-          'city': 'New York',
+          'city': 'City',
           'zipCode': '1001',
         },
-        paymentMethod:
-            'card', // This would come from the selected payment method
+        paymentMethod: 'cash',
         tipAmount: cartState.tipAmount,
         promoCode: cartState.promoCode,
-        specialInstructions:
-            'Please ring the doorbell', // This would come from user input
+        specialInstructions: cartState.deliveryNotes ?? '',
       );
 
       // Hide loading snackbar
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
-      // Navigate to order confirmation screen
-      final placedOrder = ref.read(placeOrderProvider).placedOrder;
-      if (placedOrder != null && context.mounted) {
-        Navigator.of(context).pushReplacement(
+        // Navigate to order confirmation screen
+        final placedOrder = ref.read(placeOrderProvider).placedOrder;
+        if (placedOrder != null) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) =>
+                  OrderConfirmationScreen(order: placedOrder),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      }
+      rethrow;
+    }
+  }
+
+  Future<void> _initializePayFastPayment(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final cartState = ref.watch(cartProvider);
+
+    // Show loading indicator
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Row(
+          children: [
+            LoadingIndicator(),
+            SizedBox(width: 16),
+            Text('Initializing secure payment...'),
+          ],
+        ),
+        duration: Duration(seconds: 30),
+      ),
+    );
+
+    try {
+      final paymentNotifier = ref.read(paymentProvider.notifier);
+
+      // Generate temporary order ID
+      final tempOrderId = 'temp-${DateTime.now().millisecondsSinceEpoch}';
+
+      // Initialize PayFast payment
+      final paymentData = await paymentNotifier.initializePayment(
+        orderId: tempOrderId,
+        userId: 'user_123', // Get from AuthService
+        amount: cartState.totalAmount,
+        itemName: 'Food Order from ${cartState.restaurantId ?? "Restaurant"}',
+        itemDescription:
+            '${cartState.items.length} items - Order #$tempOrderId',
+        customerEmail: 'user@example.com', // Get from user profile
+        customerFirstName: 'Customer',
+        customerLastName: 'User',
+        customerPhone: '',
+      );
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+        // Navigate to PayFast payment screen
+        Navigator.push(
+          context,
           MaterialPageRoute(
-            builder: (context) => OrderConfirmationScreen(order: placedOrder),
+            builder: (context) => PayFastPaymentScreen(
+              paymentData: paymentData,
+              orderId: tempOrderId,
+              amount: cartState.totalAmount,
+            ),
           ),
         );
       }
     } catch (e) {
-      // Show error message
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error placing order: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      }
+      rethrow;
     }
   }
 }
