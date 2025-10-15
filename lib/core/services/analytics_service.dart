@@ -1,369 +1,306 @@
-import 'package:food_delivery_app/core/services/database_service.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:food_delivery_app/core/config/environment_config.dart';
+import 'package:food_delivery_app/core/config/feature_flags.dart';
 import 'package:food_delivery_app/core/utils/app_logger.dart';
-import 'package:food_delivery_app/shared/models/analytics_data.dart';
 
-/// Service for restaurant analytics
+/// Analytics service for tracking user behavior and app events
 class AnalyticsService {
   static final AnalyticsService _instance = AnalyticsService._internal();
   factory AnalyticsService() => _instance;
   AnalyticsService._internal();
 
-  final DatabaseService _dbService = DatabaseService();
+  FirebaseAnalytics? _analytics;
+  FirebaseAnalyticsObserver? _observer;
 
-  /// Get sales analytics for a restaurant
-  Future<SalesAnalytics> getSalesAnalytics(
-    String restaurantId, {
-    DateTime? startDate,
-    DateTime? endDate,
-  }) async {
-    AppLogger.function('AnalyticsService.getSalesAnalytics', 'ENTER',
-        params: {'restaurantId': restaurantId});
+  /// Initialize analytics
+  Future<void> initialize() async {
+    if (!FeatureFlags().enableAnalytics) {
+      AppLogger.info('Analytics disabled by feature flag');
+      return;
+    }
+
+    if (EnvironmentConfig.isDevelopment) {
+      AppLogger.info('Analytics disabled in development environment');
+      return;
+    }
 
     try {
-      startDate ??= DateTime.now().subtract(const Duration(days: 30));
-      endDate ??= DateTime.now();
+      _analytics = FirebaseAnalytics.instance;
+      _observer = FirebaseAnalyticsObserver(analytics: _analytics!);
+      
+      // Set default properties
+      await _analytics?.setAnalyticsCollectionEnabled(true);
+      
+      AppLogger.success('Analytics service initialized');
+    } catch (e, stack) {
+      AppLogger.error('Failed to initialize analytics', error: e, stack: stack);
+    }
+  }
 
-      // Query orders within date range
-      final ordersResponse = await _dbService.client
-          .from('orders')
-          .select('total_amount, created_at')
-          .eq('restaurant_id', restaurantId)
-          .gte('created_at', startDate.toIso8601String())
-          .lte('created_at', endDate.toIso8601String())
-          .filter('status', 'in', '(completed,delivered)');
+  /// Get analytics observer for navigation tracking
+  FirebaseAnalyticsObserver? get observer => _observer;
 
-      final orders = ordersResponse as List;
+  // ==================== USER TRACKING ====================
 
-      if (orders.isEmpty) {
-        return SalesAnalytics(
-          totalSales: 0,
-          totalOrders: 0,
-          averageOrderValue: 0,
-          salesByDay: {},
-          ordersByDay: {},
-        );
-      }
+  /// Set user ID for tracking
+  Future<void> setUserId(String userId) async {
+    await _analytics?.setUserId(id: userId);
+    AppLogger.debug('Analytics user ID set: $userId');
+  }
 
-      // Calculate totals
-      double totalSales = 0;
-      final salesByDay = <String, double>{};
-      final ordersByDay = <String, int>{};
+  /// Set user properties
+  Future<void> setUserProperty({
+    required String name,
+    required String value,
+  }) async {
+    await _analytics?.setUserProperty(name: name, value: value);
+    AppLogger.debug('Analytics user property set: $name = $value');
+  }
 
-      for (final order in orders) {
-        final amount = (order['total_amount'] as num).toDouble();
-        final date = DateTime.parse(order['created_at']);
-        final dayKey = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  /// Clear user data (on logout)
+  Future<void> clearUserData() async {
+    await _analytics?.setUserId(id: null);
+    AppLogger.debug('Analytics user data cleared');
+  }
 
-        totalSales += amount;
-        salesByDay[dayKey] = (salesByDay[dayKey] ?? 0) + amount;
-        ordersByDay[dayKey] = (ordersByDay[dayKey] ?? 0) + 1;
-      }
+  // ==================== EVENT TRACKING ====================
 
-      final analytics = SalesAnalytics(
-        totalSales: totalSales,
-        totalOrders: orders.length,
-        averageOrderValue: totalSales / orders.length,
-        salesByDay: salesByDay,
-        ordersByDay: ordersByDay,
+  /// Log custom event
+  Future<void> logEvent({
+    required String name,
+    Map<String, dynamic>? parameters,
+  }) async {
+    if (!FeatureFlags().enableAnalytics) return;
+
+    try {
+      await _analytics?.logEvent(
+        name: name,
+        parameters: parameters,
       );
-
-      AppLogger.success('Sales analytics calculated');
-      AppLogger.function('AnalyticsService.getSalesAnalytics', 'EXIT');
-
-      return analytics;
-    } catch (e, stack) {
-      AppLogger.error('Failed to get sales analytics', error: e, stack: stack);
-      rethrow;
+      AppLogger.debug('Analytics event logged: $name', details: parameters?.toString());
+    } catch (e) {
+      AppLogger.warning('Failed to log analytics event', error: e);
     }
   }
 
-  /// Get revenue analytics
-  Future<RevenueAnalytics> getRevenueAnalytics(
-    String restaurantId, {
-    DateTime? startDate,
-    DateTime? endDate,
+  // ==================== E-COMMERCE EVENTS ====================
+
+  /// Track restaurant view
+  Future<void> trackRestaurantView({
+    required String restaurantId,
+    required String restaurantName,
   }) async {
-    AppLogger.function('AnalyticsService.getRevenueAnalytics', 'ENTER');
-
-    try {
-      startDate ??= DateTime.now().subtract(const Duration(days: 90));
-      endDate ??= DateTime.now();
-
-      final ordersResponse = await _dbService.client
-          .from('orders')
-          .select('total_amount, delivery_fee, created_at, status')
-          .eq('restaurant_id', restaurantId)
-          .gte('created_at', startDate.toIso8601String())
-          .lte('created_at', endDate.toIso8601String());
-
-      final orders = ordersResponse as List;
-
-      double grossRevenue = 0;
-      double deliveryFees = 0;
-      double refunds = 0;
-      final revenueByMonth = <String, double>{};
-
-      for (final order in orders) {
-        final amount = (order['total_amount'] as num?)?.toDouble() ?? 0;
-        final deliveryFee = (order['delivery_fee'] as num?)?.toDouble() ?? 0;
-        final date = DateTime.parse(order['created_at']);
-        final monthKey = '${date.year}-${date.month.toString().padLeft(2, '0')}';
-
-        if (order['status'] == 'refunded' || order['status'] == 'cancelled') {
-          refunds += amount;
-        } else {
-          grossRevenue += amount;
-          deliveryFees += deliveryFee;
-          revenueByMonth[monthKey] = (revenueByMonth[monthKey] ?? 0) + amount;
-        }
-      }
-
-      // Platform fees (example: 15% of gross revenue)
-      final platformFees = grossRevenue * 0.15;
-      final netRevenue = grossRevenue - platformFees;
-
-      final analytics = RevenueAnalytics(
-        grossRevenue: grossRevenue,
-        netRevenue: netRevenue,
-        deliveryFees: deliveryFees,
-        platformFees: platformFees,
-        refunds: refunds,
-        revenueByMonth: revenueByMonth,
-      );
-
-      AppLogger.success('Revenue analytics calculated');
-      return analytics;
-    } catch (e, stack) {
-      AppLogger.error('Failed to get revenue analytics',
-          error: e, stack: stack);
-      rethrow;
-    }
+    await logEvent(
+      name: 'view_restaurant',
+      parameters: {
+        'restaurant_id': restaurantId,
+        'restaurant_name': restaurantName,
+      },
+    );
   }
 
-  /// Get customer analytics
-  Future<CustomerAnalytics> getCustomerAnalytics(
-    String restaurantId, {
-    DateTime? startDate,
-    DateTime? endDate,
+  /// Track menu item view
+  Future<void> trackMenuItemView({
+    required String itemId,
+    required String itemName,
+    required double price,
   }) async {
-    AppLogger.function('AnalyticsService.getCustomerAnalytics', 'ENTER');
-
-    try {
-      startDate ??= DateTime.now().subtract(const Duration(days: 30));
-      endDate ??= DateTime.now();
-
-      final ordersResponse = await _dbService.client
-          .from('orders')
-          .select('user_id, created_at')
-          .eq('restaurant_id', restaurantId)
-          .gte('created_at', startDate.toIso8601String())
-          .lte('created_at', endDate.toIso8601String())
-          .filter('status', 'in', '(completed,delivered)');
-
-      final orders = ordersResponse as List;
-
-      // Count unique customers and their order counts
-      final customerOrderCounts = <String, int>{};
-      for (final order in orders) {
-        final userId = order['user_id'] as String;
-        customerOrderCounts[userId] = (customerOrderCounts[userId] ?? 0) + 1;
-      }
-
-      final totalCustomers = customerOrderCounts.length;
-      final newCustomers = customerOrderCounts.values.where((count) => count == 1).length;
-      final returningCustomers = totalCustomers - newCustomers;
-      final repeatRate = totalCustomers > 0 ? returningCustomers / totalCustomers : 0.0;
-      final avgOrdersPerCustomer = totalCustomers > 0 ? orders.length / totalCustomers : 0.0;
-
-      final analytics = CustomerAnalytics(
-        totalCustomers: totalCustomers,
-        newCustomers: newCustomers,
-        returningCustomers: returningCustomers,
-        repeatRate: repeatRate,
-        averageOrdersPerCustomer: avgOrdersPerCustomer,
-      );
-
-      AppLogger.success('Customer analytics calculated');
-      return analytics;
-    } catch (e, stack) {
-      AppLogger.error('Failed to get customer analytics',
-          error: e, stack: stack);
-      rethrow;
-    }
+    await logEvent(
+      name: 'view_item',
+      parameters: {
+        'item_id': itemId,
+        'item_name': itemName,
+        'price': price,
+      },
+    );
   }
 
-  /// Get top performing menu items
-  Future<List<MenuItemPerformance>> getTopMenuItems(
-    String restaurantId, {
-    int limit = 10,
-    DateTime? startDate,
-    DateTime? endDate,
+  /// Track add to cart
+  Future<void> trackAddToCart({
+    required String itemId,
+    required String itemName,
+    required double price,
+    required int quantity,
   }) async {
-    AppLogger.function('AnalyticsService.getTopMenuItems', 'ENTER');
-
-    try {
-      startDate ??= DateTime.now().subtract(const Duration(days: 30));
-      endDate ??= DateTime.now();
-
-      final response = await _dbService.client.rpc('get_top_menu_items', params: {
-        'p_restaurant_id': restaurantId,
-        'p_start_date': startDate.toIso8601String(),
-        'p_end_date': endDate.toIso8601String(),
-        'p_limit': limit,
-      });
-
-      final items = (response as List)
-          .map((json) =>
-              MenuItemPerformance.fromJson(json as Map<String, dynamic>))
-          .toList();
-
-      AppLogger.success('Fetched ${items.length} top menu items');
-      return items;
-    } catch (e, stack) {
-      AppLogger.warning('Failed to get top menu items (RPC may not exist): $e');
-      // Return empty list if RPC doesn't exist
-      return [];
-    }
+    await logEvent(
+      name: 'add_to_cart',
+      parameters: {
+        'item_id': itemId,
+        'item_name': itemName,
+        'price': price,
+        'quantity': quantity,
+        'value': price * quantity,
+      },
+    );
   }
 
-  /// Get order status breakdown
-  Future<OrderStatusBreakdown> getOrderStatusBreakdown(
-    String restaurantId, {
-    DateTime? startDate,
-    DateTime? endDate,
+  /// Track remove from cart
+  Future<void> trackRemoveFromCart({
+    required String itemId,
+    required String itemName,
   }) async {
-    AppLogger.function('AnalyticsService.getOrderStatusBreakdown', 'ENTER');
-
-    try {
-      startDate ??= DateTime.now().subtract(const Duration(days: 7));
-      endDate ??= DateTime.now();
-
-      final ordersResponse = await _dbService.client
-          .from('orders')
-          .select('status')
-          .eq('restaurant_id', restaurantId)
-          .gte('created_at', startDate.toIso8601String())
-          .lte('created_at', endDate.toIso8601String());
-
-      final orders = ordersResponse as List;
-
-      final statusCounts = <String, int>{};
-      for (final order in orders) {
-        final status = order['status'] as String;
-        statusCounts[status] = (statusCounts[status] ?? 0) + 1;
-      }
-
-      final breakdown = OrderStatusBreakdown(
-        pending: statusCounts['pending'] ?? 0,
-        confirmed: statusCounts['confirmed'] ?? 0,
-        preparing: statusCounts['preparing'] ?? 0,
-        readyForPickup: statusCounts['ready_for_pickup'] ?? 0,
-        outForDelivery: statusCounts['out_for_delivery'] ?? 0,
-        delivered: statusCounts['delivered'] ?? 0,
-        cancelled: statusCounts['cancelled'] ?? 0,
-      );
-
-      AppLogger.success('Order status breakdown calculated');
-      return breakdown;
-    } catch (e, stack) {
-      AppLogger.error('Failed to get order status breakdown',
-          error: e, stack: stack);
-      rethrow;
-    }
+    await logEvent(
+      name: 'remove_from_cart',
+      parameters: {
+        'item_id': itemId,
+        'item_name': itemName,
+      },
+    );
   }
 
-  /// Get peak hours data
-  Future<List<PeakHoursData>> getPeakHours(
-    String restaurantId, {
-    DateTime? startDate,
-    DateTime? endDate,
+  /// Track begin checkout
+  Future<void> trackBeginCheckout({
+    required double value,
+    required int itemCount,
   }) async {
-    AppLogger.function('AnalyticsService.getPeakHours', 'ENTER');
-
-    try {
-      startDate ??= DateTime.now().subtract(const Duration(days: 30));
-      endDate ??= DateTime.now();
-
-      final ordersResponse = await _dbService.client
-          .from('orders')
-          .select('created_at, total_amount')
-          .eq('restaurant_id', restaurantId)
-          .gte('created_at', startDate.toIso8601String())
-          .lte('created_at', endDate.toIso8601String())
-          .filter('status', 'in', '(completed,delivered)');
-
-      final orders = ordersResponse as List;
-
-      // Group by hour of day
-      final hourlyData = <int, Map<String, dynamic>>{};
-
-      for (final order in orders) {
-        final date = DateTime.parse(order['created_at']);
-        final hour = date.hour;
-        final amount = (order['total_amount'] as num?)?.toDouble() ?? 0;
-
-        if (!hourlyData.containsKey(hour)) {
-          hourlyData[hour] = {'count': 0, 'sales': 0.0};
-        }
-
-        hourlyData[hour]!['count'] = (hourlyData[hour]!['count'] as int) + 1;
-        hourlyData[hour]!['sales'] =
-            (hourlyData[hour]!['sales'] as double) + amount;
-      }
-
-      final peakHours = hourlyData.entries
-          .map((entry) => PeakHoursData(
-                hourOfDay: entry.key,
-                orderCount: entry.value['count'] as int,
-                totalSales: entry.value['sales'] as double,
-              ))
-          .toList()
-        ..sort((a, b) => a.hourOfDay.compareTo(b.hourOfDay));
-
-      AppLogger.success('Peak hours calculated');
-      return peakHours;
-    } catch (e, stack) {
-      AppLogger.error('Failed to get peak hours', error: e, stack: stack);
-      rethrow;
-    }
+    await logEvent(
+      name: 'begin_checkout',
+      parameters: {
+        'value': value,
+        'item_count': itemCount,
+      },
+    );
   }
 
-  /// Get comprehensive dashboard analytics
-  Future<DashboardAnalytics> getDashboardAnalytics(
-    String restaurantId, {
-    DateTime? startDate,
-    DateTime? endDate,
+  /// Track purchase
+  Future<void> trackPurchase({
+    required String orderId,
+    required double value,
+    required double tax,
+    required double deliveryFee,
+    required String paymentMethod,
   }) async {
-    AppLogger.function('AnalyticsService.getDashboardAnalytics', 'ENTER');
+    await _analytics?.logPurchase(
+      value: value,
+      currency: 'ZAR',
+      transactionId: orderId,
+      tax: tax,
+      shipping: deliveryFee,
+      parameters: {
+        'payment_method': paymentMethod,
+      },
+    );
+  }
 
-    try {
-      // Fetch all analytics in parallel
-      final results = await Future.wait([
-        getSalesAnalytics(restaurantId, startDate: startDate, endDate: endDate),
-        getRevenueAnalytics(restaurantId, startDate: startDate, endDate: endDate),
-        getCustomerAnalytics(restaurantId, startDate: startDate, endDate: endDate),
-        getTopMenuItems(restaurantId, startDate: startDate, endDate: endDate),
-        getOrderStatusBreakdown(restaurantId, startDate: startDate, endDate: endDate),
-        getPeakHours(restaurantId, startDate: startDate, endDate: endDate),
-      ]);
+  /// Track refund
+  Future<void> trackRefund({
+    required String orderId,
+    required double value,
+  }) async {
+    await logEvent(
+      name: 'refund',
+      parameters: {
+        'transaction_id': orderId,
+        'value': value,
+        'currency': 'ZAR',
+      },
+    );
+  }
 
-      final dashboard = DashboardAnalytics(
-        salesAnalytics: results[0] as SalesAnalytics,
-        revenueAnalytics: results[1] as RevenueAnalytics,
-        customerAnalytics: results[2] as CustomerAnalytics,
-        topItems: results[3] as List<MenuItemPerformance>,
-        orderStatusBreakdown: results[4] as OrderStatusBreakdown,
-        peakHours: results[5] as List<PeakHoursData>,
-      );
+  // ==================== USER ENGAGEMENT ====================
 
-      AppLogger.success('Dashboard analytics loaded');
-      AppLogger.function('AnalyticsService.getDashboardAnalytics', 'EXIT');
+  /// Track search
+  Future<void> trackSearch(String searchTerm) async {
+    await _analytics?.logSearch(searchTerm: searchTerm);
+  }
 
-      return dashboard;
-    } catch (e, stack) {
-      AppLogger.error('Failed to get dashboard analytics',
-          error: e, stack: stack);
-      rethrow;
-    }
+  /// Track review submission
+  Future<void> trackReviewSubmission({
+    required String restaurantId,
+    required int rating,
+  }) async {
+    await logEvent(
+      name: 'submit_review',
+      parameters: {
+        'restaurant_id': restaurantId,
+        'rating': rating,
+      },
+    );
+  }
+
+  /// Track share
+  Future<void> trackShare({
+    required String contentType,
+    required String contentId,
+  }) async {
+    await _analytics?.logShare(
+      contentType: contentType,
+      itemId: contentId,
+      method: 'app_share',
+    );
+  }
+
+  // ==================== APP LIFECYCLE ====================
+
+  /// Track app open
+  Future<void> trackAppOpen() async {
+    await _analytics?.logAppOpen();
+  }
+
+  /// Track screen view
+  Future<void> trackScreenView({
+    required String screenName,
+    String? screenClass,
+  }) async {
+    await _analytics?.logScreenView(
+      screenName: screenName,
+      screenClass: screenClass,
+    );
+  }
+
+  // ==================== ERROR TRACKING ====================
+
+  /// Track error
+  Future<void> trackError({
+    required String error,
+    String? fatal,
+  }) async {
+    await logEvent(
+      name: 'app_error',
+      parameters: {
+        'error_message': error,
+        'fatal': fatal ?? 'false',
+      },
+    );
+  }
+
+  // ==================== CUSTOM BUSINESS EVENTS ====================
+
+  /// Track order cancellation
+  Future<void> trackOrderCancellation({
+    required String orderId,
+    required String reason,
+  }) async {
+    await logEvent(
+      name: 'cancel_order',
+      parameters: {
+        'order_id': orderId,
+        'reason': reason,
+      },
+    );
+  }
+
+  /// Track delivery tracking
+  Future<void> trackDeliveryTracking(String orderId) async {
+    await logEvent(
+      name: 'track_delivery',
+      parameters: {
+        'order_id': orderId,
+      },
+    );
+  }
+
+  /// Track promo code usage
+  Future<void> trackPromoCodeUsage({
+    required String promoCode,
+    required double discountAmount,
+  }) async {
+    await logEvent(
+      name: 'use_promo_code',
+      parameters: {
+        'promo_code': promoCode,
+        'discount_amount': discountAmount,
+      },
+    );
   }
 }

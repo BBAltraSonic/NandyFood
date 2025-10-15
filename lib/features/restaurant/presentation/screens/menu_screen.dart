@@ -6,6 +6,8 @@ import 'package:food_delivery_app/shared/models/restaurant.dart';
 import 'package:food_delivery_app/shared/widgets/loading_indicator.dart';
 import 'package:food_delivery_app/shared/widgets/error_message_widget.dart';
 import 'package:food_delivery_app/shared/widgets/filter_widget.dart';
+import 'package:food_delivery_app/shared/widgets/skeleton_loading.dart';
+import 'package:food_delivery_app/shared/widgets/empty_state_widget.dart';
 
 class MenuScreen extends ConsumerWidget {
   final Restaurant? restaurant;
@@ -110,7 +112,10 @@ class MenuScreen extends ConsumerWidget {
           // Expanded menu content
           Expanded(
             child: restaurantState.isLoading
-                ? const LoadingIndicator()
+                ? const SkeletonList(
+                    skeletonCard: MenuItemCardSkeleton(),
+                    itemCount: 6,
+                  )
                 : restaurantState.errorMessage != null
                 ? ErrorMessageWidget(
                     message: restaurantState.errorMessage!,

@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:food_delivery_app/features/onboarding/models/onboarding_page_data.dart';

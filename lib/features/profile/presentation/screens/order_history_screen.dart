@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:food_delivery_app/shared/models/order.dart';
 import 'package:food_delivery_app/shared/widgets/loading_indicator.dart';
 import 'package:food_delivery_app/shared/widgets/error_message_widget.dart';
+import 'package:food_delivery_app/shared/widgets/empty_state_widget.dart';
 
 class OrderHistoryScreen extends ConsumerWidget {
   const OrderHistoryScreen({super.key});
@@ -67,16 +68,22 @@ class OrderHistoryScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Order History'), centerTitle: true),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          // In a real implementation, this would refresh the order history
-          await Future.delayed(const Duration(seconds: 1));
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Refresh functionality coming soon')),
-          );
-        },
-        child: ListView.builder(
-          itemCount: orders.length,
+      body: orders.isEmpty
+          ? EmptyStateWidget.noOrders(
+              onBrowse: () {
+                Navigator.of(context).pushReplacementNamed('/home');
+              },
+            )
+          : RefreshIndicator(
+              onRefresh: () async {
+                // In a real implementation, this would refresh the order history
+                await Future.delayed(const Duration(seconds: 1));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Refresh functionality coming soon')),
+                );
+              },
+              child: ListView.builder(
+                itemCount: orders.length,
           itemBuilder: (context, index) {
             final order = orders[index];
             return Card(
@@ -152,6 +159,7 @@ class OrderHistoryScreen extends ConsumerWidget {
             );
           },
         ),
+      ),
       ),
     );
   }

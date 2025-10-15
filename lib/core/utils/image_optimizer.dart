@@ -22,7 +22,8 @@ class ImageOptimizer {
     Map<String, String>? headers,
   }) {
     // Use low-quality placeholder for faster initial load
-    final lowQualityImageUrl = _generateLowQualityImageUrl(imageUrl);
+    // TODO: Implement low-quality image URL generation when backend supports it
+    // final lowQualityImageUrl = _generateLowQualityImageUrl(imageUrl);
 
     return CachedNetworkImage(
       imageUrl: imageUrl,

@@ -5,6 +5,8 @@ import 'package:food_delivery_app/features/restaurant/presentation/widgets/resta
 import 'package:food_delivery_app/shared/widgets/loading_indicator.dart';
 import 'package:food_delivery_app/shared/widgets/error_message_widget.dart';
 import 'package:food_delivery_app/shared/widgets/filter_widget.dart';
+import 'package:food_delivery_app/shared/widgets/empty_state_widget.dart';
+import 'package:food_delivery_app/shared/widgets/skeleton_loading.dart';
 
 class RestaurantListScreen extends ConsumerWidget {
   const RestaurantListScreen({super.key});
@@ -83,7 +85,10 @@ class RestaurantListScreen extends ConsumerWidget {
           // Expanded list of restaurants
           Expanded(
             child: restaurantState.isLoading
-                ? const LoadingIndicator()
+                ? const SkeletonList(
+                    skeletonCard: RestaurantCardSkeleton(),
+                    itemCount: 5,
+                  )
                 : restaurantState.errorMessage != null
                 ? ErrorMessageWidget(
                     message: restaurantState.errorMessage!,
@@ -110,8 +115,10 @@ class RestaurantListScreen extends ConsumerWidget {
               .filteredRestaurants; // If filters and results, show filtered
 
     if (restaurants.isEmpty) {
-      return const Center(
-        child: Text('No restaurants found', style: TextStyle(fontSize: 18)),
+      return EmptyStateWidget.noRestaurants(
+        onRefresh: () {
+          ref.read(restaurantProvider.notifier).loadRestaurants();
+        },
       );
     }
 

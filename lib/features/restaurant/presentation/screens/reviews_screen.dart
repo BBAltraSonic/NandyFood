@@ -4,6 +4,8 @@ import 'package:food_delivery_app/core/providers/auth_provider.dart';
 import 'package:food_delivery_app/features/restaurant/presentation/providers/review_provider.dart';
 import 'package:food_delivery_app/features/restaurant/presentation/screens/write_review_screen.dart';
 import 'package:food_delivery_app/features/restaurant/presentation/widgets/review_card.dart';
+import 'package:food_delivery_app/shared/widgets/empty_state_widget.dart';
+import 'package:food_delivery_app/shared/widgets/skeleton_loading.dart';
 
 /// Screen to display all reviews for a restaurant
 class ReviewsScreen extends ConsumerStatefulWidget {
@@ -101,8 +103,11 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
             ),
             // Reviews list
             if (reviewState.isLoading && reviewState.reviews.isEmpty)
-              const SliverFillRemaining(
-                child: Center(child: CircularProgressIndicator()),
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) => const ReviewCardSkeleton(),
+                  childCount: 5,
+                ),
               )
             else if (reviewState.errorMessage != null && reviewState.reviews.isEmpty)
               SliverFillRemaining(
@@ -128,24 +133,9 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
                 ),
               )
             else if (reviewState.reviews.isEmpty)
-              const SliverFillRemaining(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.reviews_outlined, size: 64, color: Colors.grey),
-                      SizedBox(height: 16),
-                      Text(
-                        'No reviews yet',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Be the first to review this restaurant!',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ],
-                  ),
+              SliverFillRemaining(
+                child: EmptyStateWidget.noReviews(
+                  onWriteReview: authState.user != null ? () => _navigateToWriteReview(null) : null,
                 ),
               )
             else

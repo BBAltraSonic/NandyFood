@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:food_delivery_app/features/order/presentation/providers/promotion_provider.dart';
 import 'package:food_delivery_app/features/order/presentation/widgets/promotion_card.dart';
 import 'package:food_delivery_app/core/providers/auth_provider.dart';
+import 'package:food_delivery_app/shared/widgets/empty_state_widget.dart';
 
 /// Screen to browse and select promotions
 class PromotionsScreen extends ConsumerStatefulWidget {
@@ -113,31 +114,16 @@ class _PromotionsScreenState extends ConsumerState<PromotionsScreen>
     }
 
     if (promotionState.availablePromotions.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.local_offer_outlined,
-              size: 64,
-              color: Colors.grey[400],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No promotions available',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Check back later for new deals!',
-              style: TextStyle(color: Colors.grey[500]),
-            ),
-          ],
-        ),
+      return EmptyStateWidget.noPromotions(
+        onRefresh: authState.user != null
+            ? () {
+                ref.read(promotionProvider.notifier).loadRecommendedPromotions(
+                      userId: authState.user!.id,
+                      restaurantId: widget.restaurantId,
+                      orderAmount: widget.orderAmount,
+                    );
+              }
+            : null,
       );
     }
 

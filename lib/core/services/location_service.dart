@@ -134,7 +134,7 @@ class LocationService {
     // with the current coordinates to find nearby restaurants
 
     // First get current position
-    Position position = await getCurrentPosition();
+    await getCurrentPosition();
 
     // This is where you would pass the coordinates to the database service
     // to get restaurants within the specified radius

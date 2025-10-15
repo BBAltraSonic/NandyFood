@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:food_delivery_app/core/services/payment_service.dart';
 import 'package:food_delivery_app/features/order/presentation/providers/cart_provider.dart';
-import 'package:food_delivery_app/features/order/presentation/providers/order_provider.dart';
 import 'package:food_delivery_app/features/order/presentation/providers/place_order_provider.dart';
-import 'package:food_delivery_app/features/profile/presentation/providers/payment_methods_provider.dart';
 import 'package:food_delivery_app/features/profile/presentation/providers/address_provider.dart';
 import 'package:food_delivery_app/shared/widgets/loading_indicator.dart';
 import 'package:food_delivery_app/features/order/presentation/widgets/delivery_method_selector.dart';
@@ -32,7 +29,7 @@ class CheckoutScreen extends ConsumerWidget {
     final cartState = ref.watch(cartProvider);
     final promotionState = ref.watch(promotionProvider);
     final authState = ref.watch(authStateProvider);
-    final orderNotifier = ref.read(orderProvider.notifier);
+    // final orderNotifier = ref.read(orderProvider.notifier); // Unused
     final addressNotifier = ref.read(addressProvider.notifier);
     
     // Calculate discount
@@ -197,7 +194,7 @@ class CheckoutScreen extends ConsumerWidget {
                         ),
                       );
                       
-                      if (promotion != null && mounted) {
+                      if (promotion != null) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('Promotion applied successfully!'),
