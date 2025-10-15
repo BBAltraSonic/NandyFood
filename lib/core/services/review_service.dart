@@ -217,7 +217,7 @@ class ReviewService {
           .select()
           .single();
 
-      final updatedReview = Review.fromJson(response as Map<String, dynamic>);
+      final updatedReview = Review.fromJson(response);
 
       AppLogger.success('Review updated successfully');
       AppLogger.function('ReviewService.updateReview', 'EXIT',
@@ -266,7 +266,7 @@ class ReviewService {
         return null;
       }
 
-      final review = Review.fromJson(response as Map<String, dynamic>);
+      final review = Review.fromJson(response);
       AppLogger.success('Found existing review');
       AppLogger.function('ReviewService.getUserReview', 'EXIT', result: review);
 

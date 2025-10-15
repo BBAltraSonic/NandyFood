@@ -75,7 +75,7 @@ class PromotionService {
         return null;
       }
 
-      final promotion = Promotion.fromJson(response as Map<String, dynamic>);
+      final promotion = Promotion.fromJson(response);
 
       // Validate promotion
       if (!promotion.isValid) {
@@ -266,7 +266,7 @@ class PromotionService {
         return null;
       }
 
-      final promotion = Promotion.fromJson(response as Map<String, dynamic>);
+      final promotion = Promotion.fromJson(response);
       AppLogger.success('Promotion fetched successfully');
       AppLogger.function('PromotionService.getPromotionById', 'EXIT',
           result: promotion);

@@ -320,7 +320,7 @@ class PayFastService {
       }
 
       AppLogger.success('Transaction status retrieved');
-      return response as Map<String, dynamic>;
+      return response;
     } catch (e, stack) {
       AppLogger.error('Failed to get transaction status',
           error: e, stack: stack);

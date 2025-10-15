@@ -51,7 +51,7 @@ class RoleService {
         return null;
       }
 
-      final role = UserRole.fromJson(response as Map<String, dynamic>);
+      final role = UserRole.fromJson(response);
       AppLogger.function('RoleService.getPrimaryRole', 'EXIT',
           result: role.role.toString());
       return role;
