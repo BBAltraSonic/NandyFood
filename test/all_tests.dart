@@ -8,7 +8,7 @@ import 'unit/services/payment_service_test.dart' as payment_service_test;
 import 'unit/services/location_service_test.dart' as location_service_test;
 import 'unit/services/notification_service_test.dart'
     as notification_service_test;
-import 'unit/services/storage_service_test.dart' as storage_service_test;
+// import 'unit/services/storage_service_test.dart' as storage_service_test; // File doesn't exist
 import 'unit/services/delivery_tracking_service_test.dart'
     as delivery_tracking_service_test;
 
@@ -24,10 +24,10 @@ import 'widget/screens/cart_screen_test.dart' as cart_screen_test;
 import 'widget/screens/checkout_screen_test.dart' as checkout_screen_test;
 import 'widget/screens/order_tracking_screen_test.dart'
     as order_tracking_screen_test;
-import 'widget/screens/order_history_screen_test.dart'
-    as order_history_screen_test;
+// import 'widget/screens/order_history_screen_test.dart'
+//     as order_history_screen_test; // File doesn't exist
 import 'widget/screens/profile_screen_test.dart' as profile_screen_test;
-import 'widget/screens/settings_screen_test.dart' as settings_screen_test;
+// import 'widget/screens/settings_screen_test.dart' as settings_screen_test; // File doesn't exist
 
 import 'integration/user_auth_flow_test.dart' as user_auth_flow_test;
 import 'integration/place_order_flow_test.dart' as place_order_flow_test;
@@ -50,7 +50,7 @@ void main() {
       payment_service_test.main();
       location_service_test.main();
       notification_service_test.main();
-      storage_service_test.main();
+      // storage_service_test.main();
       delivery_tracking_service_test.main();
     });
 
@@ -65,9 +65,9 @@ void main() {
       cart_screen_test.main();
       checkout_screen_test.main();
       order_tracking_screen_test.main();
-      order_history_screen_test.main();
+      // order_history_screen_test.main();
       profile_screen_test.main();
-      settings_screen_test.main();
+      // settings_screen_test.main();
     });
 
     // Run integration tests
