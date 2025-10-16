@@ -73,6 +73,76 @@ class RoleService {
     }
   }
 
+  /// Assign a role to a user
+  Future<void> assignRole(
+    String userId,
+    UserRoleType roleType, {
+    bool isPrimary = false,
+  }) async {
+    try {
+      AppLogger.function('RoleService.assignRole', 'ENTER', params: {
+        'userId': userId,
+        'roleType': roleType.toString(),
+        'isPrimary': isPrimary,
+      });
+
+      // If setting as primary, unset all other primary roles first
+      if (isPrimary) {
+        await _supabase
+            .from('user_roles')
+            .update({'is_primary': false})
+            .eq('user_id', userId);
+      }
+
+      // Insert or update the role
+      await _supabase.from('user_roles').upsert({
+        'user_id': userId,
+        'role': _roleTypeToString(roleType),
+        'is_primary': isPrimary,
+        'metadata': {},
+      });
+
+      AppLogger.success('Role assigned successfully');
+    } catch (e, stack) {
+      AppLogger.error('Failed to assign role', error: e, stack: stack);
+      rethrow;
+    }
+  }
+
+  /// Set a role as primary (if user already has it)
+  Future<void> setPrimaryRole(String userId, UserRoleType roleType) async {
+    try {
+      AppLogger.function('RoleService.setPrimaryRole', 'ENTER', params: {
+        'userId': userId,
+        'roleType': roleType.toString(),
+      });
+
+      // Check if user has this role
+      final hasThisRole = await hasRole(userId, roleType);
+      if (!hasThisRole) {
+        throw Exception('User does not have role: $roleType');
+      }
+
+      // Unset all other primary roles
+      await _supabase
+          .from('user_roles')
+          .update({'is_primary': false})
+          .eq('user_id', userId);
+
+      // Set this role as primary
+      await _supabase
+          .from('user_roles')
+          .update({'is_primary': true})
+          .eq('user_id', userId)
+          .eq('role', _roleTypeToString(roleType));
+
+      AppLogger.success('Primary role set successfully');
+    } catch (e, stack) {
+      AppLogger.error('Failed to set primary role', error: e, stack: stack);
+      rethrow;
+    }
+  }
+
   /// Switch primary role (if user has multiple roles)
   Future<void> switchPrimaryRole(String userId, UserRoleType newRole) async {
     try {

@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:food_delivery_app/core/providers/auth_provider.dart';
+import 'package:food_delivery_app/shared/models/user_role.dart';
 import 'package:go_router/go_router.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
-  const SignupScreen({super.key});
+  final UserRoleType? preselectedRole;
+  
+  const SignupScreen({
+    super.key,
+    this.preselectedRole,
+  });
 
   @override
   ConsumerState<SignupScreen> createState() => _SignupScreenState();
@@ -18,6 +24,13 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  late UserRoleType _selectedRole;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedRole = widget.preselectedRole ?? UserRoleType.consumer;
+  }
 
   @override
   void dispose() {
@@ -38,18 +51,27 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               email: _emailController.text.trim(),
               password: _passwordController.text,
               fullName: _nameController.text.trim(),
+              initialRole: _selectedRole,
             );
 
-        // Navigate to home screen after successful signup
-        if (mounted) {
-          // Show success message
+        if (!mounted) return;
+
+        // Navigate based on role
+        if (_selectedRole == UserRoleType.restaurantOwner) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Account created successfully!'),
+            const SnackBar(
+              content: Text('Account created! Let\'s set up your restaurant.'),
               backgroundColor: Colors.green,
             ),
           );
-          // Redirect to home
+          context.go('/restaurant/register?fromSignup=true');
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Account created successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
           context.go('/home');
         }
       } catch (e) {
@@ -146,7 +168,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 32),
+                  _buildRoleSelector(),
+                  const SizedBox(height: 24),
                   TextFormField(
                     controller: _nameController,
                     keyboardType: TextInputType.name,
@@ -454,6 +478,96 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRoleSelector() {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 0),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildRoleChip(
+              title: 'Order Food',
+              subtitle: 'I\'m a customer',
+              icon: Icons.shopping_bag_rounded,
+              role: UserRoleType.consumer,
+              isSelected: _selectedRole == UserRoleType.consumer,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _buildRoleChip(
+              title: 'Sell Food',
+              subtitle: 'I own a restaurant',
+              icon: Icons.store_rounded,
+              role: UserRoleType.restaurantOwner,
+              isSelected: _selectedRole == UserRoleType.restaurantOwner,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRoleChip({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required UserRoleType role,
+    required bool isSelected,
+  }) {
+    final theme = Theme.of(context);
+    
+    return GestureDetector(
+      onTap: () => setState(() => _selectedRole = role),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? theme.colorScheme.primary : Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected 
+              ? theme.colorScheme.primary 
+              : Colors.transparent,
+            width: 2,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? Colors.white : Colors.grey.shade600,
+              size: 32,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: isSelected ? Colors.white : Colors.black87,
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 11,
+                color: isSelected ? Colors.white70 : Colors.grey.shade600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       ),
     );

@@ -1,13 +1,54 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:food_delivery_app/features/authentication/presentation/providers/user_provider.dart';
+import 'package:food_delivery_app/core/providers/auth_provider.dart';
+import 'package:food_delivery_app/core/services/database_service.dart';
+import 'package:food_delivery_app/shared/models/user_profile.dart';
+import 'package:food_delivery_app/core/utils/app_logger.dart';
+
+// Provider to fetch user profile from database
+final userProfileProvider = FutureProvider.family<UserProfile?, String>((ref, userId) async {
+  try {
+    AppLogger.info('Loading user profile for: $userId');
+    
+    final response = await DatabaseService()
+        .client
+        .from('user_profiles')
+        .select()
+        .eq('id', userId)
+        .maybeSingle();
+
+    if (response == null) {
+      AppLogger.warning('No user profile found for: $userId');
+      return null;
+    }
+
+    AppLogger.success('User profile loaded successfully');
+    return UserProfile.fromJson(response);
+  } catch (e) {
+    AppLogger.error('Error loading user profile: $e');
+    return null;
+  }
+});
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userState = ref.watch(userProvider);
+    final authState = ref.watch(authStateProvider);
+
+    // If not authenticated, show login prompt
+    if (!authState.isAuthenticated || authState.user == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Profile')),
+        body: const Center(
+          child: Text('Please log in to view your profile'),
+        ),
+      );
+    }
+
+    final userId = authState.user!.id;
+    final userProfileAsync = ref.watch(userProfileProvider(userId));
 
     return Scaffold(
       appBar: AppBar(
@@ -21,9 +62,51 @@ class ProfileScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: userState.userProfile == null
-          ? const Center(child: CircularProgressIndicator())
-          : _buildProfileContent(context, ref, userState.userProfile!),
+      body: userProfileAsync.when(
+        data: (userProfile) {
+          if (userProfile == null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 64, color: Colors.grey),
+                  const SizedBox(height: 16),
+                  const Text('Profile not found'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      ref.invalidate(userProfileProvider(userId));
+                    },
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            );
+          }
+          return _buildProfileContent(context, ref, userProfile);
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stack) {
+          AppLogger.error('Profile error: $error');
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                const SizedBox(height: 16),
+                Text('Error: ${error.toString()}'),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    ref.invalidate(userProfileProvider(userId));
+                  },
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -31,7 +114,7 @@ class ProfileScreen extends ConsumerWidget {
   Widget _buildProfileContent(
     BuildContext context,
     WidgetRef ref,
-    dynamic userProfile,
+    UserProfile userProfile,
   ) {
     return SingleChildScrollView(
       child: Column(
@@ -121,7 +204,7 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   /// Build profile header
-  Widget _buildProfileHeader(dynamic userProfile) {
+  Widget _buildProfileHeader(UserProfile userProfile) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(color: Colors.deepOrange.withValues(alpha: 0.1)),
@@ -159,7 +242,7 @@ class ProfileScreen extends ConsumerWidget {
                 const SizedBox(height: 8),
                 if (userProfile.phoneNumber != null)
                   Text(
-                    userProfile.phoneNumber,
+                    userProfile.phoneNumber!,
                     style: const TextStyle(fontSize: 16, color: Colors.grey),
                   ),
               ],
@@ -213,7 +296,7 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   /// Build personal info section
-  Widget _buildPersonalInfo(dynamic userProfile) {
+  Widget _buildPersonalInfo(UserProfile userProfile) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -232,7 +315,7 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   /// Build addresses section
-  Widget _buildAddressesSection(WidgetRef ref, dynamic userProfile) {
+  Widget _buildAddressesSection(WidgetRef ref, UserProfile userProfile) {
     final defaultAddress = userProfile.defaultAddress;
 
     if (defaultAddress == null) {
@@ -294,7 +377,7 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   /// Build preferences section
-  Widget _buildPreferencesSection(WidgetRef ref, dynamic userProfile) {
+  Widget _buildPreferencesSection(WidgetRef ref, UserProfile userProfile) {
     final preferences = userProfile.preferences ?? {};
     final notificationsEnabled = preferences['notifications'] as bool? ?? true;
 
@@ -307,7 +390,7 @@ class ProfileScreen extends ConsumerWidget {
           onChanged: (value) {
             // Update notification preference
           },
-          activeColor: Colors.deepOrange,
+          activeTrackColor: Colors.deepOrange,
         ),
       ],
     );
@@ -347,7 +430,7 @@ class ProfileScreen extends ConsumerWidget {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                ref.read(userProvider.notifier).signOut();
+                ref.read(authStateProvider.notifier).signOut();
               },
               child: const Text('Logout', style: TextStyle(color: Colors.red)),
             ),

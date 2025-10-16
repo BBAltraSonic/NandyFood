@@ -3,9 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:food_delivery_app/core/providers/auth_provider.dart';
 import 'package:food_delivery_app/core/services/role_service.dart';
+import 'package:food_delivery_app/core/utils/app_logger.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/providers/restaurant_dashboard_provider.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/widgets/dashboard_stat_card.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/widgets/pending_order_card.dart';
+import 'package:food_delivery_app/features/restaurant_dashboard/services/realtime_order_service.dart';
+import 'package:food_delivery_app/features/restaurant_dashboard/services/audio_notification_service.dart';
+import 'dart:async';
 
 class RestaurantDashboardScreen extends ConsumerStatefulWidget {
   const RestaurantDashboardScreen({super.key});
@@ -19,11 +23,26 @@ class _RestaurantDashboardScreenState
     extends ConsumerState<RestaurantDashboardScreen> {
   String? _restaurantId;
   bool _isLoading = true;
+  
+  // Real-time services
+  final _realtimeService = RealtimeOrderService();
+  final _audioService = AudioNotificationService();
+  StreamSubscription? _newOrderSubscription;
+  StreamSubscription? _statusChangeSubscription;
 
   @override
   void initState() {
     super.initState();
     _loadRestaurantId();
+  }
+  
+  @override
+  void dispose() {
+    _newOrderSubscription?.cancel();
+    _statusChangeSubscription?.cancel();
+    _realtimeService.unsubscribe();
+    _realtimeService.dispose();
+    super.dispose();
   }
 
   Future<void> _loadRestaurantId() async {
@@ -52,6 +71,9 @@ class _RestaurantDashboardScreenState
         _restaurantId = restaurants.first;
         _isLoading = false;
       });
+      
+      // Subscribe to real-time orders
+      _subscribeToOrders(restaurants.first);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -553,6 +575,94 @@ class _RestaurantDashboardScreenState
       default:
         return Icons.help_outline;
     }
+  }
+  
+  /// Subscribe to real-time order notifications
+  void _subscribeToOrders(String restaurantId) {
+    AppLogger.section('🔔 Setting up real-time notifications');
+    
+    // Subscribe to real-time channel
+    _realtimeService.subscribeToRestaurantOrders(restaurantId);
+    
+    // Listen for new orders
+    _newOrderSubscription = _realtimeService.newOrdersStream.listen(
+      (order) {
+        AppLogger.success('🆕 NEW ORDER: ${order.id}');
+        
+        // Play notification sound
+        _audioService.playNewOrderSound();
+        _audioService.vibrateForNewOrder();
+        
+        // Show in-app notification
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.notifications_active, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'New Order!',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        Text('R ${order.totalAmount.toStringAsFixed(2)}'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 5),
+              action: SnackBarAction(
+                label: 'VIEW',
+                textColor: Colors.white,
+                onPressed: () {
+                  context.push('/restaurant/orders');
+                },
+              ),
+            ),
+          );
+          
+          // Refresh dashboard
+          ref
+              .read(restaurantDashboardProvider(restaurantId).notifier)
+              .loadDashboardData();
+        }
+      },
+      onError: (error) {
+        AppLogger.error('Error in new order stream: $error');
+      },
+    );
+    
+    // Listen for status changes
+    _statusChangeSubscription = _realtimeService.orderStatusStream.listen(
+      (order) {
+        AppLogger.info('Order ${order.id} status changed to: ${order.status}');
+        
+        // Play soft notification
+        _audioService.playStatusChangeSound();
+        
+        // Refresh dashboard
+        if (mounted) {
+          ref
+              .read(restaurantDashboardProvider(restaurantId).notifier)
+              .loadDashboardData();
+        }
+      },
+      onError: (error) {
+        AppLogger.error('Error in status change stream: $error');
+      },
+    );
+    
+    AppLogger.success('✅ Real-time notifications configured');
   }
 }
 

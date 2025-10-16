@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class RestaurantSettingsScreen extends ConsumerWidget {
   const RestaurantSettingsScreen({super.key});
@@ -18,7 +19,7 @@ class RestaurantSettingsScreen extends ConsumerWidget {
             subtitle: const Text('Update basic information'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              // TODO: Navigate to restaurant info
+              context.push('/restaurant/settings/info');
             },
           ),
           ListTile(
@@ -27,7 +28,7 @@ class RestaurantSettingsScreen extends ConsumerWidget {
             subtitle: const Text('Manage opening hours'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              // TODO: Navigate to operating hours
+              context.push('/restaurant/settings/hours');
             },
           ),
           ListTile(
@@ -36,17 +37,19 @@ class RestaurantSettingsScreen extends ConsumerWidget {
             subtitle: const Text('Configure delivery options'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              // TODO: Navigate to delivery settings
+              context.push('/restaurant/settings/delivery');
             },
           ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.people),
             title: const Text('Staff Management'),
-            subtitle: const Text('Manage restaurant staff'),
+            subtitle: const Text('Manage restaurant staff (Coming Soon)'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              // TODO: Navigate to staff management
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Staff management coming soon')),
+              );
             },
           ),
         ],

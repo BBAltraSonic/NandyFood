@@ -41,8 +41,12 @@ import 'package:food_delivery_app/features/restaurant_dashboard/presentation/scr
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_registration_screen.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_orders_screen.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_menu_screen.dart';
+import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/add_edit_menu_item_screen.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_analytics_screen.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_settings_screen.dart';
+import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_info_screen.dart';
+import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/operating_hours_screen.dart';
+import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/delivery_settings_screen.dart';
 
 Future<void> main() async {
   AppLogger.section('🚀 NANDYFOOD APP STARTING');
@@ -153,7 +157,15 @@ GoRouter createRouter() {
       ),
       GoRoute(
         path: '/auth/signup',
-        builder: (context, state) => const SignupScreen(),
+        builder: (context, state) {
+          // Check for role query parameter
+          final roleParam = state.uri.queryParameters['role'];
+          final preselectedRole = roleParam == 'restaurant' 
+            ? UserRoleType.restaurantOwner 
+            : null; // null = default to consumer
+          
+          return SignupScreen(preselectedRole: preselectedRole);
+        },
       ),
       GoRoute(
         path: '/auth/forgot-password',
@@ -289,7 +301,10 @@ GoRouter createRouter() {
       ),
       GoRoute(
         path: '/restaurant/register',
-        builder: (context, state) => const RestaurantRegistrationScreen(),
+        builder: (context, state) {
+          final fromSignup = state.uri.queryParameters['fromSignup'] == 'true';
+          return RestaurantRegistrationScreen(fromSignup: fromSignup);
+        },
       ),
       GoRoute(
         path: '/restaurant/orders',
@@ -303,6 +318,25 @@ GoRouter createRouter() {
         builder: (context, state) => const RestaurantMenuScreen(),
       ),
       GoRoute(
+        path: '/restaurant/menu/add',
+        builder: (context, state) {
+          final restaurantId = state.extra as String;
+          return AddEditMenuItemScreen(restaurantId: restaurantId);
+        },
+      ),
+      GoRoute(
+        path: '/restaurant/menu/edit/:itemId',
+        builder: (context, state) {
+          final itemId = state.pathParameters['itemId'];
+          final item = state.extra as MenuItem?;
+          return AddEditMenuItemScreen(
+            itemId: itemId,
+            existingItem: item,
+            restaurantId: item?.restaurantId ?? '',
+          );
+        },
+      ),
+      GoRoute(
         path: '/restaurant/analytics',
         builder: (context, state) {
           // TODO: Get restaurantId from authenticated user's session instead of query params
@@ -313,6 +347,18 @@ GoRouter createRouter() {
       GoRoute(
         path: '/restaurant/settings',
         builder: (context, state) => const RestaurantSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/restaurant/settings/info',
+        builder: (context, state) => const RestaurantInfoScreen(),
+      ),
+      GoRoute(
+        path: '/restaurant/settings/hours',
+        builder: (context, state) => const OperatingHoursScreen(),
+      ),
+      GoRoute(
+        path: '/restaurant/settings/delivery',
+        builder: (context, state) => const DeliverySettingsScreen(),
       ),
     ],
     redirect: (BuildContext context, GoRouterState state) {

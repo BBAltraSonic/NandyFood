@@ -5,7 +5,12 @@ import 'package:food_delivery_app/core/providers/auth_provider.dart';
 import 'package:food_delivery_app/core/services/database_service.dart';
 
 class RestaurantRegistrationScreen extends ConsumerStatefulWidget {
-  const RestaurantRegistrationScreen({super.key});
+  final bool fromSignup;
+  
+  const RestaurantRegistrationScreen({
+    super.key,
+    this.fromSignup = false,
+  });
 
   @override
   ConsumerState<RestaurantRegistrationScreen> createState() =>
@@ -77,9 +82,11 @@ class _RestaurantRegistrationScreenState
       appBar: AppBar(
         title: const Text('Register Your Restaurant'),
         elevation: 0,
+        automaticallyImplyLeading: !widget.fromSignup,
       ),
       body: Column(
         children: [
+          if (widget.fromSignup) _buildWelcomeBanner(),
           _buildProgressIndicator(),
           Expanded(
             child: PageView(
@@ -751,5 +758,37 @@ class _RestaurantRegistrationScreenState
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  Widget _buildWelcomeBanner() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.green.shade50, Colors.blue.shade50],
+        ),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.celebration, color: Colors.green.shade700, size: 32),
+          const SizedBox(height: 8),
+          Text(
+            'Welcome to NandyFood! 🎉',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.green.shade900,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Let\'s get your restaurant set up in just 5 easy steps',
+            style: TextStyle(color: Colors.green.shade700),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
   }
 }

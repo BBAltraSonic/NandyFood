@@ -133,6 +133,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
     required String email,
     required String password,
     required String fullName,
+    UserRoleType initialRole = UserRoleType.consumer,
   }) async {
     state = state.copyWith(isLoading: true);
     try {
@@ -145,12 +146,30 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
         },
       );
 
-      // If sign up is successful, create user profile in user_profiles table
+      // If sign up is successful, create user profile and assign role
       if (response.user != null) {
         await _createUserProfile(response.user!, fullName);
+        await _roleService.assignRole(
+          response.user!.id,
+          initialRole,
+          isPrimary: true,
+        );
+        
+        // Update state with role
+        final primaryRole = UserRole(
+          userId: response.user!.id,
+          role: initialRole,
+          isPrimary: true,
+        );
+        state = state.copyWith(
+          isLoading: false,
+          primaryRole: primaryRole,
+          allRoles: [primaryRole],
+        );
+      } else {
+        state = state.copyWith(isLoading: false);
       }
 
-      state = state.copyWith(isLoading: false);
       return response;
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
