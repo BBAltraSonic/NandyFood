@@ -9,22 +9,22 @@ part of 'user_profile.dart';
 UserProfile _$UserProfileFromJson(Map<String, dynamic> json) => UserProfile(
   id: json['id'] as String,
   email: json['email'] as String,
-  fullName: json['fullName'] as String?,
-  phoneNumber: json['phoneNumber'] as String?,
-  createdAt: DateTime.parse(json['createdAt'] as String),
-  updatedAt: DateTime.parse(json['updatedAt'] as String),
+  fullName: json['full_name'] as String?,
+  phoneNumber: json['phone_number'] as String?,
+  createdAt: DateTime.parse(json['created_at'] as String),
+  updatedAt: DateTime.parse(json['updated_at'] as String),
   preferences: json['preferences'] as Map<String, dynamic>?,
-  defaultAddress: json['defaultAddress'] as Map<String, dynamic>?,
+  defaultAddress: json['default_address'] as Map<String, dynamic>?,
 );
 
 Map<String, dynamic> _$UserProfileToJson(UserProfile instance) =>
     <String, dynamic>{
       'id': instance.id,
       'email': instance.email,
-      'fullName': instance.fullName,
-      'phoneNumber': instance.phoneNumber,
-      'createdAt': instance.createdAt.toIso8601String(),
-      'updatedAt': instance.updatedAt.toIso8601String(),
+      'full_name': instance.fullName,
+      'phone_number': instance.phoneNumber,
+      'created_at': instance.createdAt.toIso8601String(),
+      'updated_at': instance.updatedAt.toIso8601String(),
       'preferences': instance.preferences,
-      'defaultAddress': instance.defaultAddress,
+      'default_address': instance.defaultAddress,
     };

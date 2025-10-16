@@ -6,11 +6,16 @@ part 'user_profile.g.dart';
 class UserProfile {
   final String id;
   final String email;
+  @JsonKey(name: 'full_name')
   final String? fullName;
+  @JsonKey(name: 'phone_number')
   final String? phoneNumber;
+  @JsonKey(name: 'created_at')
   final DateTime createdAt;
+  @JsonKey(name: 'updated_at')
   final DateTime updatedAt;
   final Map<String, dynamic>? preferences;
+  @JsonKey(name: 'default_address')
   final Map<String, dynamic>? defaultAddress;
 
   UserProfile({

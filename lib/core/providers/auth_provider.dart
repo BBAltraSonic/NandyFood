@@ -146,25 +146,26 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
         },
       );
 
-      // If sign up is successful, create user profile and assign role
+      // If sign up is successful, assign role
+      // Note: User profile is automatically created by database trigger
       if (response.user != null) {
-        await _createUserProfile(response.user!, fullName);
-        await _roleService.assignRole(
-          response.user!.id,
-          initialRole,
-          isPrimary: true,
-        );
+        // Assign role (default consumer role is also assigned by trigger, but we can override here)
+        if (initialRole != UserRoleType.consumer) {
+          await _roleService.assignRole(
+            response.user!.id,
+            initialRole,
+            isPrimary: true,
+          );
+        }
         
-        // Update state with role
-        final primaryRole = UserRole(
-          userId: response.user!.id,
-          role: initialRole,
-          isPrimary: true,
-        );
+        // Fetch the created role from database to get complete data
+        final primaryRole = await _roleService.getPrimaryRole(response.user!.id);
+        final allRoles = await _roleService.getUserRoles(response.user!.id);
+        
         state = state.copyWith(
           isLoading: false,
           primaryRole: primaryRole,
-          allRoles: [primaryRole],
+          allRoles: allRoles,
         );
       } else {
         state = state.copyWith(isLoading: false);

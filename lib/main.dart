@@ -36,6 +36,8 @@ import 'package:food_delivery_app/features/profile/presentation/screens/payment_
 import 'package:food_delivery_app/features/profile/presentation/screens/add_edit_payment_screen.dart';
 import 'package:food_delivery_app/shared/models/order.dart';
 import 'package:food_delivery_app/shared/models/restaurant.dart';
+import 'package:food_delivery_app/shared/models/user_role.dart';
+import 'package:food_delivery_app/shared/models/menu_item.dart';
 import 'package:food_delivery_app/features/role_management/presentation/screens/role_selection_screen.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_dashboard_screen.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_registration_screen.dart';
