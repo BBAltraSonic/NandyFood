@@ -20,6 +20,7 @@ class RestaurantState {
   final List<String>
   selectedDietaryRestrictions; // Added for tracking selected filters
   final String? selectedCategory; // Added for category filtering
+  final Set<String> favouriteRestaurantIds;
 
   RestaurantState({
     this.restaurants = const [],
@@ -35,6 +36,7 @@ class RestaurantState {
     this.errorMessage,
     this.selectedDietaryRestrictions = const [],
     this.selectedCategory,
+    this.favouriteRestaurantIds = const {},
   });
 
   RestaurantState copyWith({
@@ -51,6 +53,7 @@ class RestaurantState {
     String? errorMessage,
     List<String>? selectedDietaryRestrictions,
     String? selectedCategory,
+    Set<String>? favouriteRestaurantIds,
   }) {
     return RestaurantState(
       restaurants: restaurants ?? this.restaurants,
@@ -67,6 +70,7 @@ class RestaurantState {
       selectedDietaryRestrictions:
           selectedDietaryRestrictions ?? this.selectedDietaryRestrictions,
       selectedCategory: selectedCategory ?? this.selectedCategory,
+      favouriteRestaurantIds: favouriteRestaurantIds ?? this.favouriteRestaurantIds,
     );
   }
 }
@@ -79,6 +83,17 @@ final restaurantProvider =
 
 class RestaurantNotifier extends StateNotifier<RestaurantState> {
   RestaurantNotifier() : super(RestaurantState());
+
+  /// Update favourite flag for a restaurant id (UI helper)
+  void setFavourite(String restaurantId, bool fav) {
+    final next = Set<String>.from(state.favouriteRestaurantIds);
+    if (fav) {
+      next.add(restaurantId);
+    } else {
+      next.remove(restaurantId);
+    }
+    state = state.copyWith(favouriteRestaurantIds: next);
+  }
 
   // Load restaurants from the database
   Future<void> loadRestaurants() async {

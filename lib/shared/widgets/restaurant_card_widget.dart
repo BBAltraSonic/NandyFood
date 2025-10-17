@@ -5,8 +5,10 @@ import 'package:food_delivery_app/shared/theme/app_theme.dart';
 class RestaurantCardWidget extends StatelessWidget {
   final Restaurant restaurant;
   final VoidCallback? onTap;
+  final VoidCallback? onToggleFavorite;
+  final bool isFavorite;
 
-  const RestaurantCardWidget({super.key, required this.restaurant, this.onTap});
+  const RestaurantCardWidget({super.key, required this.restaurant, this.onTap, this.onToggleFavorite, this.isFavorite = false});
 
   @override
   Widget build(BuildContext context) {
@@ -26,38 +28,62 @@ class RestaurantCardWidget extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Restaurant image with rounded design
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: AppTheme.warmCream,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: restaurant.imageUrl != null && restaurant.imageUrl!.isNotEmpty
-                      ? Image.network(
-                          restaurant.imageUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Icon(
-                            Icons.restaurant,
-                            color: AppTheme.oliveGreen,
-                            size: 44,
-                          ),
-                        )
-                      : Icon(
-                          Icons.restaurant,
-                          color: AppTheme.oliveGreen,
-                          size: 44,
+              Stack(
+                children: [
+                  Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      color: AppTheme.warmCream,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.08),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
                         ),
-                ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: restaurant.imageUrl != null && restaurant.imageUrl!.isNotEmpty
+                          ? Image.network(
+                              restaurant.imageUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => Icon(
+                                Icons.restaurant,
+                                color: AppTheme.oliveGreen,
+                                size: 44,
+                              ),
+                            )
+                          : Icon(
+                              Icons.restaurant,
+                              color: AppTheme.oliveGreen,
+                              size: 44,
+                            ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 6,
+                    right: 6,
+                    child: InkWell(
+                      onTap: onToggleFavorite,
+                      customBorder: const CircleBorder(),
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          isFavorite ? Icons.favorite : Icons.favorite_border,
+                          size: 16,
+                          color: isFavorite ? Colors.red : AppTheme.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(width: 18),
               // Restaurant details

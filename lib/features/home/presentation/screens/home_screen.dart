@@ -9,6 +9,7 @@ import 'package:food_delivery_app/features/home/presentation/widgets/order_again
 import 'package:food_delivery_app/core/services/location_service.dart';
 import 'package:food_delivery_app/core/providers/auth_provider.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:food_delivery_app/features/favourites/presentation/providers/favourites_provider.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -435,6 +436,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                           ),
                         ],
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: InkWell(
+                      onTap: () => ref.read(favouritesProvider.notifier).toggleRestaurant(restaurant.id),
+                      customBorder: const CircleBorder(),
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          ref.watch(favouritesProvider).restaurants.any((r) => r.id == restaurant.id)
+                              ? Icons.favorite
+                              : Icons.favorite_border,
+                          size: 18,
+                          color: ref.watch(favouritesProvider).restaurants.any((r) => r.id == restaurant.id)
+                              ? Colors.red
+                              : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
                       ),
                     ),
                   ),

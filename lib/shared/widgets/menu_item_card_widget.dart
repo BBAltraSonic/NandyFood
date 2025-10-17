@@ -6,6 +6,7 @@ class MenuItemCardWidget extends StatelessWidget {
   final MenuItem menuItem;
   final VoidCallback? onTap;
   final VoidCallback? onAddToCart;
+  final VoidCallback? onToggleFavorite;
   final bool isFavorite;
   final int? currentStock;
   final int? totalStock;
@@ -16,6 +17,7 @@ class MenuItemCardWidget extends StatelessWidget {
     required this.menuItem,
     this.onTap,
     this.onAddToCart,
+    this.onToggleFavorite,
     this.isFavorite = false,
     this.currentStock,
     this.totalStock,
@@ -106,22 +108,26 @@ class MenuItemCardWidget extends StatelessWidget {
                   Positioned(
                     top: 8,
                     right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.15),
-                            blurRadius: 6,
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        isFavorite ? Icons.favorite : Icons.favorite_border,
-                        size: 18,
-                        color: isFavorite ? Colors.red : AppTheme.textSecondary,
+                    child: InkWell(
+                      onTap: onToggleFavorite,
+                      customBorder: const CircleBorder(),
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.15),
+                              blurRadius: 6,
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          isFavorite ? Icons.favorite : Icons.favorite_border,
+                          size: 18,
+                          color: isFavorite ? Colors.red : AppTheme.textSecondary,
+                        ),
                       ),
                     ),
                   ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:food_delivery_app/core/services/database_service.dart';
 import 'package:food_delivery_app/core/utils/app_logger.dart';
+import 'package:food_delivery_app/core/config/feature_flags.dart';
 
 /// Payment method types
 enum PaymentMethodType {
@@ -38,6 +39,7 @@ class PaymentService {
     );
 
     try {
+      final flags = FeatureFlags();
       if (method == PaymentMethodType.cash) {
         // Cash on delivery - no actual payment processing needed
         AppLogger.info('Processing cash on delivery payment');
@@ -75,20 +77,29 @@ class PaymentService {
         );
         return true;
       } else {
-        // Card payment - to be implemented later
-        AppLogger.warning('Card payment not yet implemented');
-
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Card payment coming soon! Please use cash on delivery.',
+        // Card payment
+        if (!flags.enablePayFastPayment) {
+          AppLogger.warning('Card payment disabled by feature flag');
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Card payment currently disabled'),
+                backgroundColor: Colors.orange,
+                duration: Duration(seconds: 3),
               ),
-              backgroundColor: Colors.orange,
-              duration: Duration(seconds: 3),
-            ),
+            );
+          }
+          AppLogger.function(
+            'PaymentService.processPayment',
+            'EXIT',
+            result: false,
           );
+          return false;
         }
+
+        AppLogger.info('Routing to payment gateway (stub)');
+
+        // TODO: integrate PayFast flow here
 
         AppLogger.function(
           'PaymentService.processPayment',
