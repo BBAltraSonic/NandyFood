@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import '../../core/services/location_service.dart';
 
 class LocationSelectorWidget extends StatefulWidget {
   final Map<String, dynamic>? initialLocation;
@@ -18,20 +19,25 @@ class LocationSelectorWidget extends StatefulWidget {
 
 class _LocationSelectorWidgetState extends State<LocationSelectorWidget> {
   late TextEditingController _searchController;
+  late TextEditingController _zipCodeController;
   late Map<String, dynamic>? _selectedLocation;
   bool _isLoading = false;
   String? _errorMessage;
+  bool _showZipCodeInput = false;
+  final LocationService _locationService = LocationService();
 
   @override
   void initState() {
     super.initState();
     _searchController = TextEditingController();
+    _zipCodeController = TextEditingController();
     _selectedLocation = widget.initialLocation;
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _zipCodeController.dispose();
     super.dispose();
   }
 
@@ -39,6 +45,7 @@ class _LocationSelectorWidgetState extends State<LocationSelectorWidget> {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _showZipCodeInput = false;
     });
 
     try {
@@ -92,6 +99,55 @@ class _LocationSelectorWidgetState extends State<LocationSelectorWidget> {
         }
       } else {
         throw Exception('Unable to get address from location');
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e.toString();
+        _showZipCodeInput = true;
+      });
+    }
+  }
+
+  Future<void> _getLocationFromZipCode() async {
+    final zipCode = _zipCodeController.text.trim();
+    if (zipCode.isEmpty) {
+      setState(() {
+        _errorMessage = 'Please enter a zip code';
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final result = await _locationService.getLocationFromZipCode(zipCode);
+
+      if (result['success'] == true) {
+        final location = {
+          'latitude': result['latitude'],
+          'longitude': result['longitude'],
+          'street': result['street'],
+          'city': result['city'],
+          'state': result['state'],
+          'country': result['country'],
+          'postalCode': result['postalCode'],
+        };
+
+        setState(() {
+          _selectedLocation = location;
+          _isLoading = false;
+          _showZipCodeInput = false;
+        });
+
+        if (widget.onLocationSelected != null) {
+          widget.onLocationSelected!(location);
+        }
+      } else {
+        throw Exception(result['error'] ?? 'Unable to find location');
       }
     } catch (e) {
       setState(() {
@@ -202,6 +258,89 @@ class _LocationSelectorWidgetState extends State<LocationSelectorWidget> {
             ),
           ),
         ),
+        const SizedBox(height: 16),
+
+        // Zip code input (shown when location detection fails)
+        if (_showZipCodeInput) ...[
+          Card(
+            margin: EdgeInsets.zero,
+            color: Colors.blue.shade50,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.location_pin, color: Colors.blue.shade700),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Enter your Zip Code',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _zipCodeController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            hintText: 'Enter zip code',
+                            filled: true,
+                            fillColor: Colors.white,
+                            prefixIcon: const Icon(Icons.pin_drop),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onSubmitted: (_) => _getLocationFromZipCode(),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: _isLoading ? null : _getLocationFromZipCode,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 20,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Icon(Icons.search),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+
+        // Manual input option (always visible)
+        if (!_showZipCodeInput)
+          TextButton.icon(
+            onPressed: () {
+              setState(() {
+                _showZipCodeInput = true;
+                _errorMessage = null;
+              });
+            },
+            icon: const Icon(Icons.edit_location),
+            label: const Text('Enter Zip Code Manually'),
+          ),
         const SizedBox(height: 16),
 
         // Selected location display

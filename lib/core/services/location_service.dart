@@ -113,6 +113,51 @@ class LocationService {
     }
   }
 
+  /// Get coordinates and address details from zip/postal code
+  Future<Map<String, dynamic>> getLocationFromZipCode(
+    String zipCode, {
+    String? country,
+  }) async {
+    try {
+      // Construct query with country if provided for better accuracy
+      final query = country != null ? '$zipCode, $country' : zipCode;
+
+      List<Location> locations = await locationFromAddress(query);
+
+      if (locations.isNotEmpty) {
+        final location = locations.first;
+
+        // Get detailed address information from coordinates
+        List<Placemark> placemarks = await placemarkFromCoordinates(
+          location.latitude,
+          location.longitude,
+        );
+
+        if (placemarks.isNotEmpty) {
+          final placemark = placemarks.first;
+          return {
+            'latitude': location.latitude,
+            'longitude': location.longitude,
+            'street': placemark.street ?? '',
+            'city': placemark.locality ?? '',
+            'state': placemark.administrativeArea ?? '',
+            'country': placemark.country ?? '',
+            'postalCode': placemark.postalCode ?? zipCode,
+            'success': true,
+          };
+        }
+      }
+
+      throw Exception(
+          'Unable to find location for zip code: $zipCode');
+    } catch (e) {
+      return {
+        'success': false,
+        'error': e.toString(),
+      };
+    }
+  }
+
   /// Calculate distance between two points in kilometers
   double calculateDistance(
     double startLat,

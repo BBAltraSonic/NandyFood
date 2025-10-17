@@ -119,15 +119,11 @@ class _FloatingCartButtonState extends ConsumerState<FloatingCartButton>
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFFF6B6B), Color(0xFFFF8E53)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: const Color(0xFF919849),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.deepOrange.withValues(alpha: 0.4),
+                  color: const Color(0xFF919849).withOpacity(0.4),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -157,7 +153,7 @@ class _FloatingCartButtonState extends ConsumerState<FloatingCartButton>
                       child: Text(
                         itemCount > 99 ? '99+' : '$itemCount',
                         style: const TextStyle(
-                          color: Color(0xFFFF6B6B),
+                          color: Color(0xFF919849),
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),
@@ -218,9 +214,7 @@ class _CartPreviewOverlay extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFFFF6B6B), Color(0xFFFF8E53)],
-                            ),
+                            color: const Color(0xFF919849),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Icon(
@@ -267,12 +261,7 @@ class _CartPreviewOverlay extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            const Color(0xFFFF6B6B).withValues(alpha: 0.1),
-                            const Color(0xFFFF8E53).withValues(alpha: 0.1),
-                          ],
-                        ),
+                        color: const Color(0xFF919849).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -286,11 +275,11 @@ class _CartPreviewOverlay extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            '\$${cartState.totalAmount.toStringAsFixed(2)}',
+                            'R ${cartState.totalAmount.toStringAsFixed(2)}',
                             style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFFFF6B6B),
+                              color: Color(0xFF919849),
                             ),
                           ),
                         ],
