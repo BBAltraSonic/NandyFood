@@ -49,6 +49,11 @@ import 'package:food_delivery_app/features/restaurant_dashboard/presentation/scr
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_info_screen.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/operating_hours_screen.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/delivery_settings_screen.dart';
+import 'package:food_delivery_app/shared/screens/main_navigation_screen.dart';
+import 'package:food_delivery_app/features/favourites/presentation/screens/favourites_screen.dart';
+import 'package:food_delivery_app/features/delivery/presentation/screens/delivery_status_screen.dart';
+import 'package:food_delivery_app/features/restaurant_dashboard/presentation/widgets/restaurant_analytics_wrapper.dart';
+import 'package:food_delivery_app/core/routing/navigation_service.dart';
 
 Future<void> main() async {
   AppLogger.section('🚀 NANDYFOOD APP STARTING');
@@ -143,6 +148,7 @@ GoRouter createRouter() {
   AppLogger.info('Setting up app navigation routes...');
 
   final router = GoRouter(
+    navigatorKey: AppNavigation.navigatorKey,
     initialLocation: '/',
     routes: [
       // Splash & Onboarding
@@ -178,8 +184,21 @@ GoRouter createRouter() {
         builder: (context, state) => const VerifyEmailScreen(),
       ),
 
-      // Home & Search
-      GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
+      // Home & Navigation (with bottom nav)
+      GoRoute(
+        path: '/home',
+        builder: (context, state) => const MainNavigationScreen(initialIndex: 0),
+      ),
+      GoRoute(
+        path: '/favourites',
+        builder: (context, state) => const MainNavigationScreen(initialIndex: 1),
+      ),
+      GoRoute(
+        path: '/delivery',
+        builder: (context, state) => const MainNavigationScreen(initialIndex: 2),
+      ),
+      
+      // Search (standalone)
       GoRoute(
         path: '/search',
         builder: (context, state) => const SearchScreen(),
@@ -233,7 +252,8 @@ GoRouter createRouter() {
         path: '/order/track',
         builder: (context, state) {
           final order = state.extra as Order?;
-          return OrderTrackingScreen(order: order);
+          final orderId = state.uri.queryParameters['id'];
+          return OrderTrackingScreen(order: order, orderId: orderId);
         },
       ),
       GoRoute(
@@ -341,9 +361,8 @@ GoRouter createRouter() {
       GoRoute(
         path: '/restaurant/analytics',
         builder: (context, state) {
-          // TODO: Get restaurantId from authenticated user's session instead of query params
-          final restaurantId = state.uri.queryParameters['restaurantId'] ?? 'default_restaurant';
-          return RestaurantAnalyticsScreen(restaurantId: restaurantId);
+          final queryId = state.uri.queryParameters['restaurantId'];
+          return RestaurantAnalyticsWrapper(queryRestaurantId: queryId);
         },
       ),
       GoRoute(
@@ -456,6 +475,7 @@ class _FoodDeliveryAppState extends ConsumerState<FoodDeliveryApp> {
     );
 
     return MaterialApp.router(
+      navigatorKey: AppNavigation.navigatorKey,
       title: 'Food Delivery App',
       debugShowCheckedModeBanner: false,
       theme: _buildLightTheme(),
@@ -466,8 +486,8 @@ class _FoodDeliveryAppState extends ConsumerState<FoodDeliveryApp> {
   }
 
   ThemeData _buildLightTheme() {
-    const primaryColor = Color(0xFFFF6B35);
-    const secondaryColor = Color(0xFFF7931E);
+    const primaryColor = Color(0xFF919849); // Olive green
+    const secondaryColor = Color(0xFF7FB069); // Muted green
 
     return ThemeData(
       useMaterial3: true,
@@ -477,7 +497,7 @@ class _FoodDeliveryAppState extends ConsumerState<FoodDeliveryApp> {
         primary: primaryColor,
         secondary: secondaryColor,
       ),
-      scaffoldBackgroundColor: const Color(0xFFF8F9FA),
+      scaffoldBackgroundColor: const Color(0xFFE5E4D7), // Soft beige
       textTheme: const TextTheme(
         displayLarge: TextStyle(
           fontSize: 32,
@@ -576,30 +596,31 @@ class _FoodDeliveryAppState extends ConsumerState<FoodDeliveryApp> {
           vertical: 16,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           borderSide: const BorderSide(color: primaryColor, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           borderSide: const BorderSide(color: Colors.red, width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           borderSide: const BorderSide(color: Colors.red, width: 2),
         ),
       ),
       cardTheme: CardThemeData(
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         color: Colors.white,
+        shadowColor: Colors.black.withOpacity(0.08),
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       ),
       chipTheme: ChipThemeData(
@@ -615,10 +636,10 @@ class _FoodDeliveryAppState extends ConsumerState<FoodDeliveryApp> {
   }
 
   ThemeData _buildDarkTheme() {
-    const primaryColor = Color(0xFFFF6B35);
-    const secondaryColor = Color(0xFFF7931E);
-    const darkBackground = Color(0xFF121212);
-    const darkSurface = Color(0xFF1E1E1E);
+    const primaryColor = Color(0xFF919849); // Olive green
+    const secondaryColor = Color(0xFF7FB069); // Muted green
+    const darkBackground = Color(0xFF1A1A1A);
+    const darkSurface = Color(0xFF2D2D2D);
 
     return ThemeData(
       useMaterial3: true,

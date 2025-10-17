@@ -2,58 +2,51 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:food_delivery_app/shared/models/order.dart';
 import 'package:food_delivery_app/shared/widgets/order_history_item_widget.dart';
+import 'package:food_delivery_app/core/services/database_service.dart';
+import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class OrderHistoryScreen extends ConsumerWidget {
+class OrderHistoryScreen extends ConsumerStatefulWidget {
   const OrderHistoryScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // For now, using mock data - this would come from the provider in a real implementation
-    final mockOrders = [
-      Order(
-        id: 'order_12345678',
-        userId: 'user_123',
-        restaurantId: 'restaurant_123',
-        deliveryAddress: {'street': '123 Main St', 'city': 'New York'},
-        status: OrderStatus.delivered,
-        totalAmount: 30.97,
-        deliveryFee: 2.90,
-        taxAmount: 2.45,
-        paymentMethod: 'credit_card',
-        paymentStatus: PaymentStatus.completed,
-        placedAt: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-      Order(
-        id: 'order_87654321',
-        userId: 'user_123',
-        restaurantId: 'restaurant_456',
-        deliveryAddress: {'street': '123 Main St', 'city': 'New York'},
-        status: OrderStatus.delivered,
-        totalAmount: 24.50,
-        deliveryFee: 2.90,
-        taxAmount: 1.95,
-        paymentMethod: 'credit_card',
-        paymentStatus: PaymentStatus.completed,
-        placedAt: DateTime.now().subtract(const Duration(days: 5)),
-      ),
-      Order(
-        id: 'order_1111111',
-        userId: 'user_123',
-        restaurantId: 'restaurant_789',
-        deliveryAddress: {'street': '123 Main St', 'city': 'New York'},
-        status: OrderStatus.delivered,
-        totalAmount: 42.75,
-        deliveryFee: 2.90,
-        taxAmount: 3.40,
-        paymentMethod: 'credit_card',
-        paymentStatus: PaymentStatus.completed,
-        placedAt: DateTime.now().subtract(const Duration(days: 12)),
-      ),
-    ];
+  ConsumerState<OrderHistoryScreen> createState() => _OrderHistoryScreenState();
+}
 
+class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
+  List<Order> _orders = const [];
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOrders();
+  }
+
+  Future<void> _loadOrders() async {
+    setState(() { _loading = true; _error = null; });
+    try {
+      if (!DatabaseService().isInitialized) return;
+      final user = DatabaseService().client.auth.currentUser;
+      if (user == null) return;
+      final data = await DatabaseService().getUserOrders(user.id);
+      final orders = data.map((e) => Order.fromJson(e)).toList();
+      setState(() { _orders = orders; _loading = false; });
+    } catch (e) {
+      setState(() { _error = e.toString(); _loading = false; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Order History'), centerTitle: true),
-      body: _buildOrderHistoryContent(mockOrders, context),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+              ? Center(child: Text(_error!))
+              : _buildOrderHistoryContent(_orders, context),
     );
   }
 
@@ -65,13 +58,7 @@ class OrderHistoryScreen extends ConsumerWidget {
     }
 
     return RefreshIndicator(
-      onRefresh: () async {
-        // TODO: Refresh order history
-        await Future.delayed(const Duration(seconds: 1));
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Refresh functionality coming soon')),
-        );
-      },
+      onRefresh: _loadOrders,
       child: ListView.builder(
         itemCount: orders.length,
         itemBuilder: (context, index) {
@@ -80,12 +67,7 @@ class OrderHistoryScreen extends ConsumerWidget {
             child: OrderHistoryItemWidget(
               order: orders[index],
               onTap: () {
-                // TODO: Navigate to order details
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('View order details coming soon'),
-                  ),
-                );
+                context.push('/order/track', extra: orders[index]);
               },
             ),
           );

@@ -7,7 +7,6 @@ import 'package:food_delivery_app/features/home/presentation/widgets/featured_re
 import 'package:food_delivery_app/features/home/presentation/widgets/categories_horizontal_list.dart';
 import 'package:food_delivery_app/features/home/presentation/widgets/order_again_section.dart';
 import 'package:food_delivery_app/core/services/location_service.dart';
-import 'package:food_delivery_app/shared/widgets/floating_cart_button.dart';
 import 'package:food_delivery_app/core/providers/auth_provider.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -60,21 +59,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final restaurantState = ref.watch(restaurantProvider);
     final theme = Theme.of(context);
 
-    return Stack(
-      children: [
-        Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.center,
-            colors: [
-              theme.colorScheme.primary.withValues(alpha: 0.05),
-              theme.scaffoldBackgroundColor,
-            ],
-          ),
-        ),
-        child: SafeArea(
+    return Scaffold(
+      body: SafeArea(
           child: Column(
             children: [
               // Custom Header
@@ -101,83 +87,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       ],
                     ),
-                    Row(
-                      children: [
-                        // Restaurant Dashboard Button (if user is restaurant owner)
-                        Consumer(
-                          builder: (context, ref, _) {
-                            final authState = ref.watch(authStateProvider);
-                            if (authState.canAccessRestaurantDashboard) {
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 8),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.orange.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: Colors.orange.withValues(alpha: 0.3),
-                                    ),
-                                  ),
-                                  child: IconButton(
-                                    icon: const Icon(
-                                      Icons.store_rounded,
-                                      color: Colors.orange,
-                                    ),
-                                    onPressed: () => context.push('/restaurant/dashboard'),
-                                    tooltip: 'Restaurant Dashboard',
-                                  ),
-                                ),
-                              );
-                            }
-                            return const SizedBox.shrink();
-                          },
-                        ),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
+                    // Restaurant Dashboard Button (if user is restaurant owner)
+                    Consumer(
+                      builder: (context, ref, _) {
+                        final authState = ref.watch(authStateProvider);
+                        if (authState.canAccessRestaurantDashboard) {
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.orange.withValues(alpha: 0.3),
                               ),
-                            ],
-                          ),
-                          child: IconButton(
-                            icon: Icon(
-                              Icons.shopping_cart_outlined,
-                              color: theme.colorScheme.primary,
                             ),
-                            onPressed: () => context.push('/cart'),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                theme.colorScheme.primary,
-                                theme.colorScheme.secondary,
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: theme.colorScheme.primary.withValues(
-                                  alpha: 0.3,
-                                ),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
+                            child: IconButton(
+                              icon: const Icon(
+                                Icons.store_rounded,
+                                color: Colors.orange,
                               ),
-                            ],
-                          ),
-                          child: IconButton(
-                            icon: const Icon(Icons.person, color: Colors.white),
-                            onPressed: () => context.push('/profile'),
-                          ),
-                        ),
-                      ],
+                              onPressed: () => context.push('/restaurant/dashboard'),
+                              tooltip: 'Restaurant Dashboard',
+                            ),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
                     ),
                   ],
                 ),
@@ -361,10 +295,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
       ),
-        ),
-        // Floating Cart Button
-        const FloatingCartButton(),
-      ],
     );
   }
 

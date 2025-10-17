@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/realtime_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Order status enum
 enum OrderStatus {
@@ -381,12 +382,13 @@ class OrderTrackingNotifier extends StateNotifier<OrderTrackingState> {
   /// Cancel order
   Future<bool> cancelOrder(String reason) async {
     try {
-      // TODO: Call API to cancel order
-      // await supabase.from('orders').update({
-      //   'status': 'cancelled',
-      //   'cancellation_reason': reason,
-      //   'cancelled_at': DateTime.now().toIso8601String(),
-      // }).eq('id', orderId);
+      // Call API to cancel order
+      final client = Supabase.instance.client;
+      await client.from('orders').update({
+        'status': 'cancelled',
+        'cancellation_reason': reason,
+        'cancelled_at': DateTime.now().toIso8601String(),
+      }).eq('id', orderId);
 
       state = state.copyWith(status: OrderStatus.cancelled);
       

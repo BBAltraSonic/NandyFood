@@ -8,8 +8,9 @@ import 'package:food_delivery_app/shared/widgets/delivery_tracking_widget.dart';
 
 class OrderTrackingScreen extends ConsumerStatefulWidget {
   final Order? order;
+  final String? orderId;
 
-  const OrderTrackingScreen({Key? key, this.order}) : super(key: key);
+  const OrderTrackingScreen({Key? key, this.order, this.orderId}) : super(key: key);
 
   @override
   ConsumerState<OrderTrackingScreen> createState() =>
@@ -27,15 +28,17 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
     _deliveryService = DeliveryTrackingService();
 
     // Start tracking the delivery
-    if (widget.order != null) {
-      _deliveryService.startTrackingDelivery(widget.order!.id);
-      _deliveryStream = _deliveryService.getDeliveryStream(widget.order!.id);
+    final id = widget.order?.id ?? widget.orderId;
+    if (id != null) {
+      _deliveryService.startTrackingDelivery(id);
+      _deliveryStream = _deliveryService.getDeliveryStream(id);
 
-      // Get initial delivery status
-      _deliveryService.getDeliveryStatus(widget.order!.id).then((delivery) {
-        setState(() {
-          _currentDelivery = delivery;
-        });
+      _deliveryService.getDeliveryStatus(id).then((delivery) {
+        if (mounted) {
+          setState(() {
+            _currentDelivery = delivery;
+          });
+        }
       });
     }
   }
@@ -50,7 +53,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Track Order'), centerTitle: true),
-      body: widget.order == null
+      body: (widget.order == null && widget.orderId == null)
           ? const Center(child: Text('No order to track'))
           : _buildOrderTrackingContent(context),
     );

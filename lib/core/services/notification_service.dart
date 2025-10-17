@@ -8,6 +8,9 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:go_router/go_router.dart';
+import 'package:food_delivery_app/core/routing/navigation_service.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 /// Top-level function for handling background FCM messages
 @pragma('vm:entry-point')
@@ -138,7 +141,6 @@ class NotificationService {
       _fcmToken = await _firebaseMessaging.getToken();
       debugPrint('FCM Token: $_fcmToken');
 
-      // TODO: Send token to backend
       await _sendTokenToBackend(_fcmToken);
     } catch (e) {
       debugPrint('Error getting FCM token: $e');
@@ -171,7 +173,7 @@ class NotificationService {
         'fcm_token': token,
         'platform': Platform.isIOS ? 'ios' : 'android',
         'device_name': await _getDeviceName(),
-        'app_version': '1.0.0', // TODO: Get from package_info
+        'app_version': await _getAppVersion(),
         'is_active': true,
         'last_used_at': DateTime.now().toIso8601String(),
         'created_at': DateTime.now().toIso8601String(),
@@ -181,6 +183,14 @@ class NotificationService {
       debugPrint('FCM token stored in database for user: $userId');
     } catch (e) {
       debugPrint('Error sending FCM token to backend: $e');
+    }
+  }
+  Future<String> _getAppVersion() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      return '${info.version}+${info.buildNumber}';
+    } catch (_) {
+      return 'unknown';
     }
   }
   
@@ -254,16 +264,25 @@ class NotificationService {
   void _handlePayload(String payload) {
     if (payload.startsWith('order:')) {
       final orderId = payload.replaceFirst('order:', '');
-      debugPrint('Should navigate to order: $orderId');
-      // TODO: Implement navigation
+      final ctx = AppNavigation.context;
+      if (ctx != null) {
+        ctx.push('/order/track?id=$orderId');
+      } else {
+        debugPrint('Navigation context unavailable for order $orderId');
+      }
     }
   }
 
   /// Navigate based on notification data
   void _navigateFromNotification(Map<String, dynamic> data) {
     if (data['type'] == 'order_update' && data['order_id'] != null) {
-      debugPrint('Should navigate to order: ${data["order_id"]}');
-      // TODO: Implement navigation
+      final orderId = data['order_id'];
+      final ctx = AppNavigation.context;
+      if (ctx != null) {
+        ctx.push('/order/track?id=$orderId');
+      } else {
+        debugPrint('Navigation context unavailable for order $orderId');
+      }
     }
   }
 

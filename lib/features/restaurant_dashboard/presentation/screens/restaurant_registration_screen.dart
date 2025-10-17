@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:food_delivery_app/core/providers/auth_provider.dart';
 import 'package:food_delivery_app/core/services/database_service.dart';
+import 'package:food_delivery_app/core/services/location_service.dart';
 
 class RestaurantRegistrationScreen extends ConsumerStatefulWidget {
   final bool fromSignup;
@@ -689,6 +690,14 @@ class _RestaurantRegistrationScreenState
         throw Exception('User not authenticated');
       }
 
+      // Geocode to get coordinates
+      final geo = await LocationService().getLocationFromZipCode(
+        _zipController.text,
+        country: _stateController.text.isNotEmpty ? _stateController.text : null,
+      );
+      final latitude = (geo['latitude'] as num?)?.toDouble() ?? 0.0;
+      final longitude = (geo['longitude'] as num?)?.toDouble() ?? 0.0;
+
       // Create restaurant record
       final response = await DatabaseService().client.from('restaurants').insert({
         'name': _nameController.text,
@@ -699,8 +708,8 @@ class _RestaurantRegistrationScreenState
           'city': _cityController.text,
           'state': _stateController.text,
           'zip': _zipController.text,
-          'latitude': 0.0, // TODO: Get from geocoding
-          'longitude': 0.0,
+          'latitude': latitude,
+          'longitude': longitude,
         },
         'phone_number': _phoneController.text,
         'email': _emailController.text,
