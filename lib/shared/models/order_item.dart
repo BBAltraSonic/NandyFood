@@ -27,6 +27,9 @@ class OrderItem {
 
   Map<String, dynamic> toJson() => _$OrderItemToJson(this);
 
+  /// Getter for price - returns unitPrice
+  double get price => unitPrice;
+
   OrderItem copyWith({
     String? id,
     String? orderId,

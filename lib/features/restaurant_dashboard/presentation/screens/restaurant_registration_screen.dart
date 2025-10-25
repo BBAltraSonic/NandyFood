@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:food_delivery_app/core/providers/auth_provider.dart';
 import 'package:food_delivery_app/core/services/database_service.dart';
+import 'package:food_delivery_app/core/utils/app_logger.dart';
 
 class RestaurantRegistrationScreen extends ConsumerStatefulWidget {
   final bool fromSignup;
-  
+
   const RestaurantRegistrationScreen({
     super.key,
     this.fromSignup = false,
@@ -33,11 +35,11 @@ class _RestaurantRegistrationScreenState
   final _cityController = TextEditingController();
   final _stateController = TextEditingController();
   final _zipController = TextEditingController();
-  
+
   String _selectedCuisine = 'Italian';
   double _deliveryRadius = 5.0;
   int _estimatedDeliveryTime = 30;
-  
+
   final List<String> _selectedDietaryOptions = [];
   final Map<String, Map<String, String>> _operatingHours = {};
 
@@ -689,6 +691,27 @@ class _RestaurantRegistrationScreenState
         throw Exception('User not authenticated');
       }
 
+      // Geocode the address to get latitude and longitude
+      double latitude = 0.0;
+      double longitude = 0.0;
+
+      try {
+        final fullAddress = '${_addressController.text}, ${_cityController.text}, ${_stateController.text} ${_zipController.text}';
+        AppLogger.info('Geocoding address: $fullAddress');
+
+        final locations = await locationFromAddress(fullAddress);
+        if (locations.isNotEmpty) {
+          latitude = locations.first.latitude;
+          longitude = locations.first.longitude;
+          AppLogger.success('Geocoded coordinates: ($latitude, $longitude)');
+        } else {
+          AppLogger.warning('No geocoding results found for address');
+        }
+      } catch (e) {
+        AppLogger.error('Geocoding failed, using default coordinates', error: e);
+        // Continue with 0,0 coordinates if geocoding fails
+      }
+
       // Create restaurant record
       final response = await DatabaseService().client.from('restaurants').insert({
         'name': _nameController.text,
@@ -699,8 +722,8 @@ class _RestaurantRegistrationScreenState
           'city': _cityController.text,
           'state': _stateController.text,
           'zip': _zipController.text,
-          'latitude': 0.0, // TODO: Get from geocoding
-          'longitude': 0.0,
+          'latitude': latitude,
+          'longitude': longitude,
         },
         'phone_number': _phoneController.text,
         'email': _emailController.text,

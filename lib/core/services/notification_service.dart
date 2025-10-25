@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -25,12 +27,26 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
-  
+
   bool _isInitialized = false;
   bool _timezoneInitialized = false;
   String? _fcmToken;
-  
+
+  // Navigation key for routing from notifications
+  static GlobalKey<NavigatorState>? _navigatorKey;
+  static GoRouter? _router;
+
   String? get fcmToken => _fcmToken;
+
+  /// Set the navigation key for routing
+  static void setNavigationContext({
+    GlobalKey<NavigatorState>? navigatorKey,
+    GoRouter? router,
+  }) {
+    _navigatorKey = navigatorKey;
+    _router = router;
+    debugPrint('Navigation context set for NotificationService');
+  }
 
   int _normalizeId(int id) => id & 0x7fffffff;
 
@@ -56,31 +72,36 @@ class NotificationService {
       _timezoneInitialized = true;
     }
 
-    const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+    // Only initialize local notifications on supported platforms (Android/iOS)
+    if (Platform.isAndroid || Platform.isIOS) {
+      const AndroidInitializationSettings initializationSettingsAndroid =
+          AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    const DarwinInitializationSettings initializationSettingsIOS =
-        DarwinInitializationSettings(
-          requestAlertPermission: true,
-          requestBadgePermission: true,
-          requestSoundPermission: true,
+      const DarwinInitializationSettings initializationSettingsIOS =
+          DarwinInitializationSettings(
+            requestAlertPermission: true,
+            requestBadgePermission: true,
+            requestSoundPermission: true,
+          );
+
+      const InitializationSettings initializationSettings =
+          InitializationSettings(
+            android: initializationSettingsAndroid,
+            iOS: initializationSettingsIOS,
+          );
+
+      await _safeOperation(() async {
+        await _notifications.initialize(
+          initializationSettings,
+          onDidReceiveNotificationResponse: _onNotificationTapped,
         );
+      });
 
-    const InitializationSettings initializationSettings =
-        InitializationSettings(
-          android: initializationSettingsAndroid,
-          iOS: initializationSettingsIOS,
-        );
-
-    await _safeOperation(() async {
-      await _notifications.initialize(
-        initializationSettings,
-        onDidReceiveNotificationResponse: _onNotificationTapped,
-      );
-    });
-
-    // Initialize FCM
-    await _initializeFCM();
+      // Initialize FCM (only on mobile platforms)
+      await _initializeFCM();
+    } else {
+      debugPrint('Local notifications not supported on this platform (${Platform.operatingSystem})');
+    }
 
     _isInitialized = true;
   }
@@ -155,35 +176,44 @@ class NotificationService {
   /// Send FCM token to backend
   Future<void> _sendTokenToBackend(String? token) async {
     if (token == null) return;
-    
+
     try {
       final supabase = Supabase.instance.client;
       final userId = supabase.auth.currentUser?.id;
-      
+
       if (userId == null) {
         debugPrint('No user logged in, FCM token not stored');
         return;
       }
-      
+
+      // Get package info for app version
+      final packageInfo = await PackageInfo.fromPlatform();
+      final appVersion = '${packageInfo.version}+${packageInfo.buildNumber}';
+
+      // Get device name
+      final deviceName = await _getDeviceName();
+
       // Store token in Supabase user_devices table
       await supabase.from('user_devices').upsert({
         'user_id': userId,
         'fcm_token': token,
         'platform': Platform.isIOS ? 'ios' : 'android',
-        'device_name': await _getDeviceName(),
-        'app_version': '1.0.0', // TODO: Get from package_info
+        'device_name': deviceName,
+        'app_version': appVersion,
         'is_active': true,
         'last_used_at': DateTime.now().toIso8601String(),
         'created_at': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),
       }, onConflict: 'fcm_token');
-      
+
+      debugPrint('FCM token registered: Device=$deviceName, Version=$appVersion, Platform=${Platform.isIOS ? 'iOS' : 'Android'}');
+
       debugPrint('FCM token stored in database for user: $userId');
     } catch (e) {
       debugPrint('Error sending FCM token to backend: $e');
     }
   }
-  
+
   /// Get device name
   Future<String> _getDeviceName() async {
     try {
@@ -214,7 +244,7 @@ class NotificationService {
   /// Handle FCM message in foreground
   Future<void> _handleForegroundMessage(RemoteMessage message) async {
     debugPrint('Foreground FCM message: ${message.messageId}');
-    
+
     if (message.notification != null) {
       // Show local notification
       await showNotification(
@@ -252,18 +282,103 @@ class NotificationService {
 
   /// Handle notification payload
   void _handlePayload(String payload) {
+    debugPrint('Handling notification payload: $payload');
+
     if (payload.startsWith('order:')) {
       final orderId = payload.replaceFirst('order:', '');
-      debugPrint('Should navigate to order: $orderId');
-      // TODO: Implement navigation
+      _navigateToRoute('/order/tracking/$orderId');
+    } else if (payload.startsWith('restaurant:')) {
+      final restaurantId = payload.replaceFirst('restaurant:', '');
+      _navigateToRoute('/restaurant/$restaurantId');
+    } else if (payload.startsWith('chat:')) {
+      final chatId = payload.replaceFirst('chat:', '');
+      _navigateToRoute('/chat/$chatId');
+    } else if (payload.startsWith('promo:')) {
+      final promoId = payload.replaceFirst('promo:', '');
+      _navigateToRoute('/promo/$promoId');
+    } else {
+      // Default to home if payload format is unknown
+      _navigateToRoute('/home');
     }
   }
 
-  /// Navigate based on notification data
+  /// Navigate based on notification data (FCM remote message)
   void _navigateFromNotification(Map<String, dynamic> data) {
-    if (data['type'] == 'order_update' && data['order_id'] != null) {
-      debugPrint('Should navigate to order: ${data["order_id"]}');
-      // TODO: Implement navigation
+    debugPrint('Navigating from notification data: $data');
+
+    final type = data['type'] as String?;
+
+    switch (type) {
+      case 'order_update':
+      case 'order_status':
+        final orderId = data['order_id'] as String?;
+        if (orderId != null) {
+          _navigateToRoute('/order/tracking/$orderId');
+        }
+        break;
+
+      case 'new_order':
+        // For restaurant owners - navigate to orders screen
+        _navigateToRoute('/restaurant/orders');
+        break;
+
+      case 'restaurant_update':
+        final restaurantId = data['restaurant_id'] as String?;
+        if (restaurantId != null) {
+          _navigateToRoute('/restaurant/$restaurantId');
+        }
+        break;
+
+      case 'promotion':
+      case 'promo':
+        final promoId = data['promo_id'] as String?;
+        if (promoId != null) {
+          _navigateToRoute('/promo/$promoId');
+        } else {
+          _navigateToRoute('/home');
+        }
+        break;
+
+      case 'driver_nearby':
+      case 'delivery_update':
+        final orderId = data['order_id'] as String?;
+        if (orderId != null) {
+          _navigateToRoute('/order/tracking/$orderId');
+        }
+        break;
+
+      default:
+        // Unknown type - navigate to home
+        _navigateToRoute('/home');
+    }
+  }
+
+  /// Navigate to a specific route
+  void _navigateToRoute(String route) {
+    debugPrint('Attempting to navigate to: $route');
+
+    // Try using GoRouter first (preferred)
+    if (_router != null) {
+      try {
+        _router!.go(route);
+        debugPrint('Navigation successful via GoRouter: $route');
+        return;
+      } catch (e) {
+        debugPrint('GoRouter navigation failed: $e');
+      }
+    }
+
+    // Fallback to Navigator if GoRouter is not available
+    if (_navigatorKey?.currentState != null) {
+      try {
+        _navigatorKey!.currentState!.pushNamed(route);
+        debugPrint('Navigation successful via Navigator: $route');
+      } catch (e) {
+        debugPrint('Navigator navigation failed: $e');
+      }
+    } else {
+      debugPrint('No navigation context available. Route: $route');
+      debugPrint('Please call NotificationService.setNavigationContext() in main.dart');
     }
   }
 
@@ -528,11 +643,11 @@ class NotificationService {
   }) async {
     String title = 'New Order Received!';
     String body = 'Order from $customerName';
-    
+
     if (itemCount != null) {
       body += ' - $itemCount item${itemCount > 1 ? "s" : ""}';
     }
-    
+
     body += ' - \$${orderTotal.toStringAsFixed(2)}';
 
     await showNotification(
@@ -551,7 +666,7 @@ class NotificationService {
   }) async {
     String title = 'Order Cancelled';
     String body = 'Order from $customerName has been cancelled';
-    
+
     if (reason != null && reason.isNotEmpty) {
       body += ' - Reason: $reason';
     }
@@ -587,7 +702,7 @@ class NotificationService {
     String title = "Today's Performance";
     String body = '$totalOrders order${totalOrders != 1 ? "s" : ""}, '
         '\$${totalRevenue.toStringAsFixed(2)} revenue';
-    
+
     if (completedOrders != null) {
       body += ' ($completedOrders completed)';
     }
@@ -620,7 +735,7 @@ class NotificationService {
     String? currentStock,
   }) async {
     String body = 'Low stock alert for $itemName';
-    
+
     if (currentStock != null) {
       body += ' - Current stock: $currentStock';
     }

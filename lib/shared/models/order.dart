@@ -8,6 +8,7 @@ class Order {
   final String id;
   final String userId;
   final String restaurantId;
+  final String? restaurantName;
   final Map<String, dynamic> deliveryAddress;
   final OrderStatus status;
   final List<OrderItem>? orderItems;
@@ -40,6 +41,7 @@ class Order {
     required this.id,
     required this.userId,
     required this.restaurantId,
+    this.restaurantName,
     required this.deliveryAddress,
     required this.status,
     this.orderItems,
@@ -69,14 +71,24 @@ class Order {
   factory Order.fromJson(Map<String, dynamic> json) => _$OrderFromJson(json);
 
   Map<String, dynamic> toJson() => _$OrderToJson(this);
-  
+
   /// Getter for items - returns orderItems or empty list
   List<OrderItem> get items => orderItems ?? [];
+
+  /// Getter for tax - returns taxAmount
+  double get tax => taxAmount;
+
+  /// Getter for total - returns totalAmount
+  double get total => totalAmount;
+
+  /// Getter for deliveryInstructions - returns specialInstructions
+  String? get deliveryInstructions => specialInstructions;
 
   Order copyWith({
     String? id,
     String? userId,
     String? restaurantId,
+    String? restaurantName,
     Map<String, dynamic>? deliveryAddress,
     OrderStatus? status,
     List<OrderItem>? orderItems,

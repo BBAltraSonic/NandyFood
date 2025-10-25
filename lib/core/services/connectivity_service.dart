@@ -9,10 +9,10 @@ class ConnectivityService {
   ConnectivityService._internal();
 
   final Connectivity _connectivity = Connectivity();
-  StreamSubscription<ConnectivityResult>? _subscription;
+  StreamSubscription<List<ConnectivityResult>>? _subscription;
   
   bool _isConnected = true;
-  ConnectivityResult _lastResult = ConnectivityResult.none;
+  List<ConnectivityResult> _lastResults = [ConnectivityResult.none];
 
   /// Stream controller for connectivity changes
   final _connectivityController = StreamController<bool>.broadcast();
@@ -44,28 +44,29 @@ class ConnectivityService {
 
   Future<void> _checkConnectivity() async {
     try {
-      final result = await _connectivity.checkConnectivity();
-      _handleConnectivityChange(result);
+      final results = await _connectivity.checkConnectivity();
+      _handleConnectivityChange(results);
     } catch (e) {
       AppLogger.error('Failed to check connectivity', error: e);
       _isConnected = false;
     }
   }
 
-  void _handleConnectivityChange(ConnectivityResult result) {
-    _updateConnectionStatus(result);
+  void _handleConnectivityChange(List<ConnectivityResult> results) {
+    _updateConnectionStatus(results);
   }
 
-  void _updateConnectionStatus(ConnectivityResult result) {
-    _lastResult = result;
+  void _updateConnectionStatus(List<ConnectivityResult> results) {
+    _lastResults = results;
     final wasConnected = _isConnected;
     
-    _isConnected = result != ConnectivityResult.none;
+    // Connected if any result is not 'none'
+    _isConnected = results.any((result) => result != ConnectivityResult.none);
 
     if (wasConnected != _isConnected) {
       AppLogger.info(
         'Connectivity changed',
-        data: {'isConnected': _isConnected, 'type': result.toString()},
+        data: {'isConnected': _isConnected, 'types': results.map((r) => r.toString()).toList()},
       );
       _connectivityController.add(_isConnected);
     }
@@ -76,7 +77,12 @@ class ConnectivityService {
 
   /// Get connection type
   String get connectionType {
-    switch (_lastResult) {
+    if (_lastResults.isEmpty || _lastResults.first == ConnectivityResult.none) {
+      return 'No Connection';
+    }
+    
+    final result = _lastResults.first;
+    switch (result) {
       case ConnectivityResult.wifi:
         return 'WiFi';
       case ConnectivityResult.mobile:
@@ -95,10 +101,10 @@ class ConnectivityService {
   }
 
   /// Check if connected via WiFi
-  bool get isWiFi => _lastResult == ConnectivityResult.wifi;
+  bool get isWiFi => _lastResults.contains(ConnectivityResult.wifi);
 
   /// Check if connected via mobile data
-  bool get isMobile => _lastResult == ConnectivityResult.mobile;
+  bool get isMobile => _lastResults.contains(ConnectivityResult.mobile);
 
   /// Dispose resources
   void dispose() {

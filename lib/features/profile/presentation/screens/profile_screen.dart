@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:food_delivery_app/core/providers/auth_provider.dart';
 import 'package:food_delivery_app/core/services/database_service.dart';
 import 'package:food_delivery_app/shared/models/user_profile.dart';
@@ -175,6 +176,27 @@ class ProfileScreen extends ConsumerWidget {
             _buildPreferencesSection(ref, userProfile),
             onTap: () {
               // Navigate to preferences screen
+            },
+          ),
+
+          const SizedBox(height: 10),
+          _buildProfileSection(
+            context,
+            'Send Feedback',
+            Icons.feedback,
+            const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Help us improve the app', style: TextStyle(fontSize: 16)),
+                SizedBox(height: 4),
+                Text(
+                  'Share your thoughts and suggestions',
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+              ],
+            ),
+            onTap: () {
+              context.push('/profile/feedback');
             },
           ),
 

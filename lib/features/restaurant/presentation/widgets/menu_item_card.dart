@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:food_delivery_app/shared/models/menu_item.dart';
 import 'package:food_delivery_app/features/restaurant/presentation/widgets/dish_customization_modal.dart';
+import 'package:food_delivery_app/features/favourites/presentation/providers/favourites_provider.dart';
+import 'package:food_delivery_app/core/providers/auth_provider.dart';
 
 class MenuItemCard extends ConsumerWidget {
   final MenuItem menuItem;
@@ -12,11 +15,18 @@ class MenuItemCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authStateProvider);
+    final isFavourite = ref.watch(
+      isMenuItemFavouriteProvider(menuItem.id),
+    );
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
-      child: Column(
+      child: Stack(
+        children: [
+          Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(12),
@@ -69,11 +79,10 @@ class MenuItemCard extends ConsumerWidget {
                       const SizedBox(height: 4),
 
                       // Dietary restrictions badges
-                      if (menuItem.dietaryRestrictions != null &&
-                          menuItem.dietaryRestrictions!.isNotEmpty)
+                      if (menuItem.dietaryRestrictions.isNotEmpty)
                         Wrap(
                           spacing: 8,
-                          children: menuItem.dietaryRestrictions!.map<Widget>((
+                          children: menuItem.dietaryRestrictions.map<Widget>((
                             restriction,
                           ) {
                             Color badgeColor;
@@ -83,15 +92,12 @@ class MenuItemCard extends ConsumerWidget {
                               case 'vegetarian':
                                 badgeColor = Colors.green;
                                 badgeText = 'Veg';
-                                break;
                               case 'vegan':
                                 badgeColor = Colors.green.shade700;
                                 badgeText = 'Vegan';
-                                break;
                               case 'gluten-free':
                                 badgeColor = Colors.blue;
                                 badgeText = 'GF';
-                                break;
                               default:
                                 badgeColor = Colors.grey;
                                 badgeText = restriction;
@@ -155,6 +161,88 @@ class MenuItemCard extends ConsumerWidget {
                 child: const Text('Add to Cart'),
               ),
             ),
+          ),
+        ],
+      ),
+
+          // Favorite button
+          Positioned(
+            top: 4,
+            right: 4,
+            child: Material(
+              color: Colors.white.withValues(alpha: 0.9),
+              shape: const CircleBorder(),
+              elevation: 2,
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: () async {
+                  // Check authentication
+                  if (!authState.isAuthenticated || authState.user == null) {
+                    _showLoginPrompt(context);
+                    return;
+                  }
+
+                  final success = await ref
+                      .read(favouritesProvider.notifier)
+                      .toggleMenuItemFavourite(menuItem.id);
+
+                  if (success && context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          isFavourite
+                              ? '${menuItem.name} removed from favorites'
+                              : '${menuItem.name} added to favorites',
+                        ),
+                        duration: const Duration(seconds: 2),
+                        behavior: SnackBarBehavior.floating,
+                        action: SnackBarAction(
+                          label: 'Undo',
+                          onPressed: () {
+                            ref
+                                .read(favouritesProvider.notifier)
+                                .toggleMenuItemFavourite(menuItem.id);
+                          },
+                        ),
+                      ),
+                    );
+                  }
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Icon(
+                    isFavourite ? Icons.favorite : Icons.favorite_border,
+                    color: isFavourite ? Colors.red : Colors.grey[400],
+                    size: 22,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLoginPrompt(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Login Required'),
+        content: const Text(
+          'Please login to add items to your favorites.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              context.go('/auth/login');
+            },
+            child: const Text('Login'),
           ),
         ],
       ),

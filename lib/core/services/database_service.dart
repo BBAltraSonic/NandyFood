@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:food_delivery_app/core/constants/config.dart';
 
@@ -507,3 +508,8 @@ class DatabaseService {
     // but signing out stops the auto-refresh timers
   }
 }
+
+/// Provider for DatabaseService
+final databaseServiceProvider = Provider<DatabaseService>((ref) {
+  return DatabaseService();
+});

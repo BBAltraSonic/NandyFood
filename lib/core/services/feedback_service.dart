@@ -1,4 +1,7 @@
+import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:food_delivery_app/core/utils/app_logger.dart';
+import 'package:food_delivery_app/core/services/notification_service.dart';
 
 /// User feedback collection service
 class FeedbackService {
@@ -7,6 +10,8 @@ class FeedbackService {
   FeedbackService._internal();
 
   final List<FeedbackItem> _feedbackQueue = [];
+  final SupabaseClient _supabase = Supabase.instance.client;
+  final NotificationService _notificationService = NotificationService();
 
   /// Initialize feedback service
   void initialize() {
@@ -25,7 +30,7 @@ class FeedbackService {
     Map<String, dynamic>? metadata,
   }) async {
     final feedbackId = 'FB-${DateTime.now().millisecondsSinceEpoch}';
-    
+
     final feedback = FeedbackItem(
       id: feedbackId,
       userId: userId,
@@ -45,8 +50,16 @@ class FeedbackService {
       details: 'ID: $feedbackId, Type: ${type.name}, User: $userId',
     );
 
-    // TODO: Send to backend/support system
-    await _sendToBackend(feedback);
+    // Send to backend
+    final success = await _sendToBackend(feedback);
+
+    if (success) {
+      // Notify user of successful submission
+      await _notifyUserSuccess(feedback);
+    } else {
+      feedback.status = FeedbackStatus.pending;
+      AppLogger.warning('Feedback submission failed, will retry later');
+    }
 
     return feedbackId;
   }
@@ -171,7 +184,21 @@ class FeedbackService {
 
       AppLogger.info('Feedback status updated: $feedbackId -> ${status.name}');
 
-      // TODO: Notify user of status change
+      // Notify user of status change
+      await _notifyUserStatusChange(feedback);
+
+      // Update in backend
+      try {
+        await _supabase
+            .from('feedback')
+            .update({
+              'status': status.name,
+              'updated_at': DateTime.now().toIso8601String(),
+            })
+            .eq('id', feedbackId);
+      } catch (e) {
+        AppLogger.error('Failed to update feedback status in backend', error: e);
+      }
     }
   }
 
@@ -183,10 +210,10 @@ class FeedbackService {
     // - After successful order
     // - After using app for a while
     // - Not shown too frequently
-    
+
     final userFeedback = getUserFeedback(userId);
     final lastFeedback = userFeedback.isNotEmpty ? userFeedback.first : null;
-    
+
     if (lastFeedback == null) {
       return true; // First time user
     }
@@ -213,7 +240,7 @@ class FeedbackService {
         .where((f) => f.rating != null)
         .map((f) => f.rating!)
         .toList();
-    
+
     final avgRating = ratings.isNotEmpty
         ? ratings.reduce((a, b) => a + b) / ratings.length
         : 0.0;
@@ -229,16 +256,110 @@ class FeedbackService {
 
   // ==================== PRIVATE METHODS ====================
 
-  Future<void> _sendToBackend(FeedbackItem feedback) async {
+  /// Send feedback to backend (Supabase)
+  Future<bool> _sendToBackend(FeedbackItem feedback) async {
     try {
-      // TODO: Implement API call to send feedback to backend
-      // For now, just log it
-      AppLogger.debug('Feedback queued for backend submission', details: feedback.toJson().toString());
-      
-      // Simulate async operation
-      await Future.delayed(const Duration(milliseconds: 500));
+      AppLogger.info('Sending feedback to backend: ${feedback.id}');
+
+      await _supabase.from('feedback').insert({
+        'id': feedback.id,
+        'user_id': feedback.userId,
+        'email': feedback.email,
+        'type': feedback.type.name,
+        'message': feedback.message,
+        'rating': feedback.rating,
+        'metadata': feedback.metadata,
+        'status': feedback.status.name,
+        'submitted_at': feedback.submittedAt.toIso8601String(),
+        'created_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      });
+
+      feedback.status = FeedbackStatus.inReview;
+      feedback.updatedAt = DateTime.now();
+
+      AppLogger.success('Feedback successfully sent to backend: ${feedback.id}');
+      return true;
     } catch (e, stack) {
       AppLogger.error('Failed to send feedback to backend', error: e, stack: stack);
+      return false;
+    }
+  }
+
+  /// Notify user of successful feedback submission
+  Future<void> _notifyUserSuccess(FeedbackItem feedback) async {
+    try {
+      String title = 'Feedback Received';
+      String body = 'Thank you for your feedback! We\'ll review it shortly.';
+
+      switch (feedback.type) {
+        case FeedbackType.bug:
+          title = 'Bug Report Received';
+          body = 'Thank you for reporting the issue. Our team will investigate.';
+          break;
+        case FeedbackType.featureRequest:
+          title = 'Feature Request Received';
+          body = 'Thank you for the suggestion! We\'ll consider it for future updates.';
+          break;
+        case FeedbackType.support:
+          title = 'Support Request Received';
+          body = 'Our support team will get back to you within 24 hours.';
+          break;
+        case FeedbackType.rating:
+          if (feedback.rating != null && feedback.rating! >= 4) {
+            title = 'Thank You!';
+            body = 'We\'re glad you\'re enjoying the app!';
+          } else {
+            title = 'Thank You for Your Feedback';
+            body = 'We\'re sorry to hear you had issues. We\'ll work on improving.';
+          }
+          break;
+        default:
+          break;
+      }
+
+      await _notificationService.showNotification(
+        id: feedback.id.hashCode,
+        title: title,
+        body: body,
+        payload: 'feedback:${feedback.id}',
+      );
+    } catch (e) {
+      debugPrint('Failed to notify user of feedback submission: $e');
+    }
+  }
+
+  /// Notify user of feedback status change
+  Future<void> _notifyUserStatusChange(FeedbackItem feedback) async {
+    try {
+      String title = 'Feedback Update';
+      String body = 'Your feedback status has been updated.';
+
+      switch (feedback.status) {
+        case FeedbackStatus.acknowledged:
+          title = 'Feedback Acknowledged';
+          body = 'We\'ve acknowledged your feedback and are looking into it.';
+          break;
+        case FeedbackStatus.resolved:
+          title = 'Issue Resolved';
+          body = 'Great news! Your feedback has been addressed.';
+          break;
+        case FeedbackStatus.closed:
+          title = 'Feedback Closed';
+          body = 'Your feedback has been reviewed and closed.';
+          break;
+        default:
+          break;
+      }
+
+      await _notificationService.showNotification(
+        id: feedback.id.hashCode,
+        title: title,
+        body: body,
+        payload: 'feedback:${feedback.id}',
+      );
+    } catch (e) {
+      debugPrint('Failed to notify user of status change: $e');
     }
   }
 }

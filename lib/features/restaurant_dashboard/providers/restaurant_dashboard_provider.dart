@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:food_delivery_app/core/services/realtime_service.dart';
+import 'package:food_delivery_app/core/services/notification_service.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/services/restaurant_management_service.dart';
 import 'package:food_delivery_app/shared/models/order.dart';
 import 'package:food_delivery_app/shared/models/restaurant.dart';
@@ -48,14 +52,23 @@ class RestaurantDashboardState {
 /// Dashboard notifier
 class RestaurantDashboardNotifier
     extends StateNotifier<RestaurantDashboardState> {
-  RestaurantDashboardNotifier(this._restaurantId)
-      : super(RestaurantDashboardState()) {
+  RestaurantDashboardNotifier(
+    this._restaurantId,
+    this._realtimeService,
+    this._notificationService,
+  ) : super(RestaurantDashboardState()) {
     _service = RestaurantManagementService();
     loadDashboardData();
+    _subscribeToRealtimeUpdates();
   }
 
   final String _restaurantId;
+  final RealtimeService _realtimeService;
+  final NotificationService _notificationService;
   late final RestaurantManagementService _service;
+  
+  StreamSubscription<Map<String, dynamic>>? _orderSubscription;
+  StreamSubscription<Map<String, dynamic>>? _restaurantSubscription;
 
   /// Load all dashboard data
   Future<void> loadDashboardData() async {
@@ -211,9 +224,86 @@ class RestaurantDashboardNotifier
     }
   }
 
+  /// Subscribe to real-time updates
+  void _subscribeToRealtimeUpdates() {
+    // Subscribe to restaurant orders
+    _orderSubscription = _realtimeService
+        .subscribeToRestaurantOrders(_restaurantId)
+        .listen(_handleOrderUpdate);
+
+    // Subscribe to restaurant changes
+    _restaurantSubscription = _realtimeService
+        .subscribeToRestaurant(_restaurantId)
+        .listen(_handleRestaurantUpdate);
+  }
+
+  /// Handle real-time order updates
+  void _handleOrderUpdate(Map<String, dynamic> data) {
+    try {
+      final order = Order.fromJson(data);
+      
+      // Update pending orders if new order
+      if (order.status == 'pending' || order.status == 'placed') {
+        final updatedPending = [...state.pendingOrders];
+        final existingIndex = updatedPending.indexWhere((o) => o.id == order.id);
+        
+        if (existingIndex >= 0) {
+          updatedPending[existingIndex] = order;
+        } else {
+          updatedPending.insert(0, order);
+          // Show notification for new order
+          final customerAddress = order.deliveryAddress['name'] as String? ?? 'Customer';
+          _notificationService.showNewOrderNotification(
+            orderId: order.id,
+            customerName: customerAddress,
+            orderTotal: order.total,
+            itemCount: order.items.length,
+          );
+        }
+        
+        state = state.copyWith(pendingOrders: updatedPending);
+      }
+      
+      // Update recent orders
+      final updatedRecent = [...state.recentOrders];
+      final recentIndex = updatedRecent.indexWhere((o) => o.id == order.id);
+      
+      if (recentIndex >= 0) {
+        updatedRecent[recentIndex] = order;
+      } else if (updatedRecent.length < 10) {
+        updatedRecent.insert(0, order);
+      }
+      
+      state = state.copyWith(recentOrders: updatedRecent);
+      
+      // Refresh metrics on order changes
+      refreshMetrics();
+    } catch (e) {
+      // Silently fail - don't disrupt the UI
+      print('Error handling order update: $e');
+    }
+  }
+
+  /// Handle real-time restaurant updates
+  void _handleRestaurantUpdate(Map<String, dynamic> data) {
+    try {
+      final restaurant = Restaurant.fromJson(data);
+      state = state.copyWith(restaurant: restaurant);
+    } catch (e) {
+      print('Error handling restaurant update: $e');
+    }
+  }
+
   /// Clear error
   void clearError() {
     state = state.copyWith(error: null);
+  }
+  
+  @override
+  void dispose() {
+    _orderSubscription?.cancel();
+    _restaurantSubscription?.cancel();
+    super.dispose();
   }
 }
 
@@ -222,7 +312,16 @@ final restaurantDashboardProvider = StateNotifierProvider.family<
     RestaurantDashboardNotifier,
     RestaurantDashboardState,
     String>(
-  (ref, restaurantId) => RestaurantDashboardNotifier(restaurantId),
+  (ref, restaurantId) {
+    final realtimeService = ref.watch(realtimeServiceProvider);
+    final notificationService = NotificationService();
+    
+    return RestaurantDashboardNotifier(
+      restaurantId,
+      realtimeService,
+      notificationService,
+    );
+  },
 );
 
 /// Helper provider to get pending orders count

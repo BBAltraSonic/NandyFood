@@ -75,9 +75,14 @@ class AnalyticsService {
     if (!FeatureFlags().enableAnalytics) return;
 
     try {
+      // Convert Map<String, dynamic> to Map<String, Object> for Firebase Analytics 12.x
+      final Map<String, Object>? analyticsParams = parameters?.map(
+        (key, value) => MapEntry(key, value as Object),
+      );
+      
       await _analytics?.logEvent(
         name: name,
-        parameters: parameters,
+        parameters: analyticsParams,
       );
       AppLogger.debug('Analytics event logged: $name', details: parameters?.toString());
     } catch (e) {

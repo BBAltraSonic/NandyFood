@@ -9,7 +9,10 @@ import 'package:food_delivery_app/firebase_options.dart';
 import 'package:food_delivery_app/core/services/database_service.dart';
 import 'package:food_delivery_app/core/services/notification_service.dart';
 import 'package:food_delivery_app/core/providers/theme_provider.dart';
+import 'package:food_delivery_app/core/config/environment_config.dart';
+import 'package:food_delivery_app/core/config/payment_config.dart';
 import 'package:food_delivery_app/core/utils/app_logger.dart';
+import 'package:food_delivery_app/features/order/data/order_cache_service.dart';
 import 'package:food_delivery_app/features/authentication/presentation/screens/login_screen.dart';
 import 'package:food_delivery_app/features/authentication/presentation/screens/signup_screen.dart';
 import 'package:food_delivery_app/features/authentication/presentation/screens/splash_screen.dart';
@@ -34,6 +37,8 @@ import 'package:food_delivery_app/features/profile/presentation/screens/address_
 import 'package:food_delivery_app/features/profile/presentation/screens/add_edit_address_screen.dart';
 import 'package:food_delivery_app/features/profile/presentation/screens/payment_methods_screen.dart';
 import 'package:food_delivery_app/features/profile/presentation/screens/add_edit_payment_screen.dart';
+import 'package:food_delivery_app/features/profile/presentation/screens/feedback_screen.dart';
+import 'package:food_delivery_app/features/favourites/presentation/screens/favourites_screen.dart';
 import 'package:food_delivery_app/shared/models/order.dart';
 import 'package:food_delivery_app/shared/models/restaurant.dart';
 import 'package:food_delivery_app/shared/models/user_role.dart';
@@ -44,7 +49,7 @@ import 'package:food_delivery_app/features/restaurant_dashboard/presentation/scr
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_orders_screen.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_menu_screen.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/add_edit_menu_item_screen.dart';
-import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_analytics_screen.dart';
+import 'package:food_delivery_app/features/restaurant_dashboard/presentation/widgets/restaurant_analytics_session_wrapper.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_settings_screen.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_info_screen.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/operating_hours_screen.dart';
@@ -73,6 +78,64 @@ Future<void> main() async {
     AppLogger.debug('Will use hardcoded/default values for configuration');
   }
 
+  // Initialize Environment Configuration
+  AppLogger.init('Initializing environment configuration...');
+  try {
+    await EnvironmentConfig.initialize();
+    AppLogger.success(
+      'Environment configuration initialized',
+      details: 'Environment: ${EnvironmentConfig.current.name}',
+    );
+
+    // Log configuration report in debug mode
+    if (EnvironmentConfig.debugMode) {
+      final report = EnvironmentConfig.generateReport();
+      AppLogger.debug('Configuration Report:', data: report);
+    }
+
+    // Validate required environment variables
+    final requiredKeys = ['SUPABASE_URL', 'SUPABASE_ANON_KEY'];
+    final missingKeys = <String>[];
+
+    for (final key in requiredKeys) {
+      try {
+        dotenv.get(key);
+      } catch (e) {
+        missingKeys.add(key);
+      }
+    }
+
+    if (missingKeys.isNotEmpty) {
+      AppLogger.info(
+        'Missing required environment variables',
+        data: {'missing': missingKeys},
+      );
+    } else {
+      AppLogger.success('All required environment variables present');
+    }
+  } catch (e, stack) {
+    AppLogger.error('Failed to initialize environment config', error: e, stack: stack);
+  }
+
+  // Initialize Payment Configuration
+  AppLogger.init('Initializing payment configuration...');
+  try {
+    await PaymentConfig.initialize();
+    final paymentReport = PaymentConfig.generateReport();
+    AppLogger.success(
+      'Payment configuration initialized',
+      details: 'Enabled methods: ${paymentReport['enabled_methods']}',
+    );
+
+    // Log payment configuration in debug mode
+    if (EnvironmentConfig.debugMode) {
+      AppLogger.debug('Payment Configuration Report:', data: paymentReport);
+    }
+  } catch (e, stack) {
+    AppLogger.error('Failed to initialize payment config', error: e, stack: stack);
+    AppLogger.warning('Defaulting to cash-only payment mode');
+  }
+
   // Initialize Firebase
   AppLogger.init('Initializing Firebase...');
   try {
@@ -80,7 +143,7 @@ Future<void> main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
     AppLogger.success('Firebase initialized successfully');
-    
+
     // Set up FCM background message handler
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
     AppLogger.success('FCM background handler registered');
@@ -101,11 +164,10 @@ Future<void> main() async {
     AppLogger.error('Failed to initialize notifications', error: e, stack: stack);
   }
 
-  // Payment system - currently using cash on delivery
-  AppLogger.init('Initializing payment system...');
-  AppLogger.success('Cash on delivery payment enabled');
+  // Payment system status already logged during PaymentConfig initialization
   AppLogger.info(
-    'Card payments can be added later via payment gateway integration',
+    'Payment system ready',
+    details: 'Default method: ${PaymentConfig.getDefaultPaymentMethod().name}',
   );
 
   // Initialize the DatabaseService
@@ -119,6 +181,19 @@ Future<void> main() async {
     );
   } catch (e, stack) {
     AppLogger.error('Failed to initialize database', error: e, stack: stack);
+  }
+
+  // Initialize Order Cache Service
+  AppLogger.init('Initializing order cache service...');
+  try {
+    final cacheService = OrderCacheService();
+    await cacheService.initialize();
+    AppLogger.success(
+      'Order cache service initialized',
+      details: 'Offline order persistence enabled',
+    );
+  } catch (e, stack) {
+    AppLogger.error('Failed to initialize order cache', error: e, stack: stack);
   }
 
   final totalTime = DateTime.now().difference(startTime);
@@ -162,10 +237,10 @@ GoRouter createRouter() {
         builder: (context, state) {
           // Check for role query parameter
           final roleParam = state.uri.queryParameters['role'];
-          final preselectedRole = roleParam == 'restaurant' 
-            ? UserRoleType.restaurantOwner 
+          final preselectedRole = roleParam == 'restaurant'
+            ? UserRoleType.restaurantOwner
             : null; // null = default to consumer
-          
+
           return SignupScreen(preselectedRole: preselectedRole);
         },
       ),
@@ -289,6 +364,16 @@ GoRouter createRouter() {
           return AddEditPaymentScreen(paymentMethodId: paymentId);
         },
       ),
+      GoRoute(
+        path: '/profile/feedback',
+        builder: (context, state) => const FeedbackScreen(),
+      ),
+
+      // Favourites
+      GoRoute(
+        path: '/favourites',
+        builder: (context, state) => const FavouritesScreen(),
+      ),
 
       // Role Management
       GoRoute(
@@ -340,11 +425,7 @@ GoRouter createRouter() {
       ),
       GoRoute(
         path: '/restaurant/analytics',
-        builder: (context, state) {
-          // TODO: Get restaurantId from authenticated user's session instead of query params
-          final restaurantId = state.uri.queryParameters['restaurantId'] ?? 'default_restaurant';
-          return RestaurantAnalyticsScreen(restaurantId: restaurantId);
-        },
+        builder: (context, state) => const RestaurantAnalyticsSessionWrapper(),
       ),
       GoRoute(
         path: '/restaurant/settings',
@@ -365,11 +446,11 @@ GoRouter createRouter() {
     ],
     redirect: (BuildContext context, GoRouterState state) {
       final location = state.uri.toString();
-      
+
       // Check if database is initialized before accessing client
       Session? authState;
       bool isAuthenticated = false;
-      
+
       if (DatabaseService().isInitialized) {
         authState = DatabaseService().client.auth.currentSession;
         isAuthenticated = authState != null;
@@ -440,6 +521,10 @@ class _FoodDeliveryAppState extends ConsumerState<FoodDeliveryApp> {
     AppLogger.success(
       'Router created with ${_router.configuration.routes.length} routes',
     );
+
+    // Set notification navigation context
+    NotificationService.setNavigationContext(router: _router);
+    AppLogger.success('Notification navigation context configured');
   }
 
   @override

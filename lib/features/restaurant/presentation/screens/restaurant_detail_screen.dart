@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:food_delivery_app/features/restaurant/presentation/providers/restaurant_provider.dart';
 import 'package:food_delivery_app/features/restaurant/presentation/widgets/menu_item_card.dart';
 import 'package:food_delivery_app/features/restaurant/presentation/widgets/popular_items_section.dart';
 import 'package:food_delivery_app/features/restaurant/presentation/widgets/reviews_section.dart';
 import 'package:food_delivery_app/features/restaurant/presentation/widgets/operating_hours_widget.dart';
+import 'package:food_delivery_app/features/favourites/presentation/providers/favourites_provider.dart';
+import 'package:food_delivery_app/core/providers/auth_provider.dart';
 import 'package:food_delivery_app/shared/models/restaurant.dart';
 import 'package:food_delivery_app/shared/widgets/loading_indicator.dart';
 import 'package:food_delivery_app/shared/widgets/error_message_widget.dart';
@@ -148,6 +151,55 @@ class _RestaurantDetailScreenState
       expandedHeight: 300,
       pinned: false,
       floating: false,
+      actions: [
+        // Favorite button
+        Consumer(
+          builder: (context, ref, child) {
+            final authState = ref.watch(authStateProvider);
+            final isFavourite = ref.watch(
+              isRestaurantFavouriteProvider(widget.restaurantId),
+            );
+            final isLoading = ref.watch(favouritesProvider).isLoading;
+            
+            return IconButton(
+              icon: Icon(
+                isFavourite ? Icons.favorite : Icons.favorite_border,
+                color: isFavourite ? Colors.red : Colors.white,
+                shadows: const [
+                  Shadow(blurRadius: 4, color: Colors.black54),
+                ],
+              ),
+              onPressed: isLoading ? null : () async {
+                // Check authentication
+                if (!authState.isAuthenticated || authState.user == null) {
+                  if (context.mounted) {
+                    _showLoginDialog(context);
+                  }
+                  return;
+                }
+
+                final success = await ref
+                    .read(favouritesProvider.notifier)
+                    .toggleRestaurantFavourite(widget.restaurantId);
+                
+                if (success && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        isFavourite 
+                          ? 'Removed from favorites' 
+                          : 'Added to favorites',
+                      ),
+                      duration: const Duration(seconds: 2),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              },
+            );
+          },
+        ),
+      ],
       flexibleSpace: FlexibleSpaceBar(
         background: Stack(
           fit: StackFit.expand,
@@ -476,6 +528,31 @@ class _RestaurantDetailScreenState
     }
 
     return widgets;
+  }
+
+  void _showLoginDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Login Required'),
+        content: const Text(
+          'Please login to add restaurants to your favorites.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              context.go('/auth/login');
+            },
+            child: const Text('Login'),
+          ),
+        ],
+      ),
+    );
   }
 }
 

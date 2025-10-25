@@ -1,6 +1,23 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
+  // Color palette
+  static const Color oliveGreen = Color(0xFF4A7B59);
+  static const Color sageBackground = Color(0xFFF5F7F4);
+  static const Color textPrimary = Color(0xFF2C3E50);
+  static const Color textSecondary = Color(0xFF7F8C8D);
+  static const Color warmCream = Color(0xFFFFF8E7);
+  static const Color mutedGreen = Color(0xFF8FA998);
+  static const Color cardWhite = Color(0xFFFDFDFD);
+  static const Color cookingStatus = Color(0xFFFF9800);
+  static const Color finishedStatus = Color(0xFF4CAF50);
+  
+  // Meal time colors
+  static const Color breakfastColor = Color(0xFFFFB74D);
+  static const Color lunchColor = Color(0xFF4CAF50);
+  static const Color supperColor = Color(0xFFFF7043);
+  static const Color dinnerColor = Color(0xFF5C6BC0);
+  
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,

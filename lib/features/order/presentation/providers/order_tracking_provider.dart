@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/realtime_service.dart';
@@ -128,10 +129,13 @@ class OrderTrackingState {
     this.driverName,
     this.driverPhone,
     this.driverRating,
+    this.driverLatitude,
+    this.driverLongitude,
     this.vehicleType,
     this.vehicleNumber,
     this.estimatedDeliveryTime,
     this.actualDeliveryTime,
+    this.distanceToCustomer,
     this.lastUpdated,
     this.error,
     this.isLoading = false,
@@ -144,10 +148,13 @@ class OrderTrackingState {
   final String? driverName;
   final String? driverPhone;
   final double? driverRating;
+  final double? driverLatitude;
+  final double? driverLongitude;
   final String? vehicleType;
   final String? vehicleNumber;
   final DateTime? estimatedDeliveryTime;
   final DateTime? actualDeliveryTime;
+  final double? distanceToCustomer; // in kilometers
   final DateTime? lastUpdated;
   final String? error;
   final bool isLoading;
@@ -160,10 +167,13 @@ class OrderTrackingState {
     String? driverName,
     String? driverPhone,
     double? driverRating,
+    double? driverLatitude,
+    double? driverLongitude,
     String? vehicleType,
     String? vehicleNumber,
     DateTime? estimatedDeliveryTime,
     DateTime? actualDeliveryTime,
+    double? distanceToCustomer,
     DateTime? lastUpdated,
     String? error,
     bool? isLoading,
@@ -176,10 +186,13 @@ class OrderTrackingState {
       driverName: driverName ?? this.driverName,
       driverPhone: driverPhone ?? this.driverPhone,
       driverRating: driverRating ?? this.driverRating,
+      driverLatitude: driverLatitude ?? this.driverLatitude,
+      driverLongitude: driverLongitude ?? this.driverLongitude,
       vehicleType: vehicleType ?? this.vehicleType,
       vehicleNumber: vehicleNumber ?? this.vehicleNumber,
       estimatedDeliveryTime: estimatedDeliveryTime ?? this.estimatedDeliveryTime,
       actualDeliveryTime: actualDeliveryTime ?? this.actualDeliveryTime,
+      distanceToCustomer: distanceToCustomer ?? this.distanceToCustomer,
       lastUpdated: lastUpdated ?? this.lastUpdated,
       error: error,
       isLoading: isLoading ?? this.isLoading,
@@ -218,9 +231,10 @@ class OrderTrackingNotifier extends StateNotifier<OrderTrackingState> {
   final String orderId;
   final RealtimeService realtimeService;
   final NotificationService notificationService;
-  
+
   StreamSubscription<Map<String, dynamic>>? _orderSubscription;
   StreamSubscription<Map<String, dynamic>>? _deliverySubscription;
+  StreamSubscription<Map<String, dynamic>>? _driverLocationSubscription;
 
   /// Initialize tracking
   Future<void> _initialize() async {
@@ -301,8 +315,10 @@ class OrderTrackingNotifier extends StateNotifier<OrderTrackingState> {
   /// Handle delivery updates
   void _handleDeliveryUpdate(Map<String, dynamic> data) {
     try {
+      final driverId = data['driver_id'] as String?;
+      
       state = state.copyWith(
-        driverId: data['driver_id'] as String?,
+        driverId: driverId,
         driverName: data['driver_name'] as String?,
         driverPhone: data['driver_phone'] as String?,
         driverRating: (data['driver_rating'] as num?)?.toDouble(),
@@ -311,9 +327,70 @@ class OrderTrackingNotifier extends StateNotifier<OrderTrackingState> {
         lastUpdated: DateTime.now(),
       );
 
+      // Subscribe to driver location if driver assigned
+      if (driverId != null && _driverLocationSubscription == null) {
+        _subscribeToDriverLocation(driverId);
+      }
+
       debugPrint('Delivery info updated: ${state.driverName}');
     } catch (e) {
       debugPrint('Error handling delivery update: $e');
+    }
+  }
+
+  /// Subscribe to driver location updates
+  void _subscribeToDriverLocation(String driverId) {
+    _driverLocationSubscription = realtimeService
+        .subscribeToDriverLocation(driverId)
+        .listen(_handleDriverLocationUpdate);
+  }
+
+  /// Handle driver location updates
+  void _handleDriverLocationUpdate(Map<String, dynamic> data) {
+    try {
+      final lat = (data['latitude'] as num?)?.toDouble();
+      final lng = (data['longitude'] as num?)?.toDouble();
+
+      if (lat != null && lng != null) {
+        state = state.copyWith(
+          driverLatitude: lat,
+          driverLongitude: lng,
+          lastUpdated: DateTime.now(),
+        );
+
+        // Calculate distance if customer location is available
+        // This would require fetching the order's delivery address coordinates
+        // For now, we'll get it from the data if available
+        if (data['distance_to_customer'] != null) {
+          final distance = (data['distance_to_customer'] as num).toDouble();
+          state = state.copyWith(distanceToCustomer: distance);
+
+          // Trigger 'nearby' status if within 1km
+          if (distance < 1.0 && state.status != OrderStatus.nearby) {
+            _updateStatusToNearby();
+          }
+        }
+
+        debugPrint('Driver location updated: $lat, $lng');
+      }
+    } catch (e) {
+      debugPrint('Error handling driver location update: $e');
+    }
+  }
+
+  /// Update status to nearby when driver is close
+  Future<void> _updateStatusToNearby() async {
+    try {
+      final supabase = Supabase.instance.client;
+      
+      await supabase.from('orders').update({
+        'status': 'nearby',
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', orderId);
+
+      // State will be updated via real-time subscription
+    } catch (e) {
+      debugPrint('Error updating status to nearby: $e');
     }
   }
 
@@ -381,26 +458,58 @@ class OrderTrackingNotifier extends StateNotifier<OrderTrackingState> {
   /// Cancel order
   Future<bool> cancelOrder(String reason) async {
     try {
-      // TODO: Call API to cancel order
-      // await supabase.from('orders').update({
-      //   'status': 'cancelled',
-      //   'cancellation_reason': reason,
-      //   'cancelled_at': DateTime.now().toIso8601String(),
-      // }).eq('id', orderId);
+      state = state.copyWith(isLoading: true, error: null);
 
-      state = state.copyWith(status: OrderStatus.cancelled);
-      
+      final supabase = Supabase.instance.client;
+      final userId = supabase.auth.currentUser?.id;
+
+      if (userId == null) {
+        throw Exception('User not authenticated');
+      }
+
+      debugPrint('Cancelling order: $orderId with reason: $reason');
+
+      // Update order status in database
+      await supabase.from('orders').update({
+        'status': 'cancelled',
+        'cancellation_reason': reason,
+        'cancelled_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', orderId).eq('user_id', userId);
+
+      // Add status update to history
+      final statusUpdate = OrderStatusUpdate(
+        status: OrderStatus.cancelled,
+        timestamp: DateTime.now(),
+        note: reason,
+      );
+
+      final updatedHistory = [...state.statusHistory, statusUpdate];
+
+      // Update state
+      state = state.copyWith(
+        status: OrderStatus.cancelled,
+        statusHistory: updatedHistory,
+        lastUpdated: DateTime.now(),
+        isLoading: false,
+      );
+
+      // Show cancellation notification
       await notificationService.showNotification(
         id: orderId.hashCode,
-        title: 'Order Cancelled',
-        body: 'Your order has been cancelled',
+        title: '❌ Order Cancelled',
+        body: 'Your order has been cancelled successfully',
         payload: 'order:$orderId',
       );
 
+      debugPrint('Order cancelled successfully');
       return true;
     } catch (e) {
       debugPrint('Error cancelling order: $e');
-      state = state.copyWith(error: 'Failed to cancel order');
+      state = state.copyWith(
+        error: 'Failed to cancel order: $e',
+        isLoading: false,
+      );
       return false;
     }
   }
@@ -409,6 +518,7 @@ class OrderTrackingNotifier extends StateNotifier<OrderTrackingState> {
   void dispose() {
     _orderSubscription?.cancel();
     _deliverySubscription?.cancel();
+    _driverLocationSubscription?.cancel();
     super.dispose();
   }
 }

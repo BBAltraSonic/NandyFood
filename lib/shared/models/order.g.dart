@@ -10,6 +10,7 @@ Order _$OrderFromJson(Map<String, dynamic> json) => Order(
   id: json['id'] as String,
   userId: json['userId'] as String,
   restaurantId: json['restaurantId'] as String,
+  restaurantName: json['restaurantName'] as String?,
   deliveryAddress: json['deliveryAddress'] as Map<String, dynamic>,
   status: $enumDecode(_$OrderStatusEnumMap, json['status']),
   orderItems: (json['orderItems'] as List<dynamic>?)
@@ -49,6 +50,7 @@ Map<String, dynamic> _$OrderToJson(Order instance) => <String, dynamic>{
   'id': instance.id,
   'userId': instance.userId,
   'restaurantId': instance.restaurantId,
+  'restaurantName': instance.restaurantName,
   'deliveryAddress': instance.deliveryAddress,
   'status': _$OrderStatusEnumMap[instance.status]!,
   'orderItems': instance.orderItems,

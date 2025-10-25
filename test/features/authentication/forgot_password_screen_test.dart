@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:food_delivery_app/features/authentication/presentation/screens/forgot_password_screen.dart';
+import '../../test_helper.dart';
 
 void main() {
+  setUpAll(() async {
+    await setupTestEnvironment();
+  });
+
+  tearDownAll(() {
+    teardownTestEnvironment();
+  });
+
   testWidgets('ForgotPasswordScreen validates email and triggers submit', (tester) async {
-    await tester.pumpWidget(const ProviderScope(child: MaterialApp(home: ForgotPasswordScreen())));
+    await pumpTestWidget(tester, const ForgotPasswordScreen());
 
     // Initially button enabled
     expect(find.text('Send reset link'), findsOneWidget);
