@@ -2,7 +2,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:food_delivery_app/core/utils/app_logger.dart';
 
 /// Service for caching data locally for offline access
-/// 
+///
 /// Uses Hive for fast, lightweight local storage with automatic
 /// cache invalidation based on TTL (Time To Live).
 class CacheService {
@@ -11,7 +11,12 @@ class CacheService {
   static const String _ordersBox = 'orders';
   static const String _userProfileBox = 'userProfile';
   static const String _metadataBox = 'metadata';
-  
+  static const String _favouritesBox = 'favourites';
+
+  // Additional TTLs
+  static const int favouritesCacheTTL = 12; // 12 hours
+
+
   // Cache TTL (Time To Live) in hours
   static const int restaurantsCacheTTL = 24; // 24 hours
   static const int menuItemsCacheTTL = 12; // 12 hours
@@ -30,14 +35,15 @@ class CacheService {
   Future<void> initialize() async {
     try {
       await Hive.initFlutter();
-      
+
       // Open all boxes
       await Hive.openBox(_restaurantsBox);
       await Hive.openBox(_menuItemsBox);
       await Hive.openBox(_ordersBox);
       await Hive.openBox(_userProfileBox);
       await Hive.openBox(_metadataBox);
-      
+      await Hive.openBox(_favouritesBox);
+
       AppLogger.info('CacheService: Initialized successfully');
     } catch (e) {
       AppLogger.error('CacheService: Failed to initialize - $e');
@@ -49,12 +55,12 @@ class CacheService {
     try {
       final metadataBox = Hive.box<dynamic>(_metadataBox);
       final timestamp = metadataBox.get('${key}_timestamp') as int?;
-      
+
       if (timestamp == null) return false;
-      
+
       final cacheAge = DateTime.now().millisecondsSinceEpoch - timestamp;
       final maxAge = Duration(hours: ttlHours).inMilliseconds;
-      
+
       return cacheAge < maxAge;
     } catch (e) {
       AppLogger.error('CacheService: Error checking cache validity', error: e);
@@ -93,12 +99,12 @@ class CacheService {
         AppLogger.info('CacheService: Restaurant cache expired');
         return null;
       }
-      
+
       final box = Hive.box<dynamic>(_restaurantsBox);
       final cached = box.get('all');
-      
+
       if (cached == null) return null;
-      
+
       final restaurants = (cached as List).cast<Map<String, dynamic>>();
       AppLogger.info('CacheService: Retrieved ${restaurants.length} cached restaurants');
       return restaurants;
@@ -126,14 +132,14 @@ class CacheService {
       if (!_isCacheValid('restaurant_$restaurantId', restaurantsCacheTTL)) {
         return null;
       }
-      
+
       final box = Hive.box<dynamic>(_restaurantsBox);
       final cached = box.get(restaurantId);
-      
+
       if (cached != null) {
         AppLogger.info('CacheService: Retrieved cached restaurant $restaurantId');
       }
-      
+
       return cached as Map<String, dynamic>?;
     } catch (e) {
       AppLogger.error('CacheService: Failed to get cached restaurant', error: e);
@@ -162,12 +168,12 @@ class CacheService {
         AppLogger.info('CacheService: Menu items cache expired for restaurant $restaurantId');
         return null;
       }
-      
+
       final box = Hive.box<dynamic>(_menuItemsBox);
       final cached = box.get(restaurantId);
-      
+
       if (cached == null) return null;
-      
+
       final menuItems = (cached as List).cast<Map<String, dynamic>>();
       AppLogger.info('CacheService: Retrieved ${menuItems.length} cached menu items');
       return menuItems;
@@ -198,12 +204,12 @@ class CacheService {
         AppLogger.info('CacheService: Orders cache expired for user $userId');
         return null;
       }
-      
+
       final box = Hive.box<dynamic>(_ordersBox);
       final cached = box.get(userId);
-      
+
       if (cached == null) return null;
-      
+
       final orders = (cached as List).cast<Map<String, dynamic>>();
       AppLogger.info('CacheService: Retrieved ${orders.length} cached orders');
       return orders;
@@ -233,20 +239,55 @@ class CacheService {
       if (!_isCacheValid('profile_$userId', userProfileCacheTTL)) {
         return null;
       }
-      
+
       final box = Hive.box<dynamic>(_userProfileBox);
       final cached = box.get(userId);
-      
+
       if (cached != null) {
         AppLogger.info('CacheService: Retrieved cached profile for user $userId');
       }
-      
+
       return cached as Map<String, dynamic>?;
     } catch (e) {
       AppLogger.error('CacheService: Failed to get cached user profile', error: e);
       return null;
     }
   }
+
+  // ========== FAVOURITES ==========
+
+  /// Cache favourites for a user (restaurants and menu items combined payload)
+  Future<void> cacheFavourites(String userId, List<Map<String, dynamic>> favourites) async {
+    try {
+      final box = Hive.box<dynamic>(_favouritesBox);
+      await box.put(userId, favourites);
+      _updateTimestamp('favourites_$userId');
+      AppLogger.info('CacheService: Cached ${favourites.length} favourites for user $userId');
+    } catch (e) {
+      AppLogger.error('CacheService: Failed to cache favourites - $e');
+    }
+  }
+
+  /// Get cached favourites for a user
+  List<Map<String, dynamic>>? getCachedFavourites(String userId) {
+    try {
+      if (!_isCacheValid('favourites_$userId', favouritesCacheTTL)) {
+        AppLogger.info('CacheService: Favourites cache expired for user $userId');
+        return null;
+      }
+
+      final box = Hive.box<dynamic>(_favouritesBox);
+      final cached = box.get(userId);
+      if (cached == null) return null;
+      final favourites = (cached as List).cast<Map<String, dynamic>>();
+      AppLogger.info('CacheService: Retrieved ${favourites.length} cached favourites');
+      return favourites;
+    } catch (e) {
+      AppLogger.error('CacheService: Failed to get cached favourites - $e');
+      return null;
+    }
+  }
+
 
   // ========== CACHE MANAGEMENT ==========
 
@@ -258,7 +299,8 @@ class CacheService {
       await Hive.box<dynamic>(_ordersBox).clear();
       await Hive.box<dynamic>(_userProfileBox).clear();
       await Hive.box<dynamic>(_metadataBox).clear();
-      
+      await Hive.box<dynamic>(_favouritesBox).clear();
+
       AppLogger.info('CacheService: Cleared all cache');
     } catch (e) {
       AppLogger.error('CacheService: Failed to clear cache - $e');
@@ -270,33 +312,37 @@ class CacheService {
     try {
       final metadataBox = Hive.box<dynamic>(_metadataBox);
       final now = DateTime.now().millisecondsSinceEpoch;
-      
+
       final keysToDelete = <String>[];
-      
+
       for (final key in metadataBox.keys) {
         final timestamp = metadataBox.get(key) as int?;
         if (timestamp == null) continue;
-        
+
         // Extract TTL based on key prefix
         int ttl = 24; // Default
         if (key.startsWith('orders_')) {
           ttl = ordersCacheTTL;
         } else if (key.startsWith('menu_')) {
           ttl = menuItemsCacheTTL;
+        } else if (key.startsWith('profile_')) {
+          ttl = userProfileCacheTTL;
+        } else if (key.startsWith('favourites_')) {
+          ttl = favouritesCacheTTL;
         }
-        
+
         final cacheAge = now - timestamp;
         final maxAge = Duration(hours: ttl).inMilliseconds;
-        
+
         if (cacheAge >= maxAge) {
           keysToDelete.add(key);
         }
       }
-      
+
       for (final key in keysToDelete) {
         await metadataBox.delete(key);
       }
-      
+
       AppLogger.info('CacheService: Cleared ${keysToDelete.length} expired cache entries');
     } catch (e) {
       AppLogger.error('CacheService: Failed to clear expired cache - $e');
@@ -311,6 +357,7 @@ class CacheService {
         'menuItems': Hive.box<dynamic>(_menuItemsBox).length,
         'orders': Hive.box<dynamic>(_ordersBox).length,
         'userProfiles': Hive.box<dynamic>(_userProfileBox).length,
+        'favourites': Hive.box<dynamic>(_favouritesBox).length,
         'totalSize': _getTotalCacheSize(),
       };
     } catch (e) {
@@ -326,6 +373,7 @@ class CacheService {
       total += Hive.box<dynamic>(_menuItemsBox).length;
       total += Hive.box<dynamic>(_ordersBox).length;
       total += Hive.box<dynamic>(_userProfileBox).length;
+      total += Hive.box<dynamic>(_favouritesBox).length;
       return total;
     } catch (e) {
       return 0;

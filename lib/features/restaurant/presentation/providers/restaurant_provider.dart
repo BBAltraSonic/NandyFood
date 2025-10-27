@@ -3,23 +3,31 @@ import 'package:food_delivery_app/core/services/database_service.dart';
 import 'package:food_delivery_app/shared/models/restaurant.dart';
 import 'package:food_delivery_app/shared/models/menu_item.dart';
 import 'package:food_delivery_app/shared/models/review.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:food_delivery_app/features/restaurant/data/repositories/restaurant_repository.dart';
+
 
 // Restaurant state class to represent the restaurant state
 class RestaurantState {
   final List<Restaurant> restaurants;
-  final List<Restaurant> filteredRestaurants; // Added for filtering
+  final List<Restaurant> filteredRestaurants; // Filtering
   final Restaurant? selectedRestaurant;
   final List<MenuItem> menuItems;
-  final List<MenuItem> filteredMenuItems; // Added for filtering
-  final List<MenuItem> popularItems; // Added for popular items
-  final List<Review> reviews; // Added for reviews
-  final Map<int, int> ratingBreakdown; // Added for rating distribution
-  final int totalReviews; // Added for total reviews count
+  final List<MenuItem> filteredMenuItems; // Filtering
+  final List<MenuItem> popularItems; // Popular items
+  final List<Review> reviews; // Reviews
+  final Map<int, int> ratingBreakdown; // Rating distribution
+  final int totalReviews; // Total reviews count
   final bool isLoading;
   final String? errorMessage;
-  final List<String>
-  selectedDietaryRestrictions; // Added for tracking selected filters
-  final String? selectedCategory; // Added for category filtering
+  final List<String> selectedDietaryRestrictions; // Selected dietary filters
+  final String? selectedCategory; // Category filtering
+
+  // Pagination
+  final int currentPage;
+  final int pageSize;
+  final bool hasMore;
+  final bool isLoadingMore;
 
   RestaurantState({
     this.restaurants = const [],
@@ -35,6 +43,10 @@ class RestaurantState {
     this.errorMessage,
     this.selectedDietaryRestrictions = const [],
     this.selectedCategory,
+    this.currentPage = 0,
+    this.pageSize = 20,
+    this.hasMore = true,
+    this.isLoadingMore = false,
   });
 
   RestaurantState copyWith({
@@ -51,6 +63,10 @@ class RestaurantState {
     String? errorMessage,
     List<String>? selectedDietaryRestrictions,
     String? selectedCategory,
+    int? currentPage,
+    int? pageSize,
+    bool? hasMore,
+    bool? isLoadingMore,
   }) {
     return RestaurantState(
       restaurants: restaurants ?? this.restaurants,
@@ -67,6 +83,10 @@ class RestaurantState {
       selectedDietaryRestrictions:
           selectedDietaryRestrictions ?? this.selectedDietaryRestrictions,
       selectedCategory: selectedCategory ?? this.selectedCategory,
+      currentPage: currentPage ?? this.currentPage,
+      pageSize: pageSize ?? this.pageSize,
+      hasMore: hasMore ?? this.hasMore,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
     );
   }
 }
@@ -78,27 +98,81 @@ final restaurantProvider =
     );
 
 class RestaurantNotifier extends StateNotifier<RestaurantState> {
-  RestaurantNotifier() : super(RestaurantState());
+  RestaurantNotifier() : super(RestaurantState()) {
+    // Load any persisted dietary filters on startup
+    Future.microtask(_loadPersistedDietaryFilters);
+  }
 
-  // Load restaurants from the database
+  Future<void> _loadPersistedDietaryFilters() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getStringList('selected_dietary_filters') ?? [];
+      if (saved.isNotEmpty) {
+        state = state.copyWith(selectedDietaryRestrictions: saved);
+      }
+    } catch (_) {
+      // ignore
+    }
+  }
+
+  // Load restaurants from the database (first page)
   Future<void> loadRestaurants() async {
-    state = state.copyWith(isLoading: true);
+    state = state.copyWith(isLoading: true, currentPage: 0, hasMore: true);
 
     try {
-      final dbService = DatabaseService();
-      final restaurantData = await dbService.getRestaurants();
-
-      final restaurants = restaurantData
-          .map((data) => Restaurant.fromJson(data))
-          .toList();
+      final repo = RestaurantRepository();
+      final restaurants = await repo.fetchList(
+        limit: state.pageSize,
+        page: 0,
+      );
 
       state = state.copyWith(
         restaurants: restaurants,
         filteredRestaurants: restaurants, // Initially show all restaurants
         isLoading: false,
+        currentPage: 0,
+        hasMore: restaurants.length == state.pageSize,
       );
+
+      // Apply any persisted dietary filters
+      if (state.selectedDietaryRestrictions.isNotEmpty) {
+        await loadAllMenuItemsForDietaryFiltering();
+      }
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
+    }
+  }
+
+
+  // Load additional restaurants (pagination)
+  Future<void> loadMoreRestaurants() async {
+    if (state.isLoadingMore || !state.hasMore) return;
+
+    state = state.copyWith(isLoadingMore: true);
+    try {
+      final repo = RestaurantRepository();
+      final nextPage = state.currentPage + 1;
+      final moreRestaurants = await repo.fetchList(
+        limit: state.pageSize,
+        page: nextPage,
+      );
+
+      final allRestaurants = [...state.restaurants, ...moreRestaurants];
+
+      state = state.copyWith(
+        restaurants: allRestaurants,
+        filteredRestaurants: allRestaurants,
+        currentPage: nextPage,
+        hasMore: moreRestaurants.length == state.pageSize,
+        isLoadingMore: false,
+      );
+
+      if (state.selectedDietaryRestrictions.isNotEmpty) {
+        // Re-apply dietary filters after loading more
+        await loadAllMenuItemsForDietaryFiltering();
+      }
+    } catch (e) {
+      state = state.copyWith(isLoadingMore: false, errorMessage: e.toString());
     }
   }
 
@@ -243,6 +317,12 @@ class RestaurantNotifier extends StateNotifier<RestaurantState> {
 
     state = state.copyWith(selectedDietaryRestrictions: newRestrictions);
 
+    // Persist selection for the session/app restarts
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList('selected_dietary_filters', newRestrictions);
+    } catch (_) {}
+
     // Load all menu items to enable proper filtering across restaurants
     await loadAllMenuItemsForDietaryFiltering();
   }
@@ -316,12 +396,8 @@ class RestaurantNotifier extends StateNotifier<RestaurantState> {
     state = state.copyWith(isLoading: true, selectedCategory: category);
 
     try {
-      final dbService = DatabaseService();
-      final restaurantData = await dbService.getRestaurantsByCategory(category);
-
-      final filteredRestaurants = restaurantData
-          .map((data) => Restaurant.fromJson(data))
-          .toList();
+      final repo = RestaurantRepository();
+      final filteredRestaurants = await repo.fetchByCategory(category);
 
       state = state.copyWith(
         filteredRestaurants: filteredRestaurants,

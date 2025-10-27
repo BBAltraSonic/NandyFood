@@ -479,8 +479,6 @@ class _RestaurantOrdersScreenState
         return Colors.green;
       case OrderStatus.cancelled:
         return Colors.red;
-      default:
-        return Colors.grey;
     }
   }
 }

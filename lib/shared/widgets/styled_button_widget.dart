@@ -68,7 +68,7 @@ class StyledButton extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.oliveGreen,
               foregroundColor: AppTheme.cardWhite,
-              disabledBackgroundColor: AppTheme.textSecondary.withOpacity(0.3),
+              disabledBackgroundColor: AppTheme.textSecondary.withValues(alpha: 0.3),
               disabledForegroundColor: AppTheme.textSecondary,
               elevation: 1,
               shape: RoundedRectangleBorder(
@@ -89,7 +89,7 @@ class StyledButton extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.warmCream,
               foregroundColor: AppTheme.textPrimary,
-              disabledBackgroundColor: AppTheme.textSecondary.withOpacity(0.2),
+              disabledBackgroundColor: AppTheme.textSecondary.withValues(alpha: 0.2),
               disabledForegroundColor: AppTheme.textSecondary,
               elevation: 0,
               shape: RoundedRectangleBorder(
@@ -111,7 +111,7 @@ class StyledButton extends StatelessWidget {
               foregroundColor: AppTheme.oliveGreen,
               side: BorderSide(
                 color: onPressed == null 
-                    ? AppTheme.textSecondary.withOpacity(0.3)
+                    ? AppTheme.textSecondary.withValues(alpha: 0.3)
                     : AppTheme.oliveGreen,
                 width: 2,
               ),

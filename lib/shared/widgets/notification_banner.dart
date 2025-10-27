@@ -35,7 +35,6 @@ class NotificationBanner extends StatelessWidget {
         icon = Icons.error;
         break;
       case NotificationType.info:
-      default:
         backgroundColor = Colors.blue.shade100;
         textColor = Colors.blue.shade800;
         icon = Icons.info;

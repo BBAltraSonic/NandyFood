@@ -44,9 +44,6 @@ analyzer:
     always_use_package_imports: ignore
     depend_on_referenced_packages: ignore
     discarded_futures: ignore
-    unnecessary_dev_dependency: ignore
-    deprecated_member_use: ignore
-    unnecessary_import: ignore
 
   language:
     strict-casts: false
@@ -80,18 +77,15 @@ linter:
     cascade_invocations: false # Not always beneficial
     avoid_escaping_inner_quotes: false # Minor formatting issue
     flutter_style_todos: false # TODO format is flexible
-    unnecessary_dev_dependency: false # Duplicate deps are ok
     always_put_required_named_parameters_first: false # Not critical
     prefer_constructors_over_static_methods: false # Static factory methods are fine
     no_default_cases: false # Default cases can be useful
     prefer_final_in_for_each: false # Not always necessary
-    deprecated_member_use: false # Will be updated in next phase
     unawaited_futures: false # Handled case-by-case
     unreachable_from_main: false # Library code may not be called directly
     specify_nonobvious_property_types: false # Sometimes obvious from context
     unnecessary_parenthesis: false # Can improve readability
     unnecessary_this: false # Can be clearer in some cases
-    unnecessary_import: false # IDE manages this
     sort_child_properties_last: false # Personal preference
     unnecessary_to_list_in_spreads: false # Minor optimization
     sort_unnamed_constructors_first: false # Not critical

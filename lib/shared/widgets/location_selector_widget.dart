@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:food_delivery_app/core/services/location_service.dart';
 
 class LocationSelectorWidget extends StatefulWidget {
   final Map<String, dynamic>? initialLocation;
@@ -42,23 +43,33 @@ class _LocationSelectorWidgetState extends State<LocationSelectorWidget> {
     });
 
     try {
-      // Check if location services are enabled
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        throw Exception('Location services are disabled.');
-      }
+      final locationService = LocationService();
+      final flow = await locationService.ensureServiceAndPermission(context);
 
-      // Check location permissions
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          throw Exception('Location permissions are denied');
+      if (flow != LocationFlowResult.granted) {
+        String message;
+        switch (flow) {
+          case LocationFlowResult.servicesDisabled:
+            message = 'Location services are disabled.';
+            break;
+          case LocationFlowResult.denied:
+            message = 'Location permission denied.';
+            break;
+          case LocationFlowResult.deniedForever:
+            message = 'Location permission permanently denied.';
+            break;
+          case LocationFlowResult.cancelled:
+            message = 'Location permission request was cancelled.';
+            break;
+          case LocationFlowResult.granted:
+            message = '';
+            break;
         }
-      }
-
-      if (permission == LocationPermission.deniedForever) {
-        throw Exception('Location permissions are permanently denied');
+        setState(() {
+          _isLoading = false;
+          _errorMessage = message.isEmpty ? null : message;
+        });
+        return;
       }
 
       // Get current position

@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:food_delivery_app/core/services/database_service.dart';
+import 'package:food_delivery_app/core/config/business_config.dart';
+
 import 'package:food_delivery_app/shared/models/order_item.dart';
 import 'package:food_delivery_app/shared/models/menu_item.dart';
 import 'package:food_delivery_app/shared/models/promotion.dart';
@@ -223,50 +225,82 @@ class CartNotifier extends StateNotifier<CartState> {
       // Clear any previous error messages
       state = state.copyWith(errorMessage: null);
 
-      // If code is empty, clear the promo code
-      if (code.isEmpty) {
-        state = state.copyWith(
+      final normalizedCode = code.trim().toUpperCase();
+
+      // If code is empty, clear the promo code and recalc totals
+      if (normalizedCode.isEmpty) {
+        final cleared = state.copyWith(
           promoCode: null,
           discountAmount: 0.0,
           isLoading: false,
         );
+        state = _calculateTotals(cleared);
         return;
       }
 
-      // Validate the promo code with the backend
       final dbService = DatabaseService();
-      final promoData = await dbService.getPromotionByCode(code);
 
+      // Require authentication for applying promo codes when backend is available
+      final String? userId = dbService.isInitialized ? dbService.auth.currentUser?.id : null;
+      if (userId == null) {
+        throw Exception('Please sign in to apply a promo code');
+      }
+
+      // First try server-side validation (authoritative)
+      final rpc = await dbService.validatePromotionCodeRPC(
+        promoCode: normalizedCode,
+        userId: userId,
+        orderAmount: state.subtotal,
+        restaurantId: state.restaurantId,
+      );
+
+      if (rpc != null && rpc['valid'] == true) {
+        // Use server-calculated discount amount
+        final num rpcDiscount = rpc['discount_amount'] ?? 0;
+        final double discount = rpcDiscount.toDouble().clamp(0.0, state.subtotal);
+        final applied = state.copyWith(
+          promoCode: normalizedCode,
+          discountAmount: discount,
+          isLoading: false,
+        );
+        state = _calculateTotals(applied);
+        return;
+      }
+
+      if (rpc != null && rpc['valid'] == false) {
+        final String message = (rpc['message']?.toString() ?? 'Invalid promo code').trim();
+        throw Exception(message);
+      }
+
+      // Fallback: client-side validation using PromotionService if RPC unavailable
+      final promoData = await dbService.getPromotionByCode(normalizedCode);
       if (promoData == null) {
         throw Exception('Invalid promo code');
       }
-
       final promotion = Promotion.fromJson(promoData);
 
-      // Check if promotion is valid using new model
+      // Validate basic rules
       if (!promotion.isValid) {
         throw Exception('Promo code is not valid or has expired');
       }
-
-      // Check minimum order amount
-      if (promotion.minOrderAmount != null &&
-          state.subtotal < promotion.minOrderAmount!) {
-        throw Exception(
-          'Minimum order amount of R${promotion.minOrderAmount} required',
-        );
+      if (promotion.minOrderAmount != null && state.subtotal < promotion.minOrderAmount!) {
+        throw Exception('Minimum order amount of R${promotion.minOrderAmount} required');
+      }
+      if (promotion.restaurantId != null &&
+          state.restaurantId != null &&
+          promotion.restaurantId != state.restaurantId) {
+        throw Exception('Promo code not valid for this restaurant');
       }
 
-      // Calculate discount using promotion method
       double discount = promotion.calculateDiscount(state.subtotal);
-
-      // Ensure discount doesn't exceed subtotal
       discount = discount > state.subtotal ? state.subtotal : discount;
 
-      state = state.copyWith(
+      final applied = state.copyWith(
         promoCode: promotion.code,
         discountAmount: discount,
         isLoading: false,
       );
+      state = _calculateTotals(applied);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -311,11 +345,28 @@ class CartNotifier extends StateNotifier<CartState> {
       (sum, item) => sum + (item.unitPrice * item.quantity),
     );
 
-    // Calculate tax (assuming 8.5% tax rate)
-    final taxAmount = subtotal * 0.085;
+    // Calculate tax using configurable rate
+    final taxRate = BusinessConfig.defaultTaxRate;
+    final taxAmount = subtotal * taxRate;
+
+    // Calculate delivery fee with free delivery threshold and pickup handling
+    double deliveryFee;
+    if (currentState.deliveryMethod == DeliveryMethod.pickup) {
+      deliveryFee = 0.0;
+    } else {
+      final effectiveSubtotal = subtotal - (currentState.discountAmount);
+      deliveryFee =
+          (effectiveSubtotal >= BusinessConfig.freeDeliveryThreshold)
+              ? 0.0
+              : BusinessConfig.defaultDeliveryFee;
+    }
 
     // Return updated state with calculated totals
-    return currentState.copyWith(subtotal: subtotal, taxAmount: taxAmount);
+    return currentState.copyWith(
+      subtotal: subtotal,
+      taxAmount: taxAmount,
+      deliveryFee: deliveryFee,
+    );
   }
 
   /// Update selected payment method

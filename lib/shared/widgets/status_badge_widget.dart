@@ -72,7 +72,7 @@ class StatusBadgeWidget extends StatelessWidget {
       case StatusType.ready:
         return _StatusConfig(
           label: 'Ready',
-          backgroundColor: AppTheme.mutedGreen.withOpacity(0.2),
+          backgroundColor: AppTheme.mutedGreen.withValues(alpha: 0.2),
           textColor: const Color(0xFF065F46),
           icon: Icons.check_circle,
         );

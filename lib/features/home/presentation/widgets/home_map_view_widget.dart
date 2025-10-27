@@ -214,7 +214,7 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
             onPositionChanged: (position, hasGesture) {
               if (hasGesture) {
                 setState(() {
-                  _currentZoom = position.zoom ?? _currentZoom;
+                  _currentZoom = position.zoom;
                 });
               }
             },

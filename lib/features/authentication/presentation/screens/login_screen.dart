@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:food_delivery_app/core/providers/auth_provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:food_delivery_app/core/routing/route_paths.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -39,7 +41,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
         // Navigate to home screen after successful login
         if (mounted) {
-          context.go('/home');
+          context.go(RoutePaths.home);
         }
       } catch (e) {
         if (mounted) {
@@ -65,7 +67,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       // Navigate to home screen after successful login
       if (mounted) {
-        context.go('/home');
+        context.go(RoutePaths.home);
       }
     } on AuthException catch (e) {
       if (mounted && e.statusCode != 'user_cancelled') {
@@ -339,8 +341,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: theme.colorScheme.primary.withValues(
-                                  alpha: 0.4,
+                                color: theme.colorScheme.primary.withOpacity(
+                                  0.4,
                                 ),
                                 blurRadius: 15,
                                 offset: const Offset(0, 8),
@@ -530,7 +532,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       TextButton(
                         onPressed: () {
-                          context.go('/auth/signup');
+                          context.go(RoutePaths.authSignup);
                         },
                         child: Text(
                           'Sign Up',
@@ -542,72 +544,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 32),
-                  const Divider(),
-                  const SizedBox(height: 32),
-                  // Restaurant owner CTA
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.orange.shade50,
-                          Colors.deepOrange.shade50,
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.orange.shade200),
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.store_rounded, color: Colors.orange.shade700, size: 28),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Own a Restaurant?',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.orange.shade900,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Join NandyFood and grow your business with our platform',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.orange.shade700,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            onPressed: () => context.go('/auth/signup?role=restaurant'),
-                            icon: const Icon(Icons.restaurant_menu),
-                            label: const Text('Register Your Restaurant'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.orange.shade700,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                   const SizedBox(height: 24),
                   TextButton(
                     onPressed: () {
-                      context.go('/home');
+                      context.go(RoutePaths.home);
                     },
                     style: TextButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),

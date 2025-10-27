@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:food_delivery_app/core/routing/route_paths.dart';
+
 import 'package:food_delivery_app/core/providers/auth_provider.dart';
 import 'package:food_delivery_app/core/services/role_service.dart';
 import 'package:food_delivery_app/core/utils/app_logger.dart';
@@ -23,7 +25,7 @@ class _RestaurantDashboardScreenState
     extends ConsumerState<RestaurantDashboardScreen> {
   String? _restaurantId;
   bool _isLoading = true;
-  
+
   // Real-time services
   final _realtimeService = RealtimeOrderService();
   final _audioService = AudioNotificationService();
@@ -35,7 +37,7 @@ class _RestaurantDashboardScreenState
     super.initState();
     _loadRestaurantId();
   }
-  
+
   @override
   void dispose() {
     _newOrderSubscription?.cancel();
@@ -51,7 +53,7 @@ class _RestaurantDashboardScreenState
 
     if (userId == null) {
       if (mounted) {
-        context.go('/auth/login');
+        context.go(RoutePaths.authLogin);
       }
       return;
     }
@@ -62,7 +64,7 @@ class _RestaurantDashboardScreenState
 
       if (restaurants.isEmpty) {
         if (mounted) {
-          context.go('/restaurant/register');
+          context.go(RoutePaths.restaurantRegister);
         }
         return;
       }
@@ -71,7 +73,7 @@ class _RestaurantDashboardScreenState
         _restaurantId = restaurants.first;
         _isLoading = false;
       });
-      
+
       // Subscribe to real-time orders
       _subscribeToOrders(restaurants.first);
     } catch (e) {
@@ -82,7 +84,7 @@ class _RestaurantDashboardScreenState
             backgroundColor: Colors.red,
           ),
         );
-        context.go('/home');
+        context.go(RoutePaths.home);
       }
     }
   }
@@ -205,7 +207,7 @@ class _RestaurantDashboardScreenState
               ),
               TextButton(
                 onPressed: () {
-                  context.push('/restaurant/orders');
+                  context.push(RoutePaths.restaurantOrders);
                 },
                 child: const Text('View All'),
               ),
@@ -338,7 +340,7 @@ class _RestaurantDashboardScreenState
           value: metrics?.todayOrders.toString() ?? '0',
           icon: Icons.receipt_long_rounded,
           color: Colors.blue,
-          onTap: () => context.push('/restaurant/orders'),
+          onTap: () => context.push(RoutePaths.restaurantOrders),
         ),
         DashboardStatCard(
           title: "Today's Revenue",
@@ -354,14 +356,14 @@ class _RestaurantDashboardScreenState
           value: (metrics?.pendingOrders ?? 0).toString(),
           icon: Icons.pending_actions_rounded,
           color: Colors.orange,
-          onTap: () => context.push('/restaurant/orders?status=pending'),
+          onTap: () => context.push("${RoutePaths.restaurantOrders}?status=pending"),
         ),
         DashboardStatCard(
           title: 'Active Items',
           value: (metrics?.activeMenuItems ?? 0).toString(),
           icon: Icons.restaurant_menu_rounded,
           color: Colors.purple,
-          onTap: () => context.push('/restaurant/menu'),
+          onTap: () => context.push(RoutePaths.restaurantMenu),
         ),
       ],
     );
@@ -389,19 +391,19 @@ class _RestaurantDashboardScreenState
               'Orders',
               Icons.list_alt_rounded,
               Colors.blue,
-              () => context.push('/restaurant/orders'),
+              () => context.push(RoutePaths.restaurantOrders),
             ),
             _buildQuickActionCard(
               'Menu',
               Icons.restaurant_menu_rounded,
               Colors.orange,
-              () => context.push('/restaurant/menu'),
+              () => context.push(RoutePaths.restaurantMenu),
             ),
             _buildQuickActionCard(
               'Analytics',
               Icons.analytics_rounded,
               Colors.purple,
-              () => context.push('/restaurant/analytics'),
+              () => context.push(RoutePaths.restaurantAnalytics),
             ),
           ],
         ),
@@ -458,13 +460,13 @@ class _RestaurantDashboardScreenState
             // Already on dashboard
             break;
           case 1:
-            context.push('/restaurant/orders');
+            context.push(RoutePaths.restaurantOrders);
             break;
           case 2:
-            context.push('/restaurant/menu');
+            context.push(RoutePaths.restaurantMenu);
             break;
           case 3:
-            context.push('/restaurant/analytics');
+            context.push(RoutePaths.restaurantAnalytics);
             break;
         }
       },
@@ -576,23 +578,23 @@ class _RestaurantDashboardScreenState
         return Icons.help_outline;
     }
   }
-  
+
   /// Subscribe to real-time order notifications
   void _subscribeToOrders(String restaurantId) {
     AppLogger.section('🔔 Setting up real-time notifications');
-    
+
     // Subscribe to real-time channel
     _realtimeService.subscribeToRestaurantOrders(restaurantId);
-    
+
     // Listen for new orders
     _newOrderSubscription = _realtimeService.newOrdersStream.listen(
       (order) {
         AppLogger.success('🆕 NEW ORDER: ${order.id}');
-        
+
         // Play notification sound
         _audioService.playNewOrderSound();
         _audioService.vibrateForNewOrder();
-        
+
         // Show in-app notification
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -625,12 +627,12 @@ class _RestaurantDashboardScreenState
                 label: 'VIEW',
                 textColor: Colors.white,
                 onPressed: () {
-                  context.push('/restaurant/orders');
+                  context.push(RoutePaths.restaurantOrders);
                 },
               ),
             ),
           );
-          
+
           // Refresh dashboard
           ref
               .read(restaurantDashboardProvider(restaurantId).notifier)
@@ -641,15 +643,15 @@ class _RestaurantDashboardScreenState
         AppLogger.error('Error in new order stream: $error');
       },
     );
-    
+
     // Listen for status changes
     _statusChangeSubscription = _realtimeService.orderStatusStream.listen(
       (order) {
         AppLogger.info('Order ${order.id} status changed to: ${order.status}');
-        
+
         // Play soft notification
         _audioService.playStatusChangeSound();
-        
+
         // Refresh dashboard
         if (mounted) {
           ref
@@ -661,7 +663,7 @@ class _RestaurantDashboardScreenState
         AppLogger.error('Error in status change stream: $error');
       },
     );
-    
+
     AppLogger.success('✅ Real-time notifications configured');
   }
 }

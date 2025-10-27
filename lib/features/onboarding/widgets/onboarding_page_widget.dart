@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:food_delivery_app/features/onboarding/models/onboarding_page_data.dart';
+import 'package:food_delivery_app/core/services/location_service.dart';
 import 'package:geolocator/geolocator.dart';
 
 /// Individual onboarding page with animations and content
@@ -75,48 +76,14 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
     });
 
     try {
-      // Check if location services are enabled
-      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Location services are disabled. Please enable them in settings.'),
-              duration: Duration(seconds: 3),
-            ),
-          );
-        }
-        setState(() {
-          _isRequestingPermission = false;
-        });
-        return;
-      }
+      final locationService = LocationService();
+      final result = await locationService.ensureServiceAndPermission(context);
 
-      // Check current permission status
-      var permission = await Geolocator.checkPermission();
-      
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
+      if (!mounted) return;
 
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Location permission denied. You can still browse restaurants!'),
-              action: SnackBarAction(
-                label: 'Settings',
-                onPressed: () => Geolocator.openLocationSettings(),
-              ),
-              duration: const Duration(seconds: 4),
-            ),
-          );
-        }
-      } else {
-        // Permission granted
-        widget.onLocationPermissionGranted?.call();
-        if (mounted) {
+      switch (result) {
+        case LocationFlowResult.granted:
+          widget.onLocationPermissionGranted?.call();
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Location permission granted! 🎉'),
@@ -124,7 +91,46 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
               duration: Duration(seconds: 2),
             ),
           );
-        }
+          break;
+        case LocationFlowResult.servicesDisabled:
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Location services are disabled. You can still browse restaurants!'),
+              action: SnackBarAction(
+                label: 'Settings',
+                onPressed: () => Geolocator.openLocationSettings(),
+              ),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+          break;
+        case LocationFlowResult.denied:
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Location permission denied. You can still browse restaurants!'),
+              action: SnackBarAction(
+                label: 'Settings',
+                onPressed: () => Geolocator.openAppSettings(),
+              ),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+          break;
+        case LocationFlowResult.deniedForever:
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Permission permanently denied. Enable it in Settings anytime.'),
+              action: SnackBarAction(
+                label: 'Open',
+                onPressed: () => Geolocator.openAppSettings(),
+              ),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+          break;
+        case LocationFlowResult.cancelled:
+          // User dismissed rationale dialog; do nothing.
+          break;
       }
     } catch (e) {
       if (mounted) {
@@ -183,20 +189,24 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
                 position: _slideAnimation,
                 child: FadeTransition(
                   opacity: _fadeAnimation,
-                  child: Text(
-                    widget.pageData.title,
-                    style: theme.textTheme.displaySmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      shadows: [
-                        const Shadow(
-                          color: Colors.black26,
-                          offset: Offset(0, 2),
-                          blurRadius: 4,
-                        ),
-                      ],
+                  child: Semantics(
+                    header: true,
+                    label: widget.pageData.title,
+                    child: Text(
+                      widget.pageData.title,
+                      style: theme.textTheme.displaySmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        shadows: [
+                          const Shadow(
+                            color: Colors.black26,
+                            offset: Offset(0, 2),
+                            blurRadius: 4,
+                          ),
+                        ],
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
                   ),
                 ),
               ),
@@ -208,13 +218,16 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
                 position: _slideAnimation,
                 child: FadeTransition(
                   opacity: _fadeAnimation,
-                  child: Text(
-                    widget.pageData.description,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: Colors.white.withValues(alpha: 0.95),
-                      height: 1.6,
+                  child: Semantics(
+                    label: widget.pageData.description,
+                    child: Text(
+                      widget.pageData.description,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.95),
+                        height: 1.6,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
                   ),
                 ),
               ),
@@ -224,30 +237,35 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
                 const SizedBox(height: 40),
                 FadeTransition(
                   opacity: _fadeAnimation,
-                  child: ElevatedButton.icon(
-                    onPressed: _isRequestingPermission ? null : _requestLocationPermission,
-                    icon: _isRequestingPermission
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                          )
-                        : const Icon(Icons.location_on),
-                    label: Text(_isRequestingPermission
-                        ? 'Requesting...'
-                        : 'Grant Location Access'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: widget.pageData.backgroundColor,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 16,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
+                  child: Semantics(
+                    button: true,
+                    label: 'Grant location access',
+                    hint: 'Allows us to show nearby restaurants and delivery estimates',
+                    child: ElevatedButton.icon(
+                      onPressed: _isRequestingPermission ? null : _requestLocationPermission,
+                      icon: _isRequestingPermission
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : const Icon(Icons.location_on),
+                      label: Text(_isRequestingPermission
+                          ? 'Requesting...'
+                          : 'Grant Location Access'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: widget.pageData.backgroundColor,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
                       ),
                     ),
                   ),
@@ -255,13 +273,18 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
                 const SizedBox(height: 16),
                 FadeTransition(
                   opacity: _fadeAnimation,
-                  child: TextButton(
-                    onPressed: widget.onLocationPermissionGranted,
-                    child: Text(
-                      'Skip for now',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.9),
-                        fontWeight: FontWeight.w600,
+                  child: Semantics(
+                    button: true,
+                    label: 'Skip location permission for now',
+                    hint: 'You can grant permission later in settings',
+                    child: TextButton(
+                      onPressed: widget.onLocationPermissionGranted,
+                      child: Text(
+                        'Skip for now',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
@@ -285,7 +308,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
         child: FutureBuilder<bool>(
           future: _checkAssetExists(widget.pageData.lottieAsset!),
           builder: (context, snapshot) {
-            if (snapshot.data == true) {
+            if (snapshot.data ?? false) {
               return Lottie.asset(
                 widget.pageData.lottieAsset!,
                 width: illustrationSize,

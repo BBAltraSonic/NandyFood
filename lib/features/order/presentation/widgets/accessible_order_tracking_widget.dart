@@ -302,8 +302,6 @@ class AccessibleOrderTrackingWidget extends StatelessWidget {
         return Colors.green;
       case OrderStatus.cancelled:
         return Colors.red;
-      default:
-        return Colors.grey;
     }
   }
 
@@ -323,8 +321,6 @@ class AccessibleOrderTrackingWidget extends StatelessWidget {
         return 'Delivered';
       case OrderStatus.cancelled:
         return 'Cancelled';
-      default:
-        return status.name;
     }
   }
 

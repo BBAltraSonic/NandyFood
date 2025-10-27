@@ -3,8 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:food_delivery_app/core/constants/config.dart';
 import 'package:food_delivery_app/core/utils/app_logger.dart';
+import 'package:food_delivery_app/core/services/database_service.dart';
+import 'package:food_delivery_app/core/providers/auth_provider.dart';
+import 'package:food_delivery_app/features/order/presentation/providers/cart_provider.dart';
+import 'package:food_delivery_app/features/order/presentation/providers/place_order_provider.dart';
 import 'package:food_delivery_app/features/order/presentation/providers/payment_provider.dart';
-import 'package:food_delivery_app/features/order/presentation/screens/payment_confirmation_screen.dart';
+import 'package:food_delivery_app/features/order/presentation/screens/payment_result_screen.dart';
 import 'package:food_delivery_app/shared/widgets/payment_security_badge.dart';
 import 'package:food_delivery_app/shared/widgets/payment_loading_indicator.dart';
 
@@ -120,20 +124,101 @@ class _PayFastPaymentScreenState extends ConsumerState<PayFastPaymentScreen> {
 
       AppLogger.info('Payment response params', data: params);
 
-      // Process payment response
+      // 1) Verify payment with backend
       final paymentNotifier = ref.read(paymentProvider.notifier);
-      final success = await paymentNotifier.processPaymentResponse(params);
+      final verified = await paymentNotifier.processPaymentResponse(params);
+
+      if (!verified) {
+        final friendlyError = ref.read(paymentProvider).errorMessage ??
+            'We could not verify your payment with the bank. Please try again or choose a different method.';
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PaymentResultScreen(
+                orderId: widget.orderId,
+                success: false,
+                paymentReference: params['m_payment_id'],
+                errorMessage: friendlyError,
+              ),
+            ),
+          );
+        }
+        return;
+      }
+
+      // 2) Guard: ensure an order exists (idempotent)
+      final db = DatabaseService();
+      Map<String, dynamic>? orderRow;
+      try {
+        orderRow = await db.getOrder(widget.orderId);
+      } catch (e) {
+        AppLogger.warning('getOrder check failed: $e');
+      }
+
+      if (orderRow == null) {
+        // Create order using current cart + checkout details
+        final auth = ref.read(authStateProvider);
+        final userId = auth.user?.id;
+        final cartState = ref.read(cartProvider);
+        final restaurantId = cartState.restaurantId;
+        final deliveryAddress = cartState.selectedAddress?.toJson() ??
+            {'type': cartState.deliveryMethod.name};
+
+        if (userId == null || userId.isEmpty || restaurantId == null || restaurantId.isEmpty) {
+          AppLogger.error('Missing data to create order after payment',
+              error: 'userId=$userId restaurantId=$restaurantId');
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => PaymentResultScreen(
+                  orderId: widget.orderId,
+                  success: false,
+                  paymentReference: params['m_payment_id'],
+                  errorMessage:
+                      'Payment verified, but we could not place your order (missing checkout details). Please try again or contact support.',
+                ),
+              ),
+            );
+          }
+          return;
+        }
+
+        try {
+          await ref.read(placeOrderProvider.notifier).placeOrder(
+                orderId: widget.orderId,
+                userId: userId,
+                restaurantId: restaurantId,
+                deliveryAddress: deliveryAddress,
+                paymentMethod: 'payfast',
+                tipAmount: cartState.tipAmount,
+                promoCode: cartState.promoCode,
+                specialInstructions: cartState.deliveryNotes,
+              );
+        } catch (e) {
+          AppLogger.warning('placeOrder after payment threw: $e');
+        }
+
+        // Re-check existence (idempotency)
+        try {
+          orderRow = await db.getOrder(widget.orderId);
+        } catch (e) {
+          AppLogger.warning('getOrder after creation failed: $e');
+        }
+      }
 
       if (mounted) {
-        // Navigate to confirmation screen
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => PaymentConfirmationScreen(
+            builder: (context) => PaymentResultScreen(
               orderId: widget.orderId,
-              success: success,
+              success: orderRow != null,
               paymentReference: params['m_payment_id'],
-              errorMessage: success ? null : 'Payment processing failed',
+              errorMessage: orderRow != null
+                  ? null
+                  : 'We verified your payment but could not place your order. Please try again from the cart or contact support.',
             ),
           ),
         );
@@ -146,7 +231,7 @@ class _PayFastPaymentScreenState extends ConsumerState<PayFastPaymentScreen> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => PaymentConfirmationScreen(
+            builder: (context) => PaymentResultScreen(
               orderId: widget.orderId,
               success: false,
               errorMessage: 'Failed to verify payment. Please contact support.',
@@ -195,7 +280,7 @@ class _PayFastPaymentScreenState extends ConsumerState<PayFastPaymentScreen> {
       ),
     );
 
-    if (confirm == true) {
+    if (confirm ?? false) {
       _handlePaymentCancel();
     }
 
@@ -310,6 +395,12 @@ class _PayFastPaymentScreenState extends ConsumerState<PayFastPaymentScreen> {
               },
               icon: const Icon(Icons.refresh),
               label: const Text('Try Again'),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.payment),
+              label: const Text('Use Different Method'),
             ),
             const SizedBox(height: 12),
             TextButton(

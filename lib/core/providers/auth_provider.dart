@@ -1,5 +1,10 @@
+import 'dart:async';
+import 'dart:io' show Platform;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+
 import 'package:food_delivery_app/core/services/database_service.dart';
 import 'package:food_delivery_app/core/services/auth_service.dart';
 import 'package:food_delivery_app/core/services/role_service.dart';
@@ -69,6 +74,8 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
   }
 
   late final RoleService _roleService;
+  StreamSubscription<String>? _fcmTokenSub;
+
 
   void _initializeAuthListener() {
     try {
@@ -89,8 +96,13 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
         if (user != null) {
           // User is signed in - load roles
           await _loadUserRoles(user);
+          // Upsert FCM token and listen for refreshes
+          await _upsertDeviceTokenIfAvailable();
+          await _ensureFcmTokenRefreshListener();
         } else {
-          // User is signed out
+          // User is signed out: clean up listener and remove device token
+          await _cancelFcmTokenRefreshListener();
+          await _deleteDeviceTokenIfAvailable();
           state = AuthState(user: null, isAuthenticated: false);
         }
       });
@@ -157,11 +169,11 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
             isPrimary: true,
           );
         }
-        
+
         // Fetch the created role from database to get complete data
         final primaryRole = await _roleService.getPrimaryRole(response.user!.id);
         final allRoles = await _roleService.getUserRoles(response.user!.id);
-        
+
         state = state.copyWith(
           isLoading: false,
           primaryRole: primaryRole,
@@ -218,7 +230,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
       final response = await AuthService().signInWithGoogle();
-      
+
       // Update state with authenticated user
       if (response.user != null) {
         state = AuthState(
@@ -229,7 +241,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
       } else {
         state = state.copyWith(isLoading: false);
       }
-      
+
       return response;
     } on AuthException catch (e) {
       // Handle user cancellation gracefully (no error message)
@@ -256,7 +268,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
       final response = await AuthService().signInWithApple();
-      
+
       // Update state with authenticated user
       if (response.user != null) {
         state = AuthState(
@@ -267,7 +279,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
       } else {
         state = state.copyWith(isLoading: false);
       }
-      
+
       return response;
     } on AuthException catch (e) {
       // Handle user cancellation gracefully (no error message)
@@ -293,6 +305,10 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
   Future<void> signOut() async {
     state = state.copyWith(isLoading: true);
     try {
+      // Best-effort: delete current device token before signing out (RLS requires auth)
+      await _deleteDeviceTokenIfAvailable();
+      await _cancelFcmTokenRefreshListener();
+
       await AuthService().signOut();
       // Clear all state including roles
       state = AuthState(user: null, isAuthenticated: false);
@@ -380,6 +396,86 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
         isLoading: false,
         errorMessage: 'Failed to switch role: ${e.toString()}',
       );
+    }
+  }
+
+  // --- FCM device token management ---
+  Future<void> _ensureFcmTokenRefreshListener() async {
+    if (!DatabaseService().isInitialized) return;
+    // Avoid duplicate listeners
+    await _cancelFcmTokenRefreshListener();
+    try {
+      // Attempt initial upsert (safe if already done)
+      final initialToken = await FirebaseMessaging.instance.getToken();
+      if (initialToken != null && state.user != null) {
+        await _upsertDeviceTokenIfAvailable(initialToken);
+      }
+    } catch (e) {
+      // Non-fatal
+      print('FCM initial token upsert failed: $e');
+    }
+    _fcmTokenSub = FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
+      try {
+        if (state.user != null) {
+          await _upsertDeviceTokenIfAvailable(newToken);
+        }
+      } catch (e) {
+        print('FCM onTokenRefresh upsert failed: $e');
+      }
+    });
+  }
+
+  Future<void> _cancelFcmTokenRefreshListener() async {
+    try {
+      await _fcmTokenSub?.cancel();
+    } catch (_) {}
+    _fcmTokenSub = null;
+  }
+
+  Future<void> _upsertDeviceTokenIfAvailable([String? tokenOverride]) async {
+    try {
+      if (!DatabaseService().isInitialized) return;
+      final userId = state.user?.id ?? DatabaseService().client.auth.currentUser?.id;
+      if (userId == null) return;
+
+      final token = tokenOverride ?? await FirebaseMessaging.instance.getToken();
+      if (token == null || token.isEmpty) return;
+
+      String platform;
+      try {
+        if (Platform.isIOS) {
+          platform = 'ios';
+        } else if (Platform.isAndroid) {
+          platform = 'android';
+        } else {
+          platform = 'web';
+        }
+      } catch (_) {
+        platform = 'android';
+      }
+
+      await DatabaseService().client.from('user_devices').upsert({
+        'user_id': userId,
+        'fcm_token': token,
+        'platform': platform,
+        'is_active': true,
+        'last_used_at': DateTime.now().toIso8601String(),
+      }, onConflict: 'fcm_token');
+    } catch (e) {
+      // Non-fatal: do not block auth flow
+      print('Warning: failed to upsert device token: $e');
+    }
+  }
+
+  Future<void> _deleteDeviceTokenIfAvailable() async {
+    try {
+      if (!DatabaseService().isInitialized) return;
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token == null || token.isEmpty) return;
+      await DatabaseService().client.from('user_devices').delete().eq('fcm_token', token);
+    } catch (e) {
+      // Non-fatal cleanup
+      print('Warning: failed to delete device token: $e');
     }
   }
 }

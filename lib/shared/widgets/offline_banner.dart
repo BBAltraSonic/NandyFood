@@ -6,8 +6,7 @@ import 'dart:async';
 /// Provider for connectivity status
 final connectivityProvider = StreamProvider<List<ConnectivityResult>>((ref) {
   // connectivity_plus v5.0+ uses List<ConnectivityResult>
-  // Cast to ensure type compatibility
-  return Connectivity().onConnectivityChanged as Stream<List<ConnectivityResult>>;
+  return Connectivity().onConnectivityChanged;
 });
 
 /// Banner widget that shows connection status

@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:food_delivery_app/shared/models/menu_item.dart';
 import 'package:food_delivery_app/features/order/presentation/providers/cart_provider.dart';
+import 'package:food_delivery_app/features/restaurant/data/dtos/menu_item_dto.dart';
+import 'package:food_delivery_app/features/restaurant/data/dtos/menu_modifier_dto.dart';
+import 'package:food_delivery_app/features/restaurant/data/repositories/menu_repository.dart';
 
 /// Model for dish size options
 class DishSize {
@@ -68,12 +71,50 @@ class DishCustomizationModal extends StatefulWidget {
 }
 
 class _DishCustomizationModalState extends State<DishCustomizationModal> {
-  // Selected customizations
+  // Dynamic modifiers DTO/state
+  MenuItemDTO? _dto;
+  final Map<String, Set<String>> _selectedByGroup = {};
+  bool _loadingModifiers = false;
+
+  // Fallback (legacy) selected customizations
   int _selectedSizeIndex = 1; // Default to Medium
   final Set<String> _selectedToppings = {};
   double _spiceLevel = 1.0; // Default spice level
   final TextEditingController _instructionsController = TextEditingController();
   int _quantity = 1;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadModifiers();
+  }
+
+  bool get _useDynamic => _dto?.hasModifiers == true;
+
+  Future<void> _loadModifiers() async {
+    setState(() => _loadingModifiers = true);
+    final repo = MenuRepository();
+    final dto = await repo.fetchMenuItemWithModifiers(widget.menuItem.id);
+    if (!mounted) return;
+
+    if (dto != null && dto.modifierGroups.isNotEmpty) {
+      for (final g in dto.modifierGroups) {
+        if (!_selectedByGroup.containsKey(g.id)) {
+          _selectedByGroup[g.id] = {};
+        }
+        if (g.type == MenuModifierType.single) {
+          if (g.required && g.options.isNotEmpty) {
+            _selectedByGroup[g.id] = {g.options.first.id};
+          }
+        }
+      }
+    }
+
+    setState(() {
+      _dto = dto;
+      _loadingModifiers = false;
+    });
+  }
 
   @override
   void dispose() {
@@ -83,6 +124,11 @@ class _DishCustomizationModalState extends State<DishCustomizationModal> {
 
   /// Calculate total price with customizations
   double get _totalPrice {
+    if (_useDynamic && _dto != null) {
+      final selections = _selectedByGroup.map((k, v) => MapEntry(k, v.toList()));
+      return _dto!.computeFinalPrice(selections) * _quantity;
+    }
+
     final basePrice =
         widget.menuItem.price * dishSizes[_selectedSizeIndex].priceMultiplier;
     final toppingsPrice = _selectedToppings.fold(0.0, (sum, toppingName) {
@@ -94,6 +140,15 @@ class _DishCustomizationModalState extends State<DishCustomizationModal> {
 
   /// Build customizations map
   Map<String, dynamic> get _customizations {
+    if (_useDynamic && _dto != null) {
+      final selections = _selectedByGroup.map((k, v) => MapEntry(k, v.toList()));
+      final unitPrice = _dto!.computeFinalPrice(selections);
+      return {
+        'modifierSelections': selections,
+        'computedUnitPrice': unitPrice,
+      };
+    }
+
     return {
       'size': dishSizes[_selectedSizeIndex].label,
       'sizeMultiplier': dishSizes[_selectedSizeIndex].priceMultiplier,
@@ -157,16 +212,8 @@ class _DishCustomizationModalState extends State<DishCustomizationModal> {
                       const SizedBox(height: 24),
                     ],
 
-                    // Size selector
-                    _buildSizeSelector(),
-                    const SizedBox(height: 24),
-
-                    // Toppings/add-ons
-                    _buildToppingsSection(),
-                    const SizedBox(height: 24),
-
-                    // Spice level
-                    _buildSpiceLevelSlider(),
+                    // Customization content (dynamic groups if available)
+                    _buildCustomizationContent(),
                     const SizedBox(height: 24),
 
                     // Special instructions
@@ -208,6 +255,115 @@ class _DishCustomizationModalState extends State<DishCustomizationModal> {
             )
           : _buildPlaceholderImage(),
     );
+  }
+
+
+  /// Build customization content: dynamic groups if available, else legacy UI
+  Widget _buildCustomizationContent() {
+    if (_loadingModifiers) {
+      return const Center(child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: CircularProgressIndicator(),
+      ));
+    }
+    if (_useDynamic && _dto != null) {
+      return _buildDynamicModifiersSection();
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSizeSelector(),
+        const SizedBox(height: 24),
+        _buildToppingsSection(),
+        const SizedBox(height: 24),
+        _buildSpiceLevelSlider(),
+      ],
+    );
+  }
+
+  Widget _buildDynamicModifiersSection() {
+    final groups = _dto?.modifierGroups ?? const [];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final g in groups) ...[
+          Padding(
+            padding: const EdgeInsets.only(top: 8, bottom: 8),
+            child: Text(
+              g.name,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+          ),
+          _buildGroupChips(g),
+          const SizedBox(height: 12),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildGroupChips(MenuModifierGroup group) {
+    final selected = _selectedByGroup[group.id] ?? {};
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final option in group.options)
+          Padding(
+            padding: const EdgeInsets.only(right: 0),
+            child: group.type == MenuModifierType.single
+                ? ChoiceChip(
+                    selected: selected.contains(option.id),
+                    label: Text(_formatOptionLabel(option)),
+                    selectedColor: Colors.deepOrange,
+                    labelStyle: TextStyle(
+                      color: selected.contains(option.id)
+                          ? Colors.white
+                          : Colors.black87,
+                    ),
+                    onSelected: (isSelected) {
+                      setState(() {
+                        _selectedByGroup[group.id] = {option.id};
+                      });
+                    },
+                  )
+                : FilterChip(
+                    selected: selected.contains(option.id),
+                    label: Text(_formatOptionLabel(option)),
+                    selectedColor: Colors.deepOrange,
+                    labelStyle: TextStyle(
+                      color: selected.contains(option.id)
+                          ? Colors.white
+                          : Colors.black87,
+                    ),
+                    onSelected: (isSelected) {
+                      setState(() {
+                        final set = _selectedByGroup[group.id] ?? {};
+                        if (isSelected) {
+                          set.add(option.id);
+                        } else {
+                          set.remove(option.id);
+                        }
+                        _selectedByGroup[group.id] = set;
+                      });
+                    },
+                  ),
+          ),
+      ],
+    );
+  }
+
+  String _formatOptionLabel(MenuModifierOption opt) {
+    final hasMult = opt.multiplier != 1.0;
+    final hasDelta = opt.priceDelta != 0.0;
+    if (!hasMult && !hasDelta) return opt.name;
+
+    final parts = <String>[];
+    if (hasMult) parts.add('x${opt.multiplier.toStringAsFixed(opt.multiplier % 1 == 0 ? 0 : 2)}');
+    if (hasDelta) {
+      final sign = opt.priceDelta >= 0 ? '+' : '-';
+      parts.add('$sign\$${opt.priceDelta.abs().toStringAsFixed(2)}');
+    }
+    return '${opt.name} (${parts.join(' ')})';
   }
 
   /// Build placeholder image

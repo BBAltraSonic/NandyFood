@@ -204,6 +204,36 @@ class PayFastService {
     }
   }
 
+  /// Verify payment response with backend
+  Future<bool> _verifyWithBackend(Map<String, String> responseData) async {
+    try {
+      final response = await _dio.post(
+        Config.paymentVerifyUrl,
+        data: responseData,
+        options: Options(
+          headers: {'Content-Type': 'application/json'},
+          validateStatus: (status) => status != null && status < 500,
+        ),
+      );
+
+      AppLogger.http('POST', Config.paymentVerifyUrl,
+          statusCode: response.statusCode, body: response.data);
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data is Map) {
+          final success = data['success'] == true || data['valid'] == true;
+          return success;
+        }
+      }
+      return false;
+    } catch (e, stack) {
+      AppLogger.error('Failed to verify with backend', error: e, stack: stack);
+      return false;
+    }
+  }
+
+
   /// Process payment response from return URL
   Future<Map<String, dynamic>> processPaymentResponse({
     required Map<String, String> responseData,
@@ -218,18 +248,29 @@ class PayFastService {
         throw PaymentProcessingException('Missing payment reference');
       }
 
-      // Update payment transaction status
+      // Verify via backend; fallback to PayFast validation if backend is unavailable
+      bool isValid = await _verifyWithBackend(responseData);
+      if (!isValid) {
+        AppLogger.info('Backend verification failed or invalid. Falling back to PayFast validation');
+        isValid = await _validateWithPayFast(responseData);
+      }
+
+      // Update payment transaction status in DB
       await _updatePaymentStatus(
         paymentRef: paymentRef,
         status: paymentStatus ?? 'unknown',
         responseData: responseData,
       );
 
+      final success = (paymentStatus == 'COMPLETE') && isValid;
+
       final result = {
-        'success': paymentStatus == 'COMPLETE',
+        'success': success,
         'payment_reference': paymentRef,
         'status': paymentStatus,
-        'message': _getStatusMessage(paymentStatus ?? 'unknown'),
+        'message': success
+            ? _getStatusMessage(paymentStatus ?? 'unknown')
+            : 'Payment validation failed',
       };
 
       AppLogger.function('PayFastService.processPaymentResponse', 'EXIT',

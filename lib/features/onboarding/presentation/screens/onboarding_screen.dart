@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:food_delivery_app/core/routing/route_paths.dart';
+
 import 'package:food_delivery_app/features/onboarding/models/onboarding_page_data.dart';
 import 'package:food_delivery_app/features/onboarding/providers/onboarding_provider.dart';
 import 'package:food_delivery_app/features/onboarding/widgets/onboarding_page_widget.dart';
@@ -33,7 +35,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Future<void> _completeOnboarding() async {
     await ref.read(onboardingCompletedProvider.notifier).completeOnboarding();
     if (mounted) {
-      context.go('/home');
+      context.go(RoutePaths.home);
     }
   }
 
@@ -65,16 +67,20 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       body: Stack(
         children: [
           // PageView with onboarding pages
-          PageView.builder(
-            controller: _pageController,
-            onPageChanged: _onPageChanged,
-            itemCount: OnboardingPages.pages.length,
-            itemBuilder: (context, index) {
-              return OnboardingPageWidget(
-                pageData: OnboardingPages.pages[index],
-                onLocationPermissionGranted: isLastPage ? _completeOnboarding : null,
-              );
-            },
+          Semantics(
+            label: 'Onboarding page \\${_currentPage + 1} of \\${OnboardingPages.pages.length}',
+            hint: 'Swipe left or right to navigate onboarding pages',
+            child: PageView.builder(
+              controller: _pageController,
+              onPageChanged: _onPageChanged,
+              itemCount: OnboardingPages.pages.length,
+              itemBuilder: (context, index) {
+                return OnboardingPageWidget(
+                  pageData: OnboardingPages.pages[index],
+                  onLocationPermissionGranted: isLastPage ? _completeOnboarding : null,
+                );
+              },
+            ),
           ),
 
           // Top skip button
@@ -83,24 +89,29 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               padding: const EdgeInsets.all(16.0),
               child: Align(
                 alignment: Alignment.topRight,
-                child: TextButton(
-                  onPressed: _completeOnboarding,
-                  style: TextButton.styleFrom(
-                    backgroundColor: Colors.white.withValues(alpha: 0.2),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 10,
+                child: Semantics(
+                  button: true,
+                  label: 'Skip onboarding',
+                  hint: 'Skips onboarding and opens the home screen',
+                  child: TextButton(
+                    onPressed: _completeOnboarding,
+                    style: TextButton.styleFrom(
+                      backgroundColor: Colors.white.withValues(alpha: 0.2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                  child: const Text(
-                    'Skip',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
+                    child: const Text(
+                      'Skip',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
                 ),
@@ -136,16 +147,21 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       children: [
                         // Back button
                         if (_currentPage > 0)
-                          IconButton(
-                            onPressed: _previousPage,
-                            icon: const Icon(Icons.arrow_back),
-                            color: Colors.white,
-                            iconSize: 32,
-                            padding: const EdgeInsets.all(12),
-                            style: IconButton.styleFrom(
-                              backgroundColor: Colors.white.withValues(alpha: 0.2),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
+                          Semantics(
+                            button: true,
+                            label: 'Previous onboarding page',
+                            hint: 'Navigates to the previous onboarding page',
+                            child: IconButton(
+                              onPressed: _previousPage,
+                              icon: const Icon(Icons.arrow_back),
+                              color: Colors.white,
+                              iconSize: 32,
+                              padding: const EdgeInsets.all(12),
+                              style: IconButton.styleFrom(
+                                backgroundColor: Colors.white.withValues(alpha: 0.2),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
                               ),
                             ),
                           )
@@ -156,26 +172,33 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         Expanded(
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                            child: ElevatedButton(
-                              onPressed: _nextPage,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: OnboardingPages.pages[_currentPage]
-                                    .backgroundColor,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 16,
+                            child: Semantics(
+                              button: true,
+                              label: isLastPage ? 'Get started' : 'Next page',
+                              hint: isLastPage
+                                  ? 'Completes onboarding and opens the home screen'
+                                  : 'Moves to the next onboarding page',
+                              child: ElevatedButton(
+                                onPressed: _nextPage,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  foregroundColor: OnboardingPages.pages[_currentPage]
+                                      .backgroundColor,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                  elevation: 4,
                                 ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                                elevation: 4,
-                              ),
-                              child: Text(
-                                isLastPage ? 'Get Started' : 'Next',
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.5,
+                                child: Text(
+                                  isLastPage ? 'Get Started' : 'Next',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.5,
+                                  ),
                                 ),
                               ),
                             ),
@@ -203,23 +226,28 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final isActive = index == _currentPage;
     final color = OnboardingPages.pages[_currentPage].backgroundColor;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      width: isActive ? 32 : 8,
-      height: 8,
-      decoration: BoxDecoration(
-        color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(4),
-        boxShadow: isActive
-            ? [
-                BoxShadow(
-                  color: Colors.white.withValues(alpha: 0.3),
-                  blurRadius: 8,
-                  spreadRadius: 2,
-                ),
-              ]
-            : null,
+    return Semantics(
+      label:
+          'Onboarding progress: page \\${index + 1} of \\${OnboardingPages.pages.length}',
+      selected: isActive,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        width: isActive ? 32 : 8,
+        height: 8,
+        decoration: BoxDecoration(
+          color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.4),
+          borderRadius: BorderRadius.circular(4),
+          boxShadow: isActive
+              ? [
+                  BoxShadow(
+                    color: Colors.white.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    spreadRadius: 2,
+                  ),
+                ]
+              : null,
+        ),
       ),
     );
   }

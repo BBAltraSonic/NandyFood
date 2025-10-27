@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:food_delivery_app/core/routing/route_paths.dart';
+
 import 'package:food_delivery_app/core/providers/auth_provider.dart';
 import 'package:food_delivery_app/shared/models/user_role.dart';
 
@@ -271,9 +273,9 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
       // Navigate based on selected role
       if (_selectedRole == UserRoleType.restaurantOwner) {
         // Check if user has a restaurant, otherwise go to registration
-        context.go('/restaurant/register');
+        context.go(RoutePaths.restaurantRegister);
       } else {
-        context.go('/home');
+        context.go(RoutePaths.home);
       }
     } catch (e) {
       if (!mounted) return;

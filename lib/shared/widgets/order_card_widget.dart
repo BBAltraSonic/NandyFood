@@ -24,7 +24,7 @@ class OrderCardWidget extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       elevation: 2,
-      shadowColor: Colors.black.withOpacity(0.08),
+      shadowColor: Colors.black.withValues(alpha: 0.08),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(28),
@@ -99,7 +99,7 @@ class OrderCardWidget extends StatelessWidget {
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
+                                color: Colors.black.withValues(alpha: 0.05),
                                 blurRadius: 4,
                                 offset: const Offset(0, 2),
                               ),
@@ -179,33 +179,33 @@ class OrderCardWidget extends StatelessWidget {
 
     switch (status.toLowerCase()) {
       case 'pending':
-        backgroundColor = Colors.orange.withOpacity(0.15);
+        backgroundColor = Colors.orange.withValues(alpha: 0.15);
         textColor = Colors.orange.shade700;
         displayStatus = 'Pending';
         break;
       case 'confirmed':
       case 'preparing':
-        backgroundColor = AppTheme.cookingStatus.withOpacity(0.15);
+        backgroundColor = AppTheme.cookingStatus.withValues(alpha: 0.15);
         textColor = AppTheme.cookingStatus;
         displayStatus = 'Cooking';
         break;
       case 'ready':
-        backgroundColor = AppTheme.finishedStatus.withOpacity(0.15);
+        backgroundColor = AppTheme.finishedStatus.withValues(alpha: 0.15);
         textColor = AppTheme.finishedStatus;
         displayStatus = 'Ready';
         break;
       case 'completed':
-        backgroundColor = Colors.green.withOpacity(0.15);
+        backgroundColor = Colors.green.withValues(alpha: 0.15);
         textColor = Colors.green.shade700;
         displayStatus = 'Finished';
         break;
       case 'cancelled':
-        backgroundColor = Colors.red.withOpacity(0.15);
+        backgroundColor = Colors.red.withValues(alpha: 0.15);
         textColor = Colors.red.shade700;
         displayStatus = 'Cancelled';
         break;
       default:
-        backgroundColor = Colors.grey.withOpacity(0.15);
+        backgroundColor = Colors.grey.withValues(alpha: 0.15);
         textColor = Colors.grey.shade700;
         displayStatus = status;
     }

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -235,6 +236,25 @@ class OrderTrackingNotifier extends StateNotifier<OrderTrackingState> {
   StreamSubscription<Map<String, dynamic>>? _orderSubscription;
   StreamSubscription<Map<String, dynamic>>? _deliverySubscription;
   StreamSubscription<Map<String, dynamic>>? _driverLocationSubscription;
+  // Throttle configuration for driver location updates
+  static const Duration _minEmitInterval = Duration(seconds: 1);
+  static const double _minDistanceMeters = 10; // ignore tiny jitter
+
+  DateTime? _lastDriverEmitAt;
+  double? _lastEmittedLat;
+  double? _lastEmittedLng;
+
+  double _approxDistanceMeters(double lat1, double lng1, double lat2, double lng2) {
+    // Quick equirectangular approximation for small distances
+    const double metersPerDegree = 111320.0;
+    final double meanLatRad = ((lat1 + lat2) / 2) * (math.pi / 180.0);
+    final double dLat = (lat2 - lat1) * (math.pi / 180.0);
+    final double dLng = (lng2 - lng1) * (math.pi / 180.0);
+    final double x = dLng * math.cos(meanLatRad);
+    final double y = dLat;
+    return math.sqrt(x * x + y * y) * 6371000; // R * angle ~= meters
+  }
+
 
   /// Initialize tracking
   Future<void> _initialize() async {
@@ -316,7 +336,7 @@ class OrderTrackingNotifier extends StateNotifier<OrderTrackingState> {
   void _handleDeliveryUpdate(Map<String, dynamic> data) {
     try {
       final driverId = data['driver_id'] as String?;
-      
+
       state = state.copyWith(
         driverId: driverId,
         driverName: data['driver_name'] as String?,
@@ -345,34 +365,57 @@ class OrderTrackingNotifier extends StateNotifier<OrderTrackingState> {
         .listen(_handleDriverLocationUpdate);
   }
 
-  /// Handle driver location updates
+  /// Handle driver location updates (throttled + distance filtered)
   void _handleDriverLocationUpdate(Map<String, dynamic> data) {
     try {
       final lat = (data['latitude'] as num?)?.toDouble();
       final lng = (data['longitude'] as num?)?.toDouble();
 
-      if (lat != null && lng != null) {
-        state = state.copyWith(
-          driverLatitude: lat,
-          driverLongitude: lng,
-          lastUpdated: DateTime.now(),
-        );
+      if (lat == null || lng == null) return;
 
-        // Calculate distance if customer location is available
-        // This would require fetching the order's delivery address coordinates
-        // For now, we'll get it from the data if available
-        if (data['distance_to_customer'] != null) {
-          final distance = (data['distance_to_customer'] as num).toDouble();
-          state = state.copyWith(distanceToCustomer: distance);
+      final now = DateTime.now();
 
-          // Trigger 'nearby' status if within 1km
-          if (distance < 1.0 && state.status != OrderStatus.nearby) {
-            _updateStatusToNearby();
-          }
+      // If we have a last emission, decide whether to skip this update
+      if (_lastEmittedLat != null && _lastEmittedLng != null) {
+        final timeOk = _lastDriverEmitAt == null || now.difference(_lastDriverEmitAt!) >= _minEmitInterval;
+        final dist = _approxDistanceMeters(_lastEmittedLat!, _lastEmittedLng!, lat, lng);
+        final distOk = dist >= _minDistanceMeters;
+
+        // Skip if both too soon and too small to matter
+        if (!timeOk && !distOk) {
+          if (kDebugMode) debugPrint('Throttled driver update (dt & dist)');
+          return;
         }
-
-        debugPrint('Driver location updated: $lat, $lng');
+        // Also skip if movement is negligible even if interval passed
+        if (!distOk) {
+          if (kDebugMode) debugPrint('Ignored tiny driver movement (${dist.toStringAsFixed(1)}m)');
+          return;
+        }
       }
+
+      // Emit update
+      state = state.copyWith(
+        driverLatitude: lat,
+        driverLongitude: lng,
+        lastUpdated: now,
+      );
+
+      _lastEmittedLat = lat;
+      _lastEmittedLng = lng;
+      _lastDriverEmitAt = now;
+
+      // Calculate distance if customer location is available
+      if (data['distance_to_customer'] != null) {
+        final distance = (data['distance_to_customer'] as num).toDouble();
+        state = state.copyWith(distanceToCustomer: distance);
+
+        // Trigger 'nearby' status if within 1km
+        if (distance < 1.0 && state.status != OrderStatus.nearby) {
+          _updateStatusToNearby();
+        }
+      }
+
+      if (kDebugMode) debugPrint('Driver location updated: $lat, $lng');
     } catch (e) {
       debugPrint('Error handling driver location update: $e');
     }
@@ -382,7 +425,7 @@ class OrderTrackingNotifier extends StateNotifier<OrderTrackingState> {
   Future<void> _updateStatusToNearby() async {
     try {
       final supabase = Supabase.instance.client;
-      
+
       await supabase.from('orders').update({
         'status': 'nearby',
         'updated_at': DateTime.now().toIso8601String(),

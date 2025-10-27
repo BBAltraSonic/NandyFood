@@ -1,5 +1,5 @@
-import 'dart:async';
 
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -31,7 +31,7 @@ class _LiveTrackingMapState extends State<LiveTrackingMap>
   late AnimationController _animationController;
   late Animation<double> _latAnimation;
   late Animation<double> _lngAnimation;
-  
+
   LatLng? _previousDriverLocation;
   LatLng? _currentAnimatedLocation;
   bool _isInitialized = false;
@@ -59,12 +59,26 @@ class _LiveTrackingMapState extends State<LiveTrackingMap>
   void didUpdateWidget(LiveTrackingMap oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    // Animate driver location change
+    // Animate driver location change with small-movement gating
     if (oldWidget.driverLocation != widget.driverLocation) {
-      _animateDriverMovement(
-        from: _currentAnimatedLocation ?? oldWidget.driverLocation,
-        to: widget.driverLocation,
+      final dist = _approxDistanceMeters(
+        oldWidget.driverLocation.latitude,
+        oldWidget.driverLocation.longitude,
+        widget.driverLocation.latitude,
+        widget.driverLocation.longitude,
       );
+
+      // Skip tiny movements to reduce animation churn
+      if (dist >= 5) {
+        if (_animationController.isAnimating && dist < 20) {
+          // If animating and movement is small, skip starting another animation
+        } else {
+          _animateDriverMovement(
+            from: _currentAnimatedLocation ?? oldWidget.driverLocation,
+            to: widget.driverLocation,
+          );
+        }
+      }
     }
 
     // Update map bounds if destination changed
@@ -106,6 +120,18 @@ class _LiveTrackingMapState extends State<LiveTrackingMap>
       });
   }
 
+  double _approxDistanceMeters(double lat1, double lng1, double lat2, double lng2) {
+    const double R = 6371000; // meters
+    final phi1 = lat1 * (math.pi / 180);
+    final phi2 = lat2 * (math.pi / 180);
+    final dPhi = (lat2 - lat1) * (math.pi / 180);
+    final dLambda = (lng2 - lng1) * (math.pi / 180);
+    final a = math.sin(dPhi / 2) * math.sin(dPhi / 2) +
+        math.cos(phi1) * math.cos(phi2) * math.sin(dLambda / 2) * math.sin(dLambda / 2);
+    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+    return R * c;
+  }
+
   void _fitBounds() {
     if (!_isInitialized) return;
 
@@ -145,6 +171,7 @@ class _LiveTrackingMapState extends State<LiveTrackingMap>
               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
               userAgentPackageName: 'com.example.food_delivery_app',
               tileProvider: NetworkTileProvider(),
+              keepBuffer: 2,
             ),
 
             // Route polyline

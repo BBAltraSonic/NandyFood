@@ -13,6 +13,63 @@ class AppLogger {
   static const String _white = '\x1B[37m';
   static const String _bold = '\x1B[1m';
 
+  // --- Security: scrub sensitive data from logs ---
+  static const _sensitiveKeys = {
+    'authorization', 'auth', 'token', 'access_token', 'refresh_token',
+    'secret', 'password', 'pass', 'api_key', 'apikey', 'client_secret', 'signature'
+  };
+
+  static dynamic _scrub(dynamic value, {String? keyHint}) {
+    try {
+      if (value == null) return null;
+      // If key indicates sensitive content, mask fully
+      if (keyHint != null && _sensitiveKeys.contains(keyHint.toLowerCase())) {
+        return '***';
+      }
+      if (value is Map) {
+        return value.map((k, v) => MapEntry(k, _scrub(v, keyHint: k.toString())));
+      }
+      if (value is Iterable) {
+        return value.map((e) => _scrub(e)).toList();
+      }
+      if (value is String) {
+        return _scrubString(value);
+      }
+      return value;
+    } catch (_) {
+      return value;
+    }
+  }
+
+  static String _scrubString(String input) {
+    var s = input;
+
+    // Mask key-value secrets like: token=..., "password":"...", Authorization: Bearer xxx
+    final keyValue = RegExp(
+      '''(authorization|auth|token|access_token|refresh_token|secret|password|api[_-]?key|client_secret|signature)\\s*[:=]\\s*(".*?"|'.*?'|[^,\\s]+)''',
+      caseSensitive: false,
+    );
+    s = s.replaceAllMapped(keyValue, (m) {
+      final key = m.group(1) ?? 'secret';
+      return '$key: ***';
+    });
+
+    // Mask Bearer tokens
+    final bearer = RegExp(r'bearer\s+[A-Za-z0-9\-_.]+', caseSensitive: false);
+    s = s.replaceAllMapped(bearer, (m) => 'Bearer ***');
+
+    // If the whole string looks like a JWT or long token, mask partially
+    if (RegExp(r'^[A-Za-z0-9\-_.]{24,}$').hasMatch(s)) {
+      if (s.length > 10) {
+        s = s.substring(0, 4) + '***' + s.substring(s.length - 4);
+      } else {
+        s = '***';
+      }
+    }
+    return s;
+  }
+
+
   static void init(String message) {
     _log('🔷 INIT', message, _cyan);
   }
@@ -44,12 +101,13 @@ class AppLogger {
   }
 
   static void info(String message, {Map<String, dynamic>? data, String? details}) {
-    _log('📘 INFO', message, _blue);
+    _log('📘 INFO', _scrubString(message), _blue);
     if (details != null) {
-      debugPrint('$_blue   └─ $details$_reset');
+      debugPrint('$_blue   └─ ${_scrubString(details)}$_reset');
     }
     if (data != null && data.isNotEmpty) {
-      data.forEach((key, value) {
+      final scrubbed = _scrub(data) as Map?;
+      scrubbed?.forEach((key, value) {
         debugPrint('$_blue   └─ $key: $value$_reset');
       });
     }
@@ -57,12 +115,13 @@ class AppLogger {
 
   static void debug(String message, {dynamic data, String? details}) {
     if (kDebugMode) {
-      _log('🔍 DEBUG', message, _magenta);
+      _log('🔍 DEBUG', _scrubString(message), _magenta);
       if (details != null) {
-        debugPrint('$_magenta   └─ $details$_reset');
+        debugPrint('$_magenta   └─ ${_scrubString(details)}$_reset');
       }
       if (data != null) {
-        debugPrint('$_magenta   └─ Data: $data$_reset');
+        final scrubbed = _scrub(data);
+        debugPrint('$_magenta   └─ Data: $scrubbed$_reset');
       }
     }
   }
@@ -98,13 +157,14 @@ class AppLogger {
 
   static void http(String method, String url, {int? statusCode, dynamic body}) {
     debugPrint('$_magenta┌─ HTTP $method$_reset');
-    debugPrint('$_magenta│  URL: $url$_reset');
+    debugPrint('$_magenta│  URL: ${_scrubString(url)}$_reset');
     if (statusCode != null) {
       final color = statusCode >= 200 && statusCode < 300 ? _green : _red;
       debugPrint('$color│  Status: $statusCode$_reset');
     }
     if (body != null) {
-      debugPrint('$_magenta│  Body: $body$_reset');
+      final scrubbed = _scrub(body);
+      debugPrint('$_magenta│  Body: $scrubbed$_reset');
     }
     debugPrint('$_magenta└─$_reset');
   }
@@ -115,13 +175,14 @@ class AppLogger {
     dynamic data,
     int? count,
   }) {
-    debugPrint('$_yellow┌─ 🗄️  DATABASE $operation$_reset');
-    debugPrint('$_yellow│  Table: $table$_reset');
+    debugPrint('$_yellow┌─ 🗄️  DATABASE ${_scrubString(operation)}$_reset');
+    debugPrint('$_yellow│  Table: ${_scrubString(table)}$_reset');
     if (count != null) {
       debugPrint('$_yellow│  Count: $count records$_reset');
     }
     if (data != null) {
-      debugPrint('$_yellow│  Data: $data$_reset');
+      final scrubbed = _scrub(data);
+      debugPrint('$_yellow│  Data: $scrubbed$_reset');
     }
     debugPrint('$_yellow└─$_reset');
   }
@@ -182,10 +243,11 @@ class AppLogger {
         .toIso8601String()
         .split('T')[1]
         .split('.')[0];
-    debugPrint('$color[$timestamp] $level: $message$_reset');
+    final safe = _scrubString(message);
+    debugPrint('$color[$timestamp] $level: $safe$_reset');
 
     // Also log to developer console for better debugging
-    developer.log(message, name: level, time: DateTime.now());
+    developer.log(safe, name: level, time: DateTime.now());
   }
 
   /// Log app lifecycle events

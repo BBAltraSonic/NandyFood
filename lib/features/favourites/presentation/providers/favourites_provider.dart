@@ -6,6 +6,8 @@ import '../../../../core/utils/app_logger.dart';
 import '../../../../shared/models/restaurant.dart';
 import '../../../../shared/models/menu_item.dart';
 
+import '../../../../core/services/cache_service.dart';
+
 /// Favourite type enum
 enum FavouriteType {
   restaurant,
@@ -169,6 +171,27 @@ class FavouritesNotifier extends StateNotifier<FavouritesState> {
 
       AppLogger.info('Loading favourites for user: $userId');
 
+      // 1) Try cache first for immediate UX
+      final cached = CacheService.instance.getCachedFavourites(userId);
+      if (cached != null) {
+        final cachedFavourites = <FavouriteItem>[];
+        for (final item in cached) {
+          try {
+            cachedFavourites.add(FavouriteItem.fromJson(item));
+          } catch (e) {
+            AppLogger.error('Error parsing cached favourite item', error: e);
+          }
+        }
+        if (cachedFavourites.isNotEmpty) {
+          state = state.copyWith(
+            favourites: cachedFavourites,
+            isLoading: false,
+            lastUpdated: DateTime.now(),
+          );
+        }
+      }
+
+      // 2) Fetch fresh data from Supabase
       final response = await _supabase
           .from('favourites')
           .select('''
@@ -194,6 +217,15 @@ class FavouritesNotifier extends StateNotifier<FavouritesState> {
         isLoading: false,
         lastUpdated: DateTime.now(),
       );
+
+      // 3) Update cache with fresh payload
+      try {
+        final List<Map<String, dynamic>> rawList =
+            List<Map<String, dynamic>>.from((response as List).map((e) => Map<String, dynamic>.from(e as Map)));
+        await CacheService.instance.cacheFavourites(userId, rawList);
+      } catch (e) {
+        AppLogger.error('Failed to cache favourites after fetch', error: e);
+      }
 
       AppLogger.success('Loaded ${favourites.length} favourites');
     } catch (e, stack) {
@@ -242,6 +274,16 @@ class FavouritesNotifier extends StateNotifier<FavouritesState> {
         lastUpdated: DateTime.now(),
       );
 
+      // Update cache
+      try {
+        await CacheService.instance.cacheFavourites(
+          userId,
+          state.favourites.map((f) => f.toJson()).toList(),
+        );
+      } catch (e) {
+        AppLogger.error('Failed to update favourites cache after adding restaurant', error: e);
+      }
+
       AppLogger.success('Restaurant added to favourites');
       return true;
     } catch (e, stack) {
@@ -288,6 +330,16 @@ class FavouritesNotifier extends StateNotifier<FavouritesState> {
         lastUpdated: DateTime.now(),
       );
 
+      // Update cache
+      try {
+        await CacheService.instance.cacheFavourites(
+          userId,
+          state.favourites.map((f) => f.toJson()).toList(),
+        );
+      } catch (e) {
+        AppLogger.error('Failed to update favourites cache after adding menu item', error: e);
+      }
+
       AppLogger.success('Menu item added to favourites');
       return true;
     } catch (e, stack) {
@@ -321,6 +373,16 @@ class FavouritesNotifier extends StateNotifier<FavouritesState> {
         lastUpdated: DateTime.now(),
       );
 
+      // Update cache
+      try {
+        await CacheService.instance.cacheFavourites(
+          userId,
+          state.favourites.map((f) => f.toJson()).toList(),
+        );
+      } catch (e) {
+        AppLogger.error('Failed to update favourites cache after removing restaurant', error: e);
+      }
+
       AppLogger.success('Restaurant removed from favourites');
       return true;
     } catch (e, stack) {
@@ -353,6 +415,16 @@ class FavouritesNotifier extends StateNotifier<FavouritesState> {
             .toList(),
         lastUpdated: DateTime.now(),
       );
+
+      // Update cache
+      try {
+        await CacheService.instance.cacheFavourites(
+          userId,
+          state.favourites.map((f) => f.toJson()).toList(),
+        );
+      } catch (e) {
+        AppLogger.error('Failed to update favourites cache after removing menu item', error: e);
+      }
 
       AppLogger.success('Menu item removed from favourites');
       return true;
@@ -400,6 +472,16 @@ class FavouritesNotifier extends StateNotifier<FavouritesState> {
         favourites: [],
         lastUpdated: DateTime.now(),
       );
+
+      // Update cache
+      try {
+        await CacheService.instance.cacheFavourites(
+          userId,
+          const [],
+        );
+      } catch (e) {
+        AppLogger.error('Failed to update favourites cache after clearing', error: e);
+      }
 
       AppLogger.success('All favourites cleared');
       return true;

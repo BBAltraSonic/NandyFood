@@ -253,7 +253,7 @@ class _DeliveryStatusScreenState extends ConsumerState<DeliveryStatusScreen>
                   ),
                 ],
               ),
-              if (order.status == 'pending' || order.status == 'confirmed')
+              if (order.status == OrderStatus.placed || order.status == OrderStatus.confirmed)
                 Padding(
                   padding: const EdgeInsets.only(top: 16),
                   child: SizedBox(
@@ -276,8 +276,8 @@ class _DeliveryStatusScreenState extends ConsumerState<DeliveryStatusScreen>
   }
 
   Widget _buildHistoryOrderCard(Order order) {
-    final isDelivered = order.status == 'delivered';
-    final isCancelled = order.status == 'cancelled';
+    final isDelivered = order.status == OrderStatus.delivered;
+    final isCancelled = order.status == OrderStatus.cancelled;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -342,7 +342,7 @@ class _DeliveryStatusScreenState extends ConsumerState<DeliveryStatusScreen>
                   Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
                   const SizedBox(width: 8),
                   Text(
-                    _formatHistoryDate(order.updatedAt ?? order.createdAt),
+                    _formatHistoryDate(order.updatedAt),
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey[600],

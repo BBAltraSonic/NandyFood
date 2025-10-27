@@ -14,7 +14,6 @@ class CartScreen extends ConsumerStatefulWidget {
 
 class _CartScreenState extends ConsumerState<CartScreen> {
   final TextEditingController _promoController = TextEditingController();
-  bool _promoApplied = false;
   final Map<String, String> _menuItemNames = {};
   final Map<String, String?> _menuItemImages = {};
 
@@ -418,9 +417,6 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     ref.listen<CartState>(cartProvider, (previous, current) {
       if (previous?.promoCode != current.promoCode &&
           current.promoCode != null) {
-        setState(() {
-          _promoApplied = true;
-        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
@@ -520,10 +516,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                 icon: const Icon(Icons.close, color: Colors.green),
                 onPressed: () {
                   ref.read(cartProvider.notifier).applyPromoCode('');
-                  setState(() {
-                    _promoController.clear();
-                    _promoApplied = false;
-                  });
+                  _promoController.clear();
                 },
               ),
             ],

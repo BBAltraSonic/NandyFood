@@ -1,24 +1,30 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:food_delivery_app/core/services/delivery_tracking_service.dart';
 import 'package:food_delivery_app/shared/models/delivery.dart';
 import 'package:food_delivery_app/shared/models/order.dart';
-import 'package:food_delivery_app/shared/widgets/loading_indicator.dart';
-import 'package:food_delivery_app/shared/widgets/delivery_tracking_widget.dart';
+import 'package:food_delivery_app/core/services/database_service.dart';
+import 'package:food_delivery_app/shared/widgets/delivery_tracking_map_widget.dart';
+
 
 class OrderTrackingScreen extends ConsumerStatefulWidget {
   final Order? order;
+  final String? orderId;
 
-  const OrderTrackingScreen({Key? key, this.order}) : super(key: key);
+  const OrderTrackingScreen({Key? key, this.order, this.orderId}) : super(key: key);
 
   @override
-  ConsumerState<OrderTrackingScreen> createState() =>
-      _OrderTrackingScreenState();
+  ConsumerState<OrderTrackingScreen> createState() => _OrderTrackingScreenState();
 }
 
 class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
   late DeliveryTrackingService _deliveryService;
   Stream<Delivery>? _deliveryStream;
+  StreamSubscription<Delivery>? _deliverySub;
+  Order? _order;
+  String? _loadError;
+
   Delivery? _currentDelivery;
 
   @override
@@ -26,22 +32,66 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
     super.initState();
     _deliveryService = DeliveryTrackingService();
 
-    // Start tracking the delivery
-    if (widget.order != null) {
-      _deliveryService.startTrackingDelivery(widget.order!.id);
-      _deliveryStream = _deliveryService.getDeliveryStream(widget.order!.id);
+    // Determine the order and begin tracking
+    _order = widget.order;
+    final orderId = widget.order?.id ?? widget.orderId;
 
-      // Get initial delivery status
-      _deliveryService.getDeliveryStatus(widget.order!.id).then((delivery) {
+    if (orderId != null && orderId.isNotEmpty) {
+      _deliveryService.startTrackingDelivery(orderId);
+      _deliveryStream = _deliveryService.getDeliveryStream(orderId);
+
+      // Listen to the delivery stream for real-time updates
+      _deliverySub = _deliveryStream?.listen((delivery) {
+        if (!mounted) return;
         setState(() {
           _currentDelivery = delivery;
         });
       });
+
+      // Get initial delivery status
+      _deliveryService.getDeliveryStatus(orderId).then((delivery) {
+        if (!mounted) return;
+        setState(() {
+          _currentDelivery = delivery;
+        });
+      });
+
+      // If only an ID was provided, fetch the full order details
+      if (_order == null) {
+        _loadOrderById(orderId);
+      }
     }
   }
 
+  Future<void> _loadOrderById(String id) async {
+    try {
+      setState(() {
+        _loadError = null;
+      });
+      final data = await DatabaseService().getOrder(id);
+      if (!mounted) return;
+      if (data != null) {
+        setState(() {
+          _order = Order.fromJson(data);
+          _loadError = null;
+        });
+      } else {
+        setState(() {
+          _loadError = 'We couldn\'t find this order.';
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loadError = 'Failed to load order. Please check your connection and try again.';
+      });
+    }
+  }
+
+
   @override
   void dispose() {
+    _deliverySub?.cancel();
     _deliveryService.stopTrackingDelivery();
     super.dispose();
   }
@@ -49,10 +99,53 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Track Order'), centerTitle: true),
-      body: widget.order == null
-          ? const Center(child: Text('No order to track'))
+      appBar: AppBar(
+        title: const Text('Track Order'),
+        centerTitle: true,
+      ),
+      body: _order == null
+          ? (_loadError != null
+              ? _buildLoadError(context)
+              : const Center(child: CircularProgressIndicator()))
           : _buildOrderTrackingContent(context),
+    );
+  }
+
+  Widget _buildLoadError(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: Colors.redAccent),
+            const SizedBox(height: 12),
+            Text(_loadError ?? 'An error occurred', textAlign: TextAlign.center),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () => Navigator.of(context).maybePop(),
+                  icon: const Icon(Icons.arrow_back),
+                  label: const Text('Back'),
+                ),
+                const SizedBox(width: 12),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    final id = widget.order?.id ?? widget.orderId;
+                    if (id != null) {
+                      _loadOrderById(id);
+                    }
+                  },
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Try Again'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -78,7 +171,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
                           style: TextStyle(fontSize: 14, color: Colors.grey),
                         ),
                         Text(
-                          widget.order!.id,
+                          _order!.id,
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -95,7 +188,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
                           style: TextStyle(fontSize: 14, color: Colors.grey),
                         ),
                         Text(
-                          '\$${widget.order!.totalAmount.toStringAsFixed(2)}',
+                          '\$${_order!.totalAmount.toStringAsFixed(2)}',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -128,16 +221,16 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
 
             const SizedBox(height: 16),
 
+            // Delivery map
+            DeliveryTrackingMapWidget(
+              order: _order!,
+              delivery: _currentDelivery,
+            ),
+
+            const SizedBox(height: 16),
+
             // Delivery progress
-            if (_currentDelivery != null)
-              DeliveryTrackingWidget(
-                delivery: _currentDelivery!,
-                progress: _deliveryService.getDeliveryProgress(
-                  widget.order!.id,
-                ),
-              )
-            else
-              const Center(child: LoadingIndicator()),
+            _buildDeliveryProgress(),
 
             const SizedBox(height: 24),
 
@@ -155,69 +248,82 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
   }
 
   Widget _buildDriverInfo() {
-    final driverInfo = _deliveryService.getDriverInfo(widget.order!.id);
+    return FutureBuilder<Map<String, dynamic>>(
+      future: Future.value(_deliveryService.getDriverInfo(_order!.id)),
+      builder: (context, snapshot) {
+        final driverInfo = snapshot.data ?? {};
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Your Driver',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            Row(
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.grey.shade300,
-                  ),
-                  child: const Icon(Icons.person, size: 30, color: Colors.grey),
+                const Text(
+                  'Your Driver',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        driverInfo['name'],
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.grey.shade300,
                       ),
-                      Row(
+                      child: const Icon(
+                        Icons.person,
+                        size: 30,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.star, color: Colors.amber, size: 16),
-                          const SizedBox(width: 4),
                           Text(
-                            driverInfo['rating'].toString(),
-                            style: const TextStyle(fontSize: 14),
+                            driverInfo['name'] ?? 'Driver',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.star,
+                                color: Colors.amber,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                (driverInfo['rating'] ?? 0.0).toString(),
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    // In a real app, this would initiate a call
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Calling driver...')),
-                    );
-                  },
-                  child: const Icon(Icons.phone),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        // In a real app, this would initiate a call
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Calling driver...')),
+                        );
+                      },
+                      child: const Icon(Icons.phone),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -263,9 +369,16 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          const Icon(Icons.star, color: Colors.amber, size: 16),
+                          const Icon(
+                            Icons.star,
+                            color: Colors.amber,
+                            size: 16,
+                          ),
                           const SizedBox(width: 4),
-                          const Text('4.5', style: TextStyle(fontSize: 14)),
+                          const Text(
+                            '4.5',
+                            style: TextStyle(fontSize: 14),
+                          ),
                           const SizedBox(width: 8),
                           const Icon(
                             Icons.location_on,
@@ -287,6 +400,56 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildDeliveryProgress() {
+    return FutureBuilder<int>(
+      future: Future.value(_deliveryService.getDeliveryProgress(_order!.id)),
+      builder: (context, snapshot) {
+        final progress = snapshot.data ?? 0;
+
+        // Placeholder for DeliveryTrackingWidget until we create or update it
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Delivery Progress',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                LinearProgressIndicator(
+                  value: progress / 100,
+                  backgroundColor: Colors.grey.shade200,
+                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.deepOrange),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _getProgressText(progress),
+                  style: const TextStyle(fontSize: 16),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  String _getProgressText(int progress) {
+    if (progress < 25) {
+      return 'Preparing your order';
+    } else if (progress < 50) {
+      return 'Order ready, waiting for driver';
+    } else if (progress < 75) {
+      return 'Driver is on the way';
+    } else if (progress < 100) {
+      return 'Driver is almost there!';
+    } else {
+      return 'Delivered!';
+    }
   }
 
   Color _getStatusColor(DeliveryStatus? status) {

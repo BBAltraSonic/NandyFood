@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:food_delivery_app/core/routing/route_paths.dart';
+
 import 'package:food_delivery_app/core/providers/auth_provider.dart';
 import 'package:food_delivery_app/shared/models/user_role.dart';
 
@@ -10,7 +12,7 @@ class RoleSelectorWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authStateProvider);
-    
+
     if (!authState.hasMultipleRoles) {
       return const SizedBox.shrink();
     }
@@ -80,12 +82,12 @@ class RoleSelectorWidget extends ConsumerWidget {
       await ref.read(authStateProvider.notifier).switchRole(role.role);
       if (context.mounted) {
         Navigator.of(context).pop(); // Close loading dialog
-        
+
         // Navigate to appropriate screen
         if (role.isRestaurantOwner) {
-          context.go('/restaurant/dashboard');
+          context.go(RoutePaths.restaurantDashboard);
         } else {
-          context.go('/home');
+          context.go(RoutePaths.home);
         }
       }
     } catch (e) {

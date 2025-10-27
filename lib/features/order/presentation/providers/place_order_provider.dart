@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:food_delivery_app/features/order/presentation/providers/cart_provider.dart';
 import 'package:food_delivery_app/features/order/presentation/providers/order_provider.dart';
 import 'package:food_delivery_app/shared/models/order.dart';
-import 'package:food_delivery_app/shared/models/order_item.dart';
 import 'package:uuid/uuid.dart';
 
 // Place order state class to represent the place order state
@@ -74,6 +73,7 @@ class PlaceOrderNotifier extends StateNotifier<PlaceOrderState> {
     double? tipAmount,
     String? promoCode,
     String? specialInstructions,
+    String? orderId,
   }) async {
     state = state.copyWith(isLoading: true);
 
@@ -96,16 +96,15 @@ class PlaceOrderNotifier extends StateNotifier<PlaceOrderState> {
       final discountAmount = cartState.discountAmount;
       final totalAmount = cartState.totalAmount;
 
-      // Generate order ID and estimated delivery time
-      const uuid = Uuid();
-      final orderId = uuid.v4();
+      // Use provided order ID if exists, otherwise generate a new one
+      final generatedOrderId = orderId ?? const Uuid().v4();
       final estimatedDeliveryTime = DateTime.now().add(
         const Duration(minutes: 30), // Default 30 minutes delivery time
       );
 
       // Create order data
       final order = Order(
-        id: orderId,
+        id: generatedOrderId,
         userId: userId,
         restaurantId: restaurantId,
         deliveryAddress: deliveryAddress,

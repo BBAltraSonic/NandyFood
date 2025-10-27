@@ -316,7 +316,6 @@ class RoleService {
         case UserRoleType.deliveryDriver:
           return '/driver/dashboard';
         case UserRoleType.consumer:
-        default:
           return '/home';
       }
     } catch (e) {

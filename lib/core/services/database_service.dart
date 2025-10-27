@@ -200,6 +200,59 @@ class DatabaseService {
     }
   }
 
+  /// Get restaurants with pagination support
+  /// Uses limit/offset via Supabase range(start, end)
+  Future<List<Map<String, dynamic>>> getRestaurantsPaginated({
+    int limit = 20,
+    int page = 0,
+    String? cuisineType,
+    double? minRating,
+    int? maxDeliveryTime,
+  }) async {
+    try {
+      final int start = page * limit;
+      final int end = start + limit - 1;
+
+      var query = client.from('restaurants').select().eq('is_active', true);
+
+      if (cuisineType != null && cuisineType.trim().isNotEmpty) {
+        query = query.ilike('cuisine_type', '%$cuisineType%');
+      }
+      if (minRating != null) {
+        query = query.gte('rating', minRating);
+      }
+      if (maxDeliveryTime != null) {
+        query = query.lte('estimated_delivery_time', maxDeliveryTime);
+      }
+
+      final response = await query
+          .order('rating', ascending: false)
+          .range(start, end);
+
+      return response;
+    } catch (e) {
+      // Handle error
+      return [];
+    }
+  }
+
+  /// Get top rated/featured restaurants
+  Future<List<Map<String, dynamic>>> getFeaturedRestaurants({int limit = 5}) async {
+    try {
+      final response = await client
+          .from('restaurants')
+          .select()
+          .eq('is_active', true)
+          .gte('rating', 4.5)
+          .order('rating', ascending: false)
+          .limit(limit);
+      return response;
+    } catch (e) {
+      return [];
+    }
+  }
+
+
   // Menu Item Operations
   Future<List<Map<String, dynamic>>> getMenuItems(String restaurantId) async {
     try {
@@ -465,8 +518,8 @@ class DatabaseService {
           .from('promotions')
           .select()
           .eq('is_active', true)
-          .gte('valid_from', now)
-          .lte('valid_until', now);
+          .lte('valid_from', now)
+          .gte('valid_until', now);
       return response;
     } catch (e) {
       // Handle error
@@ -488,6 +541,42 @@ class DatabaseService {
       return response;
     } catch (e) {
       // Promotion not found or not active
+      return null;
+    }
+  }
+
+  /// Server-side validation via Postgres function validate_promotion_code
+  /// Returns a map with keys: valid (bool), discount_amount (num), message (String)
+  Future<Map<String, dynamic>?> validatePromotionCodeRPC({
+    required String promoCode,
+    required String userId,
+    required double orderAmount,
+    String? restaurantId,
+  }) async {
+    if (!isInitialized) return null;
+    try {
+      final params = {
+        'promo_code_param': promoCode.toUpperCase(),
+        'user_id_param': userId,
+        'order_amount_param': orderAmount,
+        'restaurant_id_param': restaurantId,
+      };
+      final response = await client.rpc('validate_promotion_code', params: params);
+      if (response == null) return null;
+
+      // Supabase can return a List for set-returning functions
+      if (response is List) {
+        if (response.isEmpty) return null;
+        final first = response.first;
+        if (first is Map<String, dynamic>) return first;
+        return null;
+      }
+      if (response is Map<String, dynamic>) {
+        return response;
+      }
+      return null;
+    } catch (e) {
+      // On any error, return null and let caller fallback to client-side validation
       return null;
     }
   }

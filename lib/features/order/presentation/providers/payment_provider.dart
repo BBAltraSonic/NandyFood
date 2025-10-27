@@ -4,6 +4,8 @@ import 'package:food_delivery_app/core/services/connectivity_service.dart';
 import 'package:food_delivery_app/core/utils/app_logger.dart';
 import 'package:food_delivery_app/core/utils/error_handler.dart';
 import 'package:food_delivery_app/shared/models/payment_transaction.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+
 
 /// Payment status enum
 enum PaymentStatus {
@@ -72,10 +74,13 @@ class PaymentState {
 
 /// Payment notifier
 class PaymentNotifier extends StateNotifier<PaymentState> {
-  PaymentNotifier() : super(PaymentState());
+  PaymentNotifier({PayFastService? payfastService, ConnectivityService? connectivityService})
+      : _payfastService = payfastService ?? PayFastService(),
+        _connectivityService = connectivityService ?? ConnectivityService(),
+        super(PaymentState());
 
-  final PayFastService _payfastService = PayFastService();
-  final ConnectivityService _connectivityService = ConnectivityService();
+  final PayFastService _payfastService;
+  final ConnectivityService _connectivityService;
 
   /// Initialize payment and get payment data for WebView
   Future<Map<String, String>> initializePayment({
@@ -128,6 +133,19 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
         paymentReference: paymentData['m_payment_id'],
         paymentData: paymentData,
       );
+
+      // Persist pending payment locally for recovery across restarts
+      try {
+        final box = Hive.box<dynamic>('metadata');
+        await box.put('pending_payment', {
+          'payment_ref': paymentData['m_payment_id'],
+          'order_id': orderId,
+          'amount': amount,
+          'started_at': DateTime.now().toIso8601String(),
+        });
+      } catch (e) {
+        AppLogger.warning('Failed to persist pending payment - $e');
+      }
 
       AppLogger.success('Payment initialized successfully');
       AppLogger.function('PaymentNotifier.initializePayment', 'EXIT',
@@ -185,12 +203,28 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
         );
 
         AppLogger.success('Payment processed successfully');
-        AppLogger.function('PaymentNotifier.processPaymentResponse', 'EXIT',
-            result: true);
 
+        // Clear pending payment on success
+        try {
+          final box = Hive.box<dynamic>('metadata');
+          await box.delete('pending_payment');
+        } catch (e) {
+          AppLogger.warning('Failed to clear pending payment - $e');
+        }
+
+        AppLogger.function('PaymentNotifier.processPaymentResponse', 'EXIT', result: true);
         return true;
       } else {
         // Update state to failed
+
+        // Clear pending payment on failure
+        try {
+          final box = Hive.box<dynamic>('metadata');
+          await box.delete('pending_payment');
+        } catch (e) {
+          AppLogger.warning('Failed to clear pending payment - $e');
+        }
+
         state = state.copyWith(
           status: PaymentStatus.failed,
           errorMessage: result['message'] as String?,
@@ -204,6 +238,9 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
         return false;
       }
     } catch (e, stack) {
+
+
+
       AppLogger.error('Failed to process payment response',
           error: e, stack: stack);
       state = state.copyWith(

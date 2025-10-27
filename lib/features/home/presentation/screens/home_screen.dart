@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:food_delivery_app/core/routing/route_paths.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:food_delivery_app/features/restaurant/presentation/providers/restaurant_provider.dart';
@@ -21,13 +23,31 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   LatLng? _userLocation;
   bool _isLoadingLocation = true;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _loadUserLocation();
     // Use Future.microtask to delay provider modification until after build
-    Future.microtask(() => _loadRestaurants());
+    Future.microtask(_loadRestaurants);
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final threshold = 200.0;
+    final position = _scrollController.position;
+    if (position.pixels >= position.maxScrollExtent - threshold) {
+      ref.read(restaurantProvider.notifier).loadMoreRestaurants();
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadUserLocation() async {
@@ -149,7 +169,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               Icons.shopping_cart_outlined,
                               color: theme.colorScheme.primary,
                             ),
-                            onPressed: () => context.push('/cart'),
+                            onPressed: () => context.push(RoutePaths.orderCart),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -174,7 +194,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                           child: IconButton(
                             icon: const Icon(Icons.person, color: Colors.white),
-                            onPressed: () => context.push('/profile'),
+                            onPressed: () => context.push(RoutePaths.profile),
                           ),
                         ),
                       ],
@@ -189,6 +209,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     await _loadUserLocation();
                   },
                   child: CustomScrollView(
+                    controller: _scrollController,
                     slivers: [
                       // Map View (40% of screen)
                       SliverToBoxAdapter(
@@ -212,8 +233,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       SliverToBoxAdapter(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 20.0,
-                            vertical: 8.0,
+                            horizontal: 20,
+                            vertical: 8,
                           ),
                           child: Container(
                             decoration: BoxDecoration(
@@ -251,6 +272,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     ),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
+
+
                                   child: const Icon(
                                     Icons.tune_rounded,
                                     color: Colors.white,
@@ -303,7 +326,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       // Popular Restaurants Header
                       const SliverToBoxAdapter(
                         child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16.0),
+                          padding: EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
                             'Popular Restaurants',
                             style: TextStyle(
@@ -315,6 +338,53 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
 
                       const SliverToBoxAdapter(child: SizedBox(height: 12)),
+
+                      // Dietary Filter Chips
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: const [
+                                  Icon(Icons.filter_alt_rounded, size: 18),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'Dietary filters',
+                                    style: TextStyle(fontWeight: FontWeight.w600),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: [
+                                  'Vegan',
+                                  'Vegetarian',
+                                  'Gluten-Free',
+                                  'Halal',
+                                  'Kosher',
+                                  'Keto',
+                                  'Dairy-Free',
+                                  'Nut-Free',
+                                ].map((filter) {
+                                  final selected = restaurantState.selectedDietaryRestrictions.contains(filter);
+                                  return FilterChip(
+                                    label: Text(filter),
+                                    selected: selected,
+                                    onSelected: (_) {
+                                      ref.read(restaurantProvider.notifier).toggleDietaryRestriction(filter);
+                                    },
+                                  );
+                                }).toList(),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
 
                       // Restaurant List
                       if (restaurantState.isLoading)
@@ -343,8 +413,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   restaurantState.filteredRestaurants[index];
                               return Padding(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 16.0,
-                                  vertical: 8.0,
+                                  horizontal: 16,
+                                  vertical: 8,
                                 ),
                                 child: _buildRestaurantCard(restaurant),
                               );
@@ -353,6 +423,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 restaurantState.filteredRestaurants.length,
                           ),
                         ),
+
+                      // Pagination footer
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          child: Center(
+                            child: restaurantState.isLoadingMore
+                                ? const SizedBox(
+                                    height: 24,
+                                    width: 24,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  )
+                                : (!restaurantState.hasMore
+                                    ? Text(
+                                        'No more results',
+                                        style: TextStyle(
+                                          color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                        ),
+                                      )
+                                    : const SizedBox.shrink()),
+                          ),
+                        ),
+                      ),
+
                     ],
                   ),
                 ),

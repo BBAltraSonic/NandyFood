@@ -33,8 +33,8 @@ class OfflineSyncService {
       await _loadQueueFromStorage();
       
       // Listen to connectivity changes
-      // Cast to List<ConnectivityResult> for v5.0+ compatibility
-      _connectivitySubscription = (_connectivity.onConnectivityChanged as Stream<List<ConnectivityResult>>).listen(
+      // connectivity_plus v5.0+ returns List<ConnectivityResult>
+      _connectivitySubscription = _connectivity.onConnectivityChanged.listen(
         _onConnectivityChanged,
       );
       
@@ -48,7 +48,7 @@ class OfflineSyncService {
   Future<void> _checkConnectivity() async {
     try {
       // connectivity_plus v5.0+ returns List<ConnectivityResult>
-      final results = await _connectivity.checkConnectivity() as List<ConnectivityResult>;
+      final results = await _connectivity.checkConnectivity();
       _isOnline = !results.contains(ConnectivityResult.none);
       AppLogger.info('OfflineSyncService: Connectivity status - ${_isOnline ? "Online" : "Offline"}');
     } catch (e) {

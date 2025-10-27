@@ -45,4 +45,9 @@ class Config {
 
   static bool get isProduction => payfastMode == 'live';
   static bool get isSandbox => payfastMode == 'sandbox';
+
+  // Backend payment verification endpoint
+  static String get paymentVerifyUrl =>
+      dotenv.env['PAYMENT_VERIFY_URL'] ?? '$apiBaseUrl/payment/payfast/verify';
+
 }
