@@ -32,7 +32,7 @@ class _LiveTrackingMapState extends State<LiveTrackingMap>
   late Animation<double> _latAnimation;
   late Animation<double> _lngAnimation;
 
-  LatLng? _previousDriverLocation;
+
   LatLng? _currentAnimatedLocation;
   bool _isInitialized = false;
 
@@ -45,7 +45,7 @@ class _LiveTrackingMapState extends State<LiveTrackingMap>
       duration: widget.animationDuration,
     );
 
-    _previousDriverLocation = widget.driverLocation;
+
     _currentAnimatedLocation = widget.driverLocation;
 
     // Initial map position
@@ -88,7 +88,7 @@ class _LiveTrackingMapState extends State<LiveTrackingMap>
   }
 
   void _animateDriverMovement({required LatLng from, required LatLng to}) {
-    _previousDriverLocation = from;
+
 
     _latAnimation = Tween<double>(
       begin: from.latitude,

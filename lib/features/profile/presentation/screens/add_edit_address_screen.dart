@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:food_delivery_app/shared/widgets/loading_indicator.dart';
+import 'package:food_delivery_app/core/providers/auth_provider.dart';
+import 'package:food_delivery_app/features/profile/presentation/providers/address_provider.dart';
+import 'package:food_delivery_app/shared/models/address.dart';
+import 'package:food_delivery_app/shared/widgets/location_selector_widget.dart';
 
 class AddEditAddressScreen extends ConsumerStatefulWidget {
   final String? addressId; // Null for add, populated for edit
@@ -21,6 +25,10 @@ class _AddEditAddressScreenState extends ConsumerState<AddEditAddressScreen> {
   final _cityController = TextEditingController();
   final _stateController = TextEditingController();
   final _zipCodeController = TextEditingController();
+  bool _showLocationSelector = false;
+  double? _latitude;
+  double? _longitude;
+
   final _instructionsController = TextEditingController();
 
   bool _isDefault = false;
@@ -30,16 +38,62 @@ class _AddEditAddressScreenState extends ConsumerState<AddEditAddressScreen> {
   void initState() {
     super.initState();
     if (widget.address != null) {
-      _labelController.text = widget.address!['label'] as String;
-      _streetController.text = widget.address!['street'] as String;
-      _apartmentController.text = widget.address!['apartment'] as String;
-      _cityController.text = widget.address!['city'] as String;
-      _stateController.text = widget.address!['state'] as String;
-      _zipCodeController.text = widget.address!['zipCode'] as String;
-      _instructionsController.text = widget.address!['instructions'] as String;
-      _isDefault = widget.address!['isDefault'] as bool;
+      _labelController.text = (widget.address!['label'] as String?) ?? '';
+      _streetController.text = (widget.address!['street'] as String?) ?? '';
+      _apartmentController.text = (widget.address!['apartment'] as String?) ?? '';
+      _cityController.text = (widget.address!['city'] as String?) ?? '';
+      _stateController.text = (widget.address!['state'] as String?) ?? '';
+      _zipCodeController.text = (widget.address!['zipCode'] as String?) ?? '';
+      _instructionsController.text = (widget.address!['instructions'] as String?) ?? '';
+      _isDefault = (widget.address!['isDefault'] as bool?) ?? false;
+      _latitude = (widget.address!['latitude'] as num?)?.toDouble();
+      _longitude = (widget.address!['longitude'] as num?)?.toDouble();
+    } else if (widget.addressId != null) {
+      final list = ref.read(addressProvider).addresses;
+      Address? a;
+      for (final x in list) {
+        if (x.id == widget.addressId) {
+          a = x;
+          break;
+        }
+      }
+      if (a != null) {
+        _labelController.text = _labelFromType(a.type);
+        _streetController.text = a.street;
+        _apartmentController.text = a.apartment ?? '';
+        _cityController.text = a.city;
+        _stateController.text = a.state;
+        _zipCodeController.text = a.zipCode;
+        _instructionsController.text = a.deliveryInstructions ?? '';
+        _isDefault = a.isDefault;
+        _latitude = a.latitude;
+        _longitude = a.longitude;
+      }
     }
   }
+
+  AddressType _typeFromLabel(String label) {
+    switch (label.toLowerCase()) {
+      case 'home':
+        return AddressType.home;
+      case 'work':
+        return AddressType.work;
+      default:
+        return AddressType.other;
+    }
+  }
+
+  String _labelFromType(AddressType type) {
+    switch (type) {
+      case AddressType.home:
+        return 'Home';
+      case AddressType.work:
+        return 'Work';
+      case AddressType.other:
+        return 'Other';
+    }
+  }
+
 
   @override
   void dispose() {
@@ -83,6 +137,7 @@ class _AddEditAddressScreenState extends ConsumerState<AddEditAddressScreen> {
                         prefixIcon: Icon(Icons.label),
                         border: OutlineInputBorder(),
                       ),
+
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter an address label';
@@ -119,6 +174,36 @@ class _AddEditAddressScreenState extends ConsumerState<AddEditAddressScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
+
+                    // Use Map/Search
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _showLocationSelector = !_showLocationSelector;
+                          });
+                        },
+                        icon: const Icon(Icons.map),
+                        label: Text(_showLocationSelector ? 'Hide Map/Search' : 'Use Map or Search'),
+                      ),
+                    ),
+                    if (_showLocationSelector) ...[
+                      const SizedBox(height: 12),
+                      LocationSelectorWidget(
+                        onLocationSelected: (loc) {
+                          setState(() {
+                            _streetController.text = (loc['street'] ?? '').toString();
+                            _cityController.text = (loc['city'] ?? '').toString();
+                            _stateController.text = (loc['state'] ?? '').toString();
+                            _zipCodeController.text = (loc['postalCode'] ?? '').toString();
+                            _latitude = (loc['latitude'] as num?)?.toDouble();
+                            _longitude = (loc['longitude'] as num?)?.toDouble();
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                    ],
 
                     // City
                     TextFormField(
@@ -259,38 +344,95 @@ class _AddEditAddressScreenState extends ConsumerState<AddEditAddressScreen> {
   }
 
   Future<void> _saveAddress() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
+    if (!_formKey.currentState!.validate()) return;
 
-      try {
-        // In a real implementation, this would save the address to the database
-        await Future.delayed(const Duration(seconds: 1));
+    final userId = ref.read(authStateProvider).user?.id;
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You need to be signed in to save an address.')),
+      );
+      return;
+    }
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              widget.address == null
-                  ? 'Address added successfully'
-                  : 'Address updated successfully',
-            ),
-            backgroundColor: Colors.green,
-          ),
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Map label to AddressType
+      final label = _labelController.text.trim().toLowerCase();
+      AddressType type;
+      if (label == 'home') {
+        type = AddressType.home;
+      } else if (label == 'work') {
+        type = AddressType.work;
+      } else {
+        type = AddressType.other;
+      }
+
+      final now = DateTime.now();
+      final notifier = ref.read(addressProvider.notifier);
+
+      if (widget.address == null) {
+        final address = Address(
+          id: 'temp_${now.millisecondsSinceEpoch}',
+          userId: userId,
+          type: type,
+          street: _streetController.text.trim(),
+          city: _cityController.text.trim(),
+          state: _stateController.text.trim(),
+          zipCode: _zipCodeController.text.trim(),
+          country: 'South Africa',
+          isDefault: _isDefault,
+          createdAt: now,
+          updatedAt: now,
+          apartment: _apartmentController.text.trim().isEmpty ? null : _apartmentController.text.trim(),
+          deliveryInstructions: _instructionsController.text.trim().isEmpty ? null : _instructionsController.text.trim(),
+          latitude: _latitude,
+          longitude: _longitude,
         );
-
-        // Navigate back to the address screen
-        if (context.mounted) {
-          Navigator.of(context).pop();
-        }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error saving address: $e'),
-            backgroundColor: Colors.red,
-          ),
+        await notifier.addAddress(address);
+      } else {
+        // Editing: use provided address id when available
+        final id = (widget.addressId ?? widget.address?['id']?.toString() ?? 'temp_${now.millisecondsSinceEpoch}');
+        final address = Address(
+          id: id,
+          userId: userId,
+          type: type,
+          street: _streetController.text.trim(),
+          city: _cityController.text.trim(),
+          state: _stateController.text.trim(),
+          zipCode: _zipCodeController.text.trim(),
+          country: 'South Africa',
+          isDefault: _isDefault,
+          createdAt: now,
+          updatedAt: now,
+          apartment: _apartmentController.text.trim().isEmpty ? null : _apartmentController.text.trim(),
+          deliveryInstructions: _instructionsController.text.trim().isEmpty ? null : _instructionsController.text.trim(),
+          latitude: _latitude,
+          longitude: _longitude,
         );
-      } finally {
+        await notifier.updateAddress(address);
+      }
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(widget.address == null ? 'Address added successfully' : 'Address updated successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.of(context).pop();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error saving address: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
         setState(() {
           _isLoading = false;
         });
@@ -318,31 +460,37 @@ class _AddEditAddressScreenState extends ConsumerState<AddEditAddressScreen> {
               });
 
               try {
-                // In a real implementation, this would delete the address from the database
-                await Future.delayed(const Duration(seconds: 1));
+                final id = (widget.addressId ?? widget.address?['id']?.toString());
+                if (id == null || id.isEmpty) {
+                  throw Exception('Missing address id');
+                }
+                await ref.read(addressProvider.notifier).removeAddress(id);
 
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Address deleted successfully'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-
-                // Navigate back to the address screen
                 if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Address deleted successfully'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+
                   Navigator.of(context).pop(); // Close edit screen
                 }
               } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Error deleting address: $e'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error deleting address: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               } finally {
-                setState(() {
-                  _isLoading = false;
-                });
+                if (mounted) {
+                  setState(() {
+                    _isLoading = false;
+                  });
+                }
               }
             },
             child: const Text('Delete', style: TextStyle(color: Colors.red)),

@@ -1,0 +1,11 @@
+The first step is to place the google-services.json file in the correct location. Copy the downloaded file to android/app/google-services.json. After copying it, confirm that the package_name field in the JSON file equals com.example.food_delivery_app. If it does not match, you need to re-download the file for the correct package.
+The second step is to verify your Gradle configuration. Open android/app/build.gradle.kts and confirm that the plugins section includes id("com.google.gms.google-services"), id("com.google.firebase.firebase-perf"), and id("com.google.firebase.crashlytics"). Also confirm that defaultConfig.applicationId is set to "com.example.food_delivery_app". Then open android/build.gradle.kts, which is the project-level file, and confirm that the repositories contain google() and mavenCentral(). Note that the classpath for Google services plugin is not needed in modern setups since you already apply the plugin in the module, and Flutter handles the remaining parts.
+The third step is to ensure your Firebase console settings are correct. In the Firebase Console, navigate to Project Settings, then Your apps, then Android. Verify that the App ID, which is the package name, is com.example.food_delivery_app. Upload or confirm your SHA-1 and SHA-256 fingerprints for the build type you will run. For debug builds, use the fingerprints from %USERPROFILE%.android\debug.keystore. For release builds, use your release JKS fingerprints. If you changed fingerprints or re-uploaded them, click Save and download an updated google-services.json file and replace it again in android/app.
+The fourth step is to configure the Google server client ID for the app. Use the "Web client (Auto-created for Google Sign-in)" Server Client ID from Google Cloud credentials attached to this Firebase project, not the Android client ID. Run the app with the command flutter run --dart-define=GOOGLE_SERVER_CLIENT_ID=YOUR_SERVER_CLIENT_ID.apps.googleusercontent.com. Replace YOUR_SERVER_CLIENT_ID with your actual server client ID value.
+The fifth and final step is to clean and build the project. From the project root directory, run flutter clean, then flutter pub get, then flutter run --dart-define=GOOGLE_SERVER_CLIENT_ID=YOUR_SERVER_CLIENT_ID.apps.googleusercontent.com.
+
+https://z934793408787-85jpn4r6qqfrbd045dgu6qd9dk54a1dr.apps.googleusercontent.com/
+
+
+
+

@@ -32,9 +32,7 @@ class _FilterWidgetState extends State<FilterWidget> {
       }
     });
 
-    if (widget.onFiltersChanged != null) {
-      widget.onFiltersChanged!(_selectedOptions);
-    }
+    widget.onFiltersChanged?.call(_selectedOptions);
   }
 
   @override

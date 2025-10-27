@@ -1,0 +1,86 @@
+appId: com.example.food_delivery_app
+---
+# Test all form validations
+- launchApp
+
+# Test login form validation
+- tapOn:
+    text: "Login"
+    optional: true
+
+# Submit empty form
+- tapOn:
+    text: "Login"
+- assertVisible:
+    text: "required"
+    optional: true
+
+# Test invalid email
+- inputText: "invalid-email"
+- tapOn:
+    text: "Email"
+- tapOn:
+    text: "Login"
+- assertVisible:
+    text: "valid email"
+    optional: true
+
+# Test short password
+- clearState
+- inputText: "test@example.com"
+- tapOn:
+    text: "Email"
+- inputText: "123"
+- tapOn:
+    text: "Password"
+- tapOn:
+    text: "Login"
+- assertVisible:
+    text: "at least"
+    optional: true
+
+# Test signup validations
+- tapOn:
+    text: "Sign Up"
+
+# Test password mismatch
+- inputText: "test@example.com"
+- tapOn:
+    text: "Email"
+- inputText: "password123"
+- tapOn:
+    text: "Password"
+- inputText: "password456"
+- tapOn:
+    text: "Confirm Password"
+- tapOn:
+    text: "Sign Up"
+- assertVisible:
+    text: "match"
+    optional: true
+
+# Test address form validation
+- back
+- tapOn:
+    text: "Profile"
+- tapOn:
+    text: "Addresses"
+- tapOn:
+    text: "Add New Address"
+
+# Submit empty address form
+- tapOn:
+    text: "Save"
+- assertVisible:
+    text: "required"
+    optional: true
+
+# Test phone number validation
+- inputText: "123"
+- tapOn:
+    text: "Phone"
+- tapOn:
+    text: "Save"
+- assertVisible:
+    text: "valid phone"
+    optional: true

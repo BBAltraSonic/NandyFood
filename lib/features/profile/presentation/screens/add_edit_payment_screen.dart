@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:food_delivery_app/features/profile/presentation/providers/payment_methods_provider.dart';
+import 'package:food_delivery_app/core/providers/auth_provider.dart';
+
 import 'package:food_delivery_app/shared/widgets/loading_indicator.dart';
 
 class AddEditPaymentScreen extends ConsumerStatefulWidget {
@@ -286,7 +288,13 @@ class _AddEditPaymentScreenState extends ConsumerState<AddEditPaymentScreen> {
     try {
       final paymentMethodsNotifier = ref.read(paymentMethodsProvider.notifier);
 
+      final userId = ref.read(authStateProvider).user?.id;
+      if (userId == null) {
+        throw Exception('Not authenticated');
+      }
+
       await paymentMethodsNotifier.addPaymentMethod(
+        userId: userId,
         cardNumber: _cardNumberController.text.replaceAll(RegExp(r'\s+'), ''),
         expiryMonth: int.parse(_expiryMonthController.text),
         expiryYear: int.parse(_expiryYearController.text),

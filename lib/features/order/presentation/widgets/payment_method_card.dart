@@ -148,10 +148,12 @@ class PaymentMethodCard extends StatelessWidget {
                   // Radio button
                   Radio<bool>(
                     value: true,
+                    // ignore: deprecated_member_use
                     groupValue: isSelected,
+                    // ignore: deprecated_member_use
                     onChanged: method.enabled
                         ? (value) {
-                            if (onTap != null) onTap!();
+                            onTap?.call();
                           }
                         : null,
                   ),

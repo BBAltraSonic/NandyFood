@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:food_delivery_app/core/services/payment_service.dart';
+import 'package:food_delivery_app/features/profile/data/repositories/payment_method_repository.dart';
+
 
 // Payment method model
 class PaymentMethodInfo {
@@ -20,7 +22,29 @@ class PaymentMethodInfo {
     required this.expiryYear,
     this.isDefault = false,
   });
-}
+
+  factory PaymentMethodInfo.fromJson(Map<String, dynamic> json) {
+    return PaymentMethodInfo(
+      id: json['id'] as String,
+      type: json['type'] as String,
+      last4: json['last4'] as String,
+      brand: json['brand'] as String,
+      expiryMonth: json['expiry_month'] as int,
+      expiryYear: json['expiry_year'] as int,
+      isDefault: json['is_default'] as bool? ?? false,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'type': type,
+        'last4': last4,
+        'brand': brand,
+        'expiry_month': expiryMonth,
+        'expiry_year': expiryYear,
+        'is_default': isDefault,
+      };
+
 
 // Payment methods state
 class PaymentMethodsState {
@@ -59,42 +83,19 @@ final paymentMethodsProvider =
     );
 
 class PaymentMethodsNotifier extends StateNotifier<PaymentMethodsState> {
-  PaymentMethodsNotifier() : super(PaymentMethodsState());
+  final PaymentMethodRepository _repo;
+  PaymentMethodsNotifier({PaymentMethodRepository? repo})
+      : _repo = repo ?? PaymentMethodRepository(),
+        super(PaymentMethodsState());
 
   // Load payment methods
-  Future<void> loadPaymentMethods() async {
+  Future<void> loadPaymentMethods(String userId) async {
     state = state.copyWith(isLoading: true);
 
     try {
-      // Simulate loading payment methods
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      // For now, return some mock payment methods
-      final mockPaymentMethods = [
-        PaymentMethodInfo(
-          id: 'pm_1',
-          type: 'card',
-          last4: '4242',
-          brand: 'Visa',
-          expiryMonth: 12,
-          expiryYear: 25,
-          isDefault: true,
-        ),
-        PaymentMethodInfo(
-          id: 'pm_2',
-          type: 'card',
-          last4: '1234',
-          brand: 'Mastercard',
-          expiryMonth: 6,
-          expiryYear: 26,
-          isDefault: false,
-        ),
-      ];
-
-      state = state.copyWith(
-        paymentMethods: mockPaymentMethods,
-        isLoading: false,
-      );
+      final rows = await _repo.fetchPaymentMethods(userId);
+      final methods = rows.map((r) => PaymentMethodInfo.fromJson(r)).toList();
+      state = state.copyWith(paymentMethods: methods, isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
@@ -102,49 +103,31 @@ class PaymentMethodsNotifier extends StateNotifier<PaymentMethodsState> {
 
   // Add a new payment method
   Future<void> addPaymentMethod({
+    required String userId,
     required String cardNumber,
     required int expiryMonth,
     required int expiryYear,
     required String cvc,
-    required String holderName,
+    String? holderName,
+    bool isDefault = false,
   }) async {
     state = state.copyWith(isLoading: true);
 
     try {
-      // Validate card details
-      final paymentService = PaymentService();
-      if (!paymentService.validateCardNumber(cardNumber)) {
-        throw Exception('Invalid card number');
-      }
-
-      if (!paymentService.validateExpiryDate(expiryMonth, expiryYear)) {
-        throw Exception('Invalid expiry date');
-      }
-
-      if (!paymentService.validateCvc(cvc, cardNumber)) {
-        throw Exception('Invalid CVC');
-      }
-
-      // Simulate creating a payment method
-      await Future.delayed(const Duration(milliseconds: 800));
-
-      // Create mock payment method
-      final newPaymentMethod = PaymentMethodInfo(
-        id: 'pm_${DateTime.now().millisecondsSinceEpoch}',
-        type: 'card',
-        last4: cardNumber.substring(cardNumber.length - 4),
-        brand: paymentService.getCardBrand(cardNumber),
+      final row = await _repo.createCardPaymentMethod(
+        userId: userId,
+        cardNumber: cardNumber,
         expiryMonth: expiryMonth,
         expiryYear: expiryYear,
-        isDefault: state.paymentMethods.isEmpty,
+        cvc: cvc,
+        cardholderName: holderName,
+        isDefault: isDefault,
       );
 
-      final updatedPaymentMethods = [...state.paymentMethods, newPaymentMethod];
+      final created = PaymentMethodInfo.fromJson(row);
+      final updated = [...state.paymentMethods, created];
 
-      state = state.copyWith(
-        paymentMethods: updatedPaymentMethods,
-        isLoading: false,
-      );
+      state = state.copyWith(paymentMethods: updated, isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
@@ -155,8 +138,7 @@ class PaymentMethodsNotifier extends StateNotifier<PaymentMethodsState> {
     state = state.copyWith(isLoading: true);
 
     try {
-      // Simulate removing a payment method
-      await Future.delayed(const Duration(milliseconds: 300));
+      await _repo.deletePaymentMethod(paymentMethodId);
 
       final updatedPaymentMethods = state.paymentMethods
           .where((method) => method.id != paymentMethodId)
@@ -172,12 +154,11 @@ class PaymentMethodsNotifier extends StateNotifier<PaymentMethodsState> {
   }
 
   // Set a payment method as default
-  Future<void> setDefaultPaymentMethod(String paymentMethodId) async {
+  Future<void> setDefaultPaymentMethod(String userId, String paymentMethodId) async {
     state = state.copyWith(isLoading: true);
 
     try {
-      // Simulate setting default payment method
-      await Future.delayed(const Duration(milliseconds: 300));
+      await _repo.setDefaultPaymentMethod(userId, paymentMethodId);
 
       final updatedPaymentMethods = state.paymentMethods.map((method) {
         return method.copyWith(isDefault: method.id == paymentMethodId);

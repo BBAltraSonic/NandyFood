@@ -1,0 +1,59 @@
+appId: com.example.food_delivery_app
+---
+# Navigation stress test - rapid screen switching
+- launchApp
+
+# Repeat navigation cycle 10 times
+- repeat:
+    times: 10
+    commands:
+      - tapOn:
+          text: "Home"
+      - waitForAnimationToEnd
+      
+      - tapOn:
+          text: "Search"
+          optional: true
+      - waitForAnimationToEnd
+      
+      - tapOn:
+          text: "Favorites"
+          optional: true
+      - waitForAnimationToEnd
+      
+      - tapOn:
+          text: "Profile"
+          optional: true
+      - waitForAnimationToEnd
+
+# Test back navigation
+- repeat:
+    times: 5
+    commands:
+      - tapOn:
+          index: 0
+          id: "restaurant_card"
+          optional: true
+      - waitForAnimationToEnd
+      - back
+      - waitForAnimationToEnd
+
+# Rapid scroll test
+- tapOn:
+    text: "Home"
+- repeat:
+    times: 10
+    commands:
+      - scroll:
+          direction: DOWN
+      - scroll:
+          direction: UP
+
+# Test rapid tapping
+- repeat:
+    times: 5
+    commands:
+      - tapOn:
+          id: "search_bar"
+          optional: true
+      - back

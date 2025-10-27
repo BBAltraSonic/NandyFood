@@ -581,6 +581,139 @@ class DatabaseService {
     }
   }
 
+  // ================= Profile: Addresses =================
+  Future<List<Map<String, dynamic>>> getAddresses(String userId) async {
+    try {
+      final response = await client
+          .from('addresses')
+          .select()
+          .eq('user_id', userId)
+          .order('is_default', ascending: false)
+          .order('updated_at', ascending: false);
+      return response;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>> createAddress(Map<String, dynamic> data) async {
+    try {
+      final response = await client
+          .from('addresses')
+          .insert(data)
+          .select()
+          .single();
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> updateAddress(
+    String id,
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final response = await client
+          .from('addresses')
+          .update(data)
+          .eq('id', id)
+          .select()
+          .single();
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> deleteAddress(String id) async {
+    try {
+      await client.from('addresses').delete().eq('id', id);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Ensure only one default address per user
+  Future<void> setDefaultAddress(String userId, String addressId) async {
+    try {
+      // Clear existing defaults
+      await client
+          .from('addresses')
+          .update({'is_default': false, 'updated_at': DateTime.now().toIso8601String()})
+          .eq('user_id', userId)
+          .eq('is_default', true);
+
+      // Set new default
+      await client
+          .from('addresses')
+          .update({'is_default': true, 'updated_at': DateTime.now().toIso8601String()})
+          .eq('user_id', userId)
+          .eq('id', addressId);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // ================= Profile: Payment Methods =================
+  Future<List<Map<String, dynamic>>> getPaymentMethods(String userId) async {
+    try {
+      final response = await client
+          .from('payment_methods')
+          .select()
+          .eq('user_id', userId)
+          .order('is_default', ascending: false)
+          .order('updated_at', ascending: false);
+      return response;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>> createPaymentMethod(
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final response = await client
+          .from('payment_methods')
+          .insert(data)
+          .select()
+          .single();
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> deletePaymentMethod(String id) async {
+    try {
+      await client.from('payment_methods').delete().eq('id', id);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Ensure only one default payment method per user
+  Future<void> setDefaultPaymentMethod(String userId, String paymentMethodId) async {
+    try {
+      // Clear existing defaults
+      await client
+          .from('payment_methods')
+          .update({'is_default': false, 'updated_at': DateTime.now().toIso8601String()})
+          .eq('user_id', userId)
+          .eq('is_default', true);
+
+      // Set new default
+      await client
+          .from('payment_methods')
+          .update({'is_default': true, 'updated_at': DateTime.now().toIso8601String()})
+          .eq('user_id', userId)
+          .eq('id', paymentMethodId);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   // Auth Operations
   GoTrueClient get auth => client.auth;
 

@@ -1,0 +1,83 @@
+appId: com.example.food_delivery_app
+---
+# Complete user journey from signup to order placement
+- launchApp
+- tapOn:
+    text: "Skip"
+    optional: true
+
+# Authentication Flow
+- tapOn:
+    text: "Sign Up"
+    optional: true
+- inputText: "test_user@example.com"
+- tapOn:
+    text: "Email"
+- inputText: "password123"
+- tapOn:
+    text: "Password"
+- hideKeyboard
+- tapOn:
+    text: "Sign Up"
+- waitForAnimationToEnd
+
+# Browse Home Screen
+- assertVisible: "Home"
+- tapOn:
+    text: "Search"
+- inputText: "Pizza"
+- hideKeyboard
+- waitForAnimationToEnd
+
+# Select Restaurant
+- tapOn:
+    index: 0
+    id: "restaurant_card"
+- assertVisible: "Menu"
+- tapOn:
+    text: "Menu"
+
+# Add to Cart
+- tapOn:
+    index: 0
+    id: "menu_item_card"
+- tapOn:
+    text: "Add to Cart"
+- assertVisible:
+    id: "cart_badge"
+
+# View Cart
+- tapOn:
+    id: "cart_button"
+- assertVisible: "Cart"
+- assertVisible: "Checkout"
+
+# Proceed to Checkout
+- tapOn:
+    text: "Proceed to Checkout"
+- assertVisible: "Delivery Address"
+
+# Select Address
+- tapOn:
+    index: 0
+    id: "address_card"
+
+# Select Payment Method
+- tapOn:
+    text: "Payment Method"
+- tapOn:
+    text: "Cash on Delivery"
+
+# Place Order
+- tapOn:
+    text: "Place Order"
+- assertVisible: "Order Confirmed"
+- assertVisible:
+    id: "order_number"
+
+# View Order Tracking
+- tapOn:
+    text: "Track Order"
+- assertVisible: "Order Status"
+- assertVisible:
+    id: "delivery_map"

@@ -16,7 +16,7 @@ class OperatingHoursScreen extends ConsumerStatefulWidget {
 class _OperatingHoursScreenState extends ConsumerState<OperatingHoursScreen> {
   bool _isLoading = true;
   bool _isSaving = false;
-  String? _restaurantId;
+  late String _restaurantId;
 
   final Map<String, Map<String, dynamic>> _hours = {
     'monday': {'isOpen': true, 'open': '09:00', 'close': '22:00'},
@@ -56,9 +56,9 @@ class _OperatingHoursScreenState extends ConsumerState<OperatingHoursScreen> {
       final restaurants = await roleService.getUserRestaurants(userId);
       if (restaurants.isEmpty) return;
 
-      _restaurantId = restaurants.first;
+      _restaurantId = restaurants.first.restaurantId;
       final restaurant =
-          await _restaurantService.getRestaurant(_restaurantId!);
+          await _restaurantService.getRestaurant(_restaurantId);
 
       // Load existing hours from restaurant
       _populateHours(restaurant.openingHours);
@@ -365,7 +365,7 @@ class _OperatingHoursScreenState extends ConsumerState<OperatingHoursScreen> {
         }
       }
 
-      await _restaurantService.updateOperatingHours(_restaurantId!, hoursData);
+      await _restaurantService.updateOperatingHours(_restaurantId, hoursData);
 
       if (!mounted) return;
 

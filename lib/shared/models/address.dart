@@ -14,6 +14,8 @@ class Address {
   final DateTime updatedAt;
   final String? apartment;
   final String? deliveryInstructions;
+  final double? latitude;
+  final double? longitude;
 
   const Address({
     required this.id,
@@ -29,6 +31,8 @@ class Address {
     required this.updatedAt,
     this.apartment,
     this.deliveryInstructions,
+    this.latitude,
+    this.longitude,
   });
 
   Address copyWith({
@@ -45,6 +49,8 @@ class Address {
     DateTime? updatedAt,
     String? apartment,
     String? deliveryInstructions,
+    double? latitude,
+    double? longitude,
   }) {
     return Address(
       id: id ?? this.id,
@@ -60,42 +66,48 @@ class Address {
       updatedAt: updatedAt ?? this.updatedAt,
       apartment: apartment ?? this.apartment,
       deliveryInstructions: deliveryInstructions ?? this.deliveryInstructions,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
     );
   }
 
   factory Address.fromJson(Map<String, dynamic> json) {
     return Address(
       id: json['id'] as String,
-      userId: json['userId'] as String,
+      userId: json['user_id'] as String,
       type: _typeFromJson(json['type'] as String?),
       street: json['street'] as String,
       city: json['city'] as String,
       state: json['state'] as String,
-      zipCode: json['zipCode'] as String,
+      zipCode: json['zip_code'] as String,
       country: json['country'] as String,
-      isDefault: json['isDefault'] as bool? ?? false,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
+      isDefault: json['is_default'] as bool? ?? false,
+      createdAt: DateTime.parse(json['created_at'] as String),
+      updatedAt: DateTime.parse(json['updated_at'] as String),
       apartment: json['apartment'] as String?,
-      deliveryInstructions: json['deliveryInstructions'] as String?,
+      deliveryInstructions: json['delivery_instructions'] as String?,
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'userId': userId,
+      'user_id': userId,
       'type': type.name,
       'street': street,
       'city': city,
       'state': state,
-      'zipCode': zipCode,
+      'zip_code': zipCode,
       'country': country,
-      'isDefault': isDefault,
-      'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
+      'is_default': isDefault,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
       'apartment': apartment,
-      'deliveryInstructions': deliveryInstructions,
+      'delivery_instructions': deliveryInstructions,
+      'latitude': latitude,
+      'longitude': longitude,
     };
   }
 
@@ -125,7 +137,9 @@ class Address {
         other.country == country &&
         other.isDefault == isDefault &&
         other.apartment == apartment &&
-        other.deliveryInstructions == deliveryInstructions;
+        other.deliveryInstructions == deliveryInstructions &&
+        other.latitude == latitude &&
+        other.longitude == longitude;
   }
 
   @override
@@ -141,5 +155,7 @@ class Address {
     isDefault,
     apartment,
     deliveryInstructions,
+    latitude,
+    longitude,
   );
 }

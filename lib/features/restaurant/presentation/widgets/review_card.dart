@@ -163,9 +163,7 @@ class ReviewCard extends StatelessWidget {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              if (onDelete != null) {
-                onDelete!();
-              }
+              onDelete?.call();
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Delete'),

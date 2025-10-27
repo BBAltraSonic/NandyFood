@@ -62,7 +62,9 @@ class PaymentMethodSelectorWidget extends ConsumerWidget {
               title: Text('${method.brand} ending in ${method.last4}'),
               subtitle: Text('${method.expiryMonth}/${method.expiryYear}'),
               value: method.id,
+              // ignore: deprecated_member_use
               groupValue: paymentMethodsState.selectedPaymentMethod?.id,
+              // ignore: deprecated_member_use
               onChanged: (value) {
                 if (value != null) {
                   paymentMethodsNotifier.selectPaymentMethod(value);
@@ -72,9 +74,7 @@ class PaymentMethodSelectorWidget extends ConsumerWidget {
                       .read(cartProvider.notifier)
                       .updateSelectedPaymentMethod(value);
 
-                  if (onPaymentMethodSelected != null) {
-                    onPaymentMethodSelected!(value);
-                  }
+                  onPaymentMethodSelected?.call(value);
                 }
               },
               secondary: method.isDefault

@@ -1,33 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:food_delivery_app/core/providers/auth_provider.dart';
+import 'package:food_delivery_app/features/profile/presentation/providers/address_provider.dart';
+import 'package:food_delivery_app/shared/models/address.dart';
 import 'package:food_delivery_app/shared/widgets/loading_indicator.dart';
+import 'package:food_delivery_app/shared/widgets/error_message_widget.dart';
+import 'package:food_delivery_app/features/profile/presentation/screens/add_edit_address_screen.dart';
 
 class AddressScreen extends ConsumerWidget {
   const AddressScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Mock addresses data
-    final addresses = [
-      {
-        'id': '1',
-        'label': 'Home',
-        'address': '123 Main Street, Apt 4B, New York, NY 10001',
-        'isDefault': true,
-      },
-      {
-        'id': '2',
-        'label': 'Work',
-        'address': '456 Business Ave, Suite 101, New York, NY 1002',
-        'isDefault': false,
-      },
-      {
-        'id': '3',
-        'label': 'Gym',
-        'address': '789 Fitness Blvd, New York, NY 10003',
-        'isDefault': false,
-      },
-    ];
+    final auth = ref.watch(authStateProvider);
+    final userId = auth.user?.id;
+    final state = ref.watch(addressProvider);
+    final notifier = ref.read(addressProvider.notifier);
+
+    // Load addresses on first build when authenticated
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (userId != null && !state.isLoading && state.addresses.isEmpty) {
+        notifier.loadAddresses(userId);
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -36,173 +31,224 @@ class AddressScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () {
-              // Navigate to add new address screen
-              _navigateToAddAddress(context);
-            },
+            onPressed: () => _navigateToAddAddress(context, ref),
           ),
         ],
       ),
-      body: ListView.builder(
-        itemCount: addresses.length + 1, // +1 for the "Add New Address" option
-        itemBuilder: (context, index) {
-          if (index == addresses.length) {
-            // Add new address option
-            return Padding(
-              padding: const EdgeInsets.all(16),
-              child: OutlinedButton(
-                onPressed: () => _navigateToAddAddress(context),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  side: BorderSide(color: Colors.deepOrange),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.add, color: Colors.deepOrange),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Add New Address',
-                      style: TextStyle(color: Colors.deepOrange),
-                    ),
-                  ],
-                ),
+      body: Builder(
+        builder: (context) {
+          if (userId == null) {
+            return const Center(child: Text('Please sign in to manage addresses'));
+          }
+          if (state.isLoading && state.addresses.isEmpty) {
+            return const Center(child: LoadingIndicator());
+          }
+          if (state.errorMessage != null && state.addresses.isEmpty) {
+            return Center(
+              child: ErrorMessageWidget(
+                message: state.errorMessage!,
+                onRetry: () => notifier.loadAddresses(userId),
               ),
             );
           }
 
-          final address = addresses[index];
-          return Card(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(16),
-              leading: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.deepOrange.shade50,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.deepOrange),
-                ),
-                child: Icon(
-                  address['label'] == 'Home'
-                      ? Icons.home
-                      : address['label'] == 'Work'
-                      ? Icons.work
-                      : Icons.fitness_center,
-                  color: Colors.deepOrange,
-                ),
-              ),
-              title: Row(
-                children: [
-                  Text(
-                    address['label'] as String,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+          final addresses = state.addresses;
+          return ListView.builder(
+            itemCount: addresses.length + 1, // +1 for the "Add New Address" option
+            itemBuilder: (context, index) {
+              if (index == addresses.length) {
+                // Add new address option
+                return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: OutlinedButton(
+                    onPressed: () => _navigateToAddAddress(context, ref),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: const BorderSide(color: Colors.deepOrange),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.add, color: Colors.deepOrange),
+                        SizedBox(width: 8),
+                        Text(
+                          'Add New Address',
+                          style: TextStyle(color: Colors.deepOrange),
+                        ),
+                      ],
+                    ),
                   ),
-                  if (address['isDefault'] as bool)
-                    Container(
-                      margin: const EdgeInsets.only(left: 8),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
+                );
+              }
+
+              final address = addresses[index];
+              return Card(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.all(16),
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.deepOrange.shade50,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.deepOrange),
+                    ),
+                    child: Icon(
+                      _iconForType(address.type),
+                      color: Colors.deepOrange,
+                    ),
+                  ),
+                  title: Row(
+                    children: [
+                      Text(
+                        _labelForType(address.type),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade50,
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: Colors.green),
-                      ),
-                      child: Text(
-                        'Default',
-                        style: TextStyle(
-                          color: Colors.green[700],
-                          fontSize: 12,
+                      if (address.isDefault)
+                        Container(
+                          margin: const EdgeInsets.only(left: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade50,
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(color: Colors.green),
+                          ),
+                          child: Text(
+                            'Default',
+                            style: TextStyle(
+                              color: Colors.green[700],
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  subtitle: Text(
+                    _formatAddress(address),
+                    style: const TextStyle(height: 1.4),
+                  ),
+                  trailing: PopupMenuButton(
+                    onSelected: (value) async {
+                      if (value == 'edit') {
+                        _navigateToEditAddress(context, ref, address.id);
+                      } else if (value == 'delete') {
+                        _showDeleteConfirmationDialog(context, () async {
+                          await notifier.removeAddress(address.id);
+                        });
+                      } else if (value == 'set_default') {
+                        await notifier.setDefaultAddress(address.id);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Default address updated')),
+                          );
+                        }
+                      }
+                    },
+                    itemBuilder: (context) => const [
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit, size: 20),
+                            SizedBox(width: 10),
+                            Text('Edit'),
+                          ],
                         ),
                       ),
-                    ),
-                ],
-              ),
-              subtitle: Text(
-                address['address'] as String,
-                style: const TextStyle(height: 1.4),
-              ),
-              trailing: PopupMenuButton(
-                onSelected: (value) {
-                  if (value == 'edit') {
-                    _navigateToEditAddress(context, address['id'] as String);
-                  } else if (value == 'delete') {
-                    _showDeleteConfirmationDialog(
-                      context,
-                      address['id'] as String,
-                    );
-                  } else if (value == 'set_default') {
-                    // TODO: Implement set as default functionality
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Set as default address')),
-                    );
-                  }
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'edit',
-                    child: Row(
-                      children: [
-                        Icon(Icons.edit, size: 20),
-                        SizedBox(width: 10),
-                        Text('Edit'),
-                      ],
-                    ),
+                      PopupMenuItem(
+                        value: 'set_default',
+                        child: Row(
+                          children: [
+                            Icon(Icons.star_border, size: 20),
+                            SizedBox(width: 10),
+                            Text('Set as Default'),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete, size: 20),
+                            SizedBox(width: 10),
+                            Text('Delete'),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  const PopupMenuItem(
-                    value: 'set_default',
-                    child: Row(
-                      children: [
-                        Icon(Icons.star_border, size: 20),
-                        SizedBox(width: 10),
-                        Text('Set as Default'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        Icon(Icons.delete, size: 20),
-                        SizedBox(width: 10),
-                        Text('Delete'),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                ),
+              );
+            },
           );
         },
       ),
     );
   }
 
-  void _navigateToAddAddress(BuildContext context) {
-    // Navigate to address screen
-    // For now, show a snackbar
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Add new address functionality coming soon'),
+  IconData _iconForType(AddressType type) {
+    switch (type) {
+      case AddressType.home:
+        return Icons.home;
+      case AddressType.work:
+        return Icons.work;
+      case AddressType.other:
+        return Icons.place;
+    }
+  }
+
+  String _labelForType(AddressType type) {
+    switch (type) {
+      case AddressType.home:
+        return 'Home';
+      case AddressType.work:
+        return 'Work';
+      case AddressType.other:
+        return 'Other';
+    }
+  }
+
+  String _formatAddress(Address a) {
+    final parts = [
+      a.street,
+      if (a.apartment != null && a.apartment!.isNotEmpty) a.apartment!,
+      '${a.city}, ${a.state} ${a.zipCode}',
+    ];
+    return parts.where((e) => e.trim().isNotEmpty).join(', ');
+  }
+
+  Future<void> _navigateToAddAddress(BuildContext context, WidgetRef ref) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const AddEditAddressScreen()),
+    );
+    final userId = ref.read(authStateProvider).user?.id;
+    if (userId != null) {
+      await ref.read(addressProvider.notifier).loadAddresses(userId);
+    }
+  }
+
+  Future<void> _navigateToEditAddress(
+      BuildContext context, WidgetRef ref, String addressId) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => AddEditAddressScreen(addressId: addressId),
       ),
     );
+    final userId = ref.read(authStateProvider).user?.id;
+    if (userId != null) {
+      await ref.read(addressProvider.notifier).loadAddresses(userId);
+    }
   }
 
-  void _navigateToEditAddress(BuildContext context, String addressId) {
-    // Navigate to edit address screen
-    // For now, show a snackbar
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Edit address functionality coming soon')),
-    );
-  }
-
-  void _showDeleteConfirmationDialog(BuildContext context, String addressId) {
+  void _showDeleteConfirmationDialog(
+      BuildContext context, Future<void> Function() onConfirm) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -214,11 +260,14 @@ class AddressScreen extends ConsumerWidget {
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.of(context).pop();
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('Address deleted')));
+              await onConfirm();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Address deleted')),
+                );
+              }
             },
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),

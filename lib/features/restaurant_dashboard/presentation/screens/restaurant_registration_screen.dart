@@ -187,8 +187,9 @@ class _RestaurantRegistrationScreenState
               },
             ),
             const SizedBox(height: 16),
+            // ignore: deprecated_member_use
             DropdownButtonFormField<String>(
-              value: _selectedCuisine,
+              initialValue: _selectedCuisine,
               decoration: const InputDecoration(
                 labelText: 'Cuisine Type',
                 prefixIcon: Icon(Icons.restaurant_menu_rounded),

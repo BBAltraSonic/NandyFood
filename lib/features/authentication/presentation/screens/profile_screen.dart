@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
 import 'package:food_delivery_app/core/providers/auth_provider.dart';
+import 'package:food_delivery_app/core/routing/route_paths.dart';
+import 'package:food_delivery_app/shared/models/user_role.dart';
 import 'package:food_delivery_app/features/profile/presentation/widgets/profile_header_widget.dart';
 import 'package:food_delivery_app/shared/models/user_profile.dart';
 import 'package:food_delivery_app/features/authentication/presentation/screens/login_screen.dart';
+import 'package:food_delivery_app/features/profile/presentation/screens/profile_settings_screen.dart';
+import 'package:food_delivery_app/features/profile/presentation/screens/address_screen.dart';
+import 'package:food_delivery_app/features/profile/presentation/screens/payment_methods_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -64,23 +71,31 @@ class ProfileScreen extends ConsumerWidget {
         ],
       ),
       body: authState.isAuthenticated && authState.user != null
-          ? _buildProfileContent(context, authState.user!)
+          ? _buildProfileContent(context, ref, authState)
           : _buildNotAuthenticatedContent(context),
     );
   }
 
-  Widget _buildProfileContent(BuildContext context, user) {
+  Widget _buildProfileContent(
+    BuildContext context,
+    WidgetRef ref,
+    AuthState authState,
+  ) {
+    final user = authState.user!;
+
     // Create a UserProfile object from the Supabase user data
     final userProfile = UserProfile(
       id: user.id,
       email: user.email ?? 'No email',
-      fullName:
-          user.userMetadata?['full_name'] ??
-          user.email?.split('@')[0] ??
-          'User',
+      fullName: user.userMetadata?['full_name'] ?? user.email?.split('@')[0] ?? 'User',
       createdAt: DateTime.now(), // This would normally come from the database
       updatedAt: DateTime.now(), // This would normally come from the database
     );
+
+    final hasOwnerRole =
+        authState.allRoles.any((r) => r.role == UserRoleType.restaurantOwner);
+    final hasStaffRole =
+        authState.allRoles.any((r) => r.role == UserRoleType.restaurantStaff);
 
     return SingleChildScrollView(
       child: Padding(
@@ -90,11 +105,10 @@ class ProfileScreen extends ConsumerWidget {
             // Profile header
             ProfileHeaderWidget(
               userProfile: userProfile,
-              onEditProfile: () {
-                // TODO: Navigate to edit profile screen
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Edit Profile functionality coming soon'),
+              onEditProfile: () async {
+                await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const ProfileSettingsScreen(),
                   ),
                 );
               },
@@ -107,11 +121,10 @@ class ProfileScreen extends ConsumerWidget {
               context,
               icon: Icons.person,
               title: 'Edit Profile',
-              onTap: () {
-                // TODO: Navigate to edit profile screen
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Edit Profile functionality coming soon'),
+              onTap: () async {
+                await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const ProfileSettingsScreen(),
                   ),
                 );
               },
@@ -121,13 +134,10 @@ class ProfileScreen extends ConsumerWidget {
               context,
               icon: Icons.location_on,
               title: 'Delivery Addresses',
-              onTap: () {
-                // TODO: Navigate to addresses screen
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Delivery Addresses functionality coming soon',
-                    ),
+              onTap: () async {
+                await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const AddressScreen(),
                   ),
                 );
               },
@@ -137,15 +147,65 @@ class ProfileScreen extends ConsumerWidget {
               context,
               icon: Icons.payment,
               title: 'Payment Methods',
-              onTap: () {
-                // TODO: Navigate to payment methods screen
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Payment Methods functionality coming soon'),
+              onTap: () async {
+                await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const PaymentMethodsScreen(),
                   ),
                 );
               },
             ),
+
+            if (authState.canAccessRestaurantDashboard) ...[
+              const SizedBox(height: 20),
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Restaurant',
+                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
+                ),
+              ),
+              const SizedBox(height: 8),
+              _buildProfileOption(
+                context,
+                icon: Icons.store,
+                title: 'Restaurant Dashboard',
+                onTap: () => context.push(RoutePaths.restaurantDashboard),
+              ),
+              _buildProfileOption(
+                context,
+                icon: Icons.receipt_long,
+                title: 'Manage Orders',
+                onTap: () => context.push(RoutePaths.restaurantOrders),
+              ),
+              _buildProfileOption(
+                context,
+                icon: Icons.restaurant_menu,
+                title: 'Manage Menu',
+                onTap: () => context.push(RoutePaths.restaurantMenu),
+              ),
+              _buildProfileOption(
+                context,
+                icon: Icons.insights,
+                title: 'Analytics',
+                onTap: () => context.push(RoutePaths.restaurantAnalytics),
+              ),
+              _buildProfileOption(
+                context,
+                icon: Icons.settings_applications,
+                title: 'Restaurant Settings',
+                onTap: () => context.push(RoutePaths.restaurantSettings),
+              ),
+            ],
+
+            if (authState.hasMultipleRoles)
+              _buildProfileOption(
+                context,
+                icon: Icons.swap_horiz,
+                title: 'Switch Role',
+                onTap: () => _showSwitchRoleSheet(context, ref, authState,
+                    hasOwnerRole: hasOwnerRole, hasStaffRole: hasStaffRole),
+              ),
 
             _buildProfileOption(
               context,
@@ -184,6 +244,8 @@ class ProfileScreen extends ConsumerWidget {
                 onPressed: () {
                   // Same logout functionality as the app bar
                   showDialog(
+
+
                     context: context,
                     builder: (context) => AlertDialog(
                       title: const Text('Sign Out'),
@@ -195,15 +257,11 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                         TextButton(
                           onPressed: () async {
-                            final authNotifier = ProviderScope.containerOf(
-                              context,
-                            ).read(authStateProvider.notifier);
+                            final authNotifier = ref.read(authStateProvider.notifier);
                             await authNotifier.signOut();
                             if (context.mounted) {
                               Navigator.of(context).pop(); // Close dialog
-                              Navigator.of(
-                                context,
-                              ).pop(); // Go back to previous screen
+                              Navigator.of(context).pop(); // Go back to previous screen
                             }
                           },
                           child: const Text('Sign Out'),
@@ -280,4 +338,57 @@ class ProfileScreen extends ConsumerWidget {
       ),
     );
   }
+
+  void _showSwitchRoleSheet(
+    BuildContext context,
+    WidgetRef ref,
+    AuthState authState, {
+    required bool hasOwnerRole,
+    required bool hasStaffRole,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) {
+        final notifier = ref.read(authStateProvider.notifier);
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.person_outline),
+                title: const Text('Customer'),
+                enabled: authState.primaryRole?.role != UserRoleType.consumer,
+                onTap: () async {
+                  Navigator.of(ctx).pop();
+                  await notifier.switchRole(UserRoleType.consumer);
+                },
+              ),
+              if (hasOwnerRole)
+                ListTile(
+                  leading: const Icon(Icons.storefront),
+                  title: const Text('Restaurant Owner'),
+                  enabled: authState.primaryRole?.role != UserRoleType.restaurantOwner,
+                  onTap: () async {
+                    Navigator.of(ctx).pop();
+                    await notifier.switchRole(UserRoleType.restaurantOwner);
+                  },
+                ),
+              if (hasStaffRole)
+                ListTile(
+                  leading: const Icon(Icons.badge_outlined),
+                  title: const Text('Restaurant Staff'),
+                  enabled: authState.primaryRole?.role != UserRoleType.restaurantStaff,
+                  onTap: () async {
+                    Navigator.of(ctx).pop();
+                    await notifier.switchRole(UserRoleType.restaurantStaff);
+                  },
+                ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
 }

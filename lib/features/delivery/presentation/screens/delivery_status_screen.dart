@@ -367,7 +367,7 @@ class _DeliveryStatusScreenState extends ConsumerState<DeliveryStatusScreen>
       width: 48,
       height: 48,
       decoration: BoxDecoration(
-        color: _getStatusColor(status).withOpacity(0.1),
+        color: _getStatusColor(status).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Icon(

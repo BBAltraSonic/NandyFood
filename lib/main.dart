@@ -18,6 +18,17 @@ import 'package:food_delivery_app/features/order/presentation/screens/promotions
 import 'package:food_delivery_app/features/order/presentation/screens/promo_detail_screen.dart';
 
 import 'package:food_delivery_app/core/routing/route_paths.dart';
+import 'package:food_delivery_app/core/routing/route_guards.dart';
+import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_dashboard_screen.dart';
+import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_orders_screen.dart';
+import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_menu_screen.dart';
+import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_analytics_screen.dart';
+import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_settings_screen.dart';
+import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_info_screen.dart';
+import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/delivery_settings_screen.dart';
+import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/operating_hours_screen.dart';
+import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_registration_screen.dart';
+
 
 import 'package:food_delivery_app/features/restaurant/presentation/screens/restaurant_detail_screen.dart';
 import 'package:food_delivery_app/features/profile/presentation/screens/profile_screen.dart';
@@ -226,6 +237,36 @@ class _FoodDeliveryAppState extends ConsumerState<FoodDeliveryApp> {
             return OrderTrackingScreen(orderId: id);
           },
         ),
+        GoRoute(
+          path: RoutePaths.restaurantRegister,
+          builder: (context, state) => const RestaurantRegistrationScreen(),
+        ),
+        GoRoute(
+          path: RoutePaths.restaurantDashboard,
+          builder: (context, state) => const RestaurantDashboardScreen(),
+          redirect: (context, state) => RouteGuards.requireRestaurantRole(state),
+        ),
+        GoRoute(
+          path: RoutePaths.restaurantOrders,
+          builder: (context, state) => const RestaurantOrdersScreen(),
+          redirect: (context, state) => RouteGuards.requireRestaurantRole(state),
+        ),
+        GoRoute(
+          path: RoutePaths.restaurantMenu,
+          builder: (context, state) => const RestaurantMenuScreen(),
+          redirect: (context, state) => RouteGuards.requireRestaurantRole(state),
+        ),
+        GoRoute(
+          path: RoutePaths.restaurantAnalytics,
+          builder: (context, state) => const RestaurantAnalyticsScreen(),
+          redirect: (context, state) => RouteGuards.requireRestaurantRole(state),
+        ),
+        GoRoute(
+          path: RoutePaths.restaurantSettings,
+          builder: (context, state) => const RestaurantSettingsScreen(),
+          redirect: (context, state) => RouteGuards.requireRestaurantRole(state),
+        ),
+
         GoRoute(
           path: '/restaurant/:id',
           builder: (context, state) {

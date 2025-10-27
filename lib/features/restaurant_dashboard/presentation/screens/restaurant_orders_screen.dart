@@ -563,7 +563,9 @@ class _RejectReasonDialogState extends State<_RejectReasonDialog> {
             return RadioListTile<String>(
               title: Text(reason),
               value: reason,
+              // ignore: deprecated_member_use
               groupValue: _selectedReason,
+              // ignore: deprecated_member_use
               onChanged: (value) {
                 setState(() => _selectedReason = value);
               },

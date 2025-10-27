@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:food_delivery_app/core/services/database_service.dart';
+import 'package:food_delivery_app/features/order/data/repositories/cart_order_repository.dart';
 import 'package:food_delivery_app/shared/models/order.dart';
 import 'package:food_delivery_app/shared/models/order_item.dart';
 
@@ -49,12 +49,17 @@ class OrderNotifier extends StateNotifier<OrderState> {
     state = state.copyWith(isLoading: true);
 
     try {
-      final dbService = DatabaseService();
-      final orderData = await dbService.getUserOrders(userId);
+      final repo = CartOrderRepository();
+      final res = await repo.getUserOrders(userId);
 
-      final orders = orderData.map((data) => Order.fromJson(data)).toList();
-
-      state = state.copyWith(orders: orders, isLoading: false);
+      res.when(
+        success: (orders) {
+          state = state.copyWith(orders: orders, isLoading: false);
+        },
+        failure: (f) {
+          state = state.copyWith(isLoading: false, errorMessage: f.message);
+        },
+      );
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
@@ -65,16 +70,21 @@ class OrderNotifier extends StateNotifier<OrderState> {
     state = state.copyWith(isLoading: true);
 
     try {
-      final dbService = DatabaseService();
-      final orderData = order.toJson();
-      final orderId = await dbService.createOrder(orderData);
+      final repo = CartOrderRepository();
+      final res = await repo.createOrder(order.toJson());
 
-      final newOrder = order.copyWith(id: orderId);
-
-      state = state.copyWith(
-        currentOrder: newOrder,
-        orders: [...state.orders, newOrder],
-        isLoading: false,
+      res.when(
+        success: (orderId) {
+          final newOrder = order.copyWith(id: orderId);
+          state = state.copyWith(
+            currentOrder: newOrder,
+            orders: [...state.orders, newOrder],
+            isLoading: false,
+          );
+        },
+        failure: (f) {
+          state = state.copyWith(isLoading: false, errorMessage: f.message);
+        },
       );
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());

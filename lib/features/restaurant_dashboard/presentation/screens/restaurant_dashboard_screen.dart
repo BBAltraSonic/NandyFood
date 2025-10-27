@@ -356,7 +356,7 @@ class _RestaurantDashboardScreenState
           value: (metrics?.pendingOrders ?? 0).toString(),
           icon: Icons.pending_actions_rounded,
           color: Colors.orange,
-          onTap: () => context.push("${RoutePaths.restaurantOrders}?status=pending"),
+          onTap: () => context.push('${RoutePaths.restaurantOrders}?status=pending'),
         ),
         DashboardStatCard(
           title: 'Active Items',
@@ -748,7 +748,9 @@ class _RejectReasonDialogState extends State<_RejectReasonDialog> {
             return RadioListTile<String>(
               title: Text(reason),
               value: reason,
+              // ignore: deprecated_member_use
               groupValue: _selectedReason,
+              // ignore: deprecated_member_use
               onChanged: (value) {
                 setState(() => _selectedReason = value);
               },

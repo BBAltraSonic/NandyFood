@@ -26,9 +26,7 @@ class ConfirmationDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () {
-            if (onCancel != null) {
-              onCancel!();
-            }
+            onCancel?.call();
             Navigator.of(context).pop();
           },
           child: Text(cancelText),

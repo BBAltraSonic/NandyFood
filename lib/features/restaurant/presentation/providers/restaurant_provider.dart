@@ -4,7 +4,7 @@ import 'package:food_delivery_app/shared/models/restaurant.dart';
 import 'package:food_delivery_app/shared/models/menu_item.dart';
 import 'package:food_delivery_app/shared/models/review.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:food_delivery_app/features/restaurant/data/repositories/restaurant_repository.dart';
+import 'package:food_delivery_app/features/restaurant/data/repositories/restaurant_repository_result.dart';
 
 
 // Restaurant state class to represent the restaurant state
@@ -120,24 +120,31 @@ class RestaurantNotifier extends StateNotifier<RestaurantState> {
     state = state.copyWith(isLoading: true, currentPage: 0, hasMore: true);
 
     try {
-      final repo = RestaurantRepository();
-      final restaurants = await repo.fetchList(
+      final repo = RestaurantRepositoryR();
+      final res = await repo.fetchList(
         limit: state.pageSize,
         page: 0,
       );
 
-      state = state.copyWith(
-        restaurants: restaurants,
-        filteredRestaurants: restaurants, // Initially show all restaurants
-        isLoading: false,
-        currentPage: 0,
-        hasMore: restaurants.length == state.pageSize,
-      );
+      await res.when(
+        success: (restaurants) async {
+          state = state.copyWith(
+            restaurants: restaurants,
+            filteredRestaurants: restaurants, // Initially show all restaurants
+            isLoading: false,
+            currentPage: 0,
+            hasMore: restaurants.length == state.pageSize,
+          );
 
-      // Apply any persisted dietary filters
-      if (state.selectedDietaryRestrictions.isNotEmpty) {
-        await loadAllMenuItemsForDietaryFiltering();
-      }
+          // Apply any persisted dietary filters
+          if (state.selectedDietaryRestrictions.isNotEmpty) {
+            await loadAllMenuItemsForDietaryFiltering();
+          }
+        },
+        failure: (f) {
+          state = state.copyWith(isLoading: false, errorMessage: f.message);
+        },
+      );
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
@@ -150,27 +157,34 @@ class RestaurantNotifier extends StateNotifier<RestaurantState> {
 
     state = state.copyWith(isLoadingMore: true);
     try {
-      final repo = RestaurantRepository();
+      final repo = RestaurantRepositoryR();
       final nextPage = state.currentPage + 1;
-      final moreRestaurants = await repo.fetchList(
+      final res = await repo.fetchList(
         limit: state.pageSize,
         page: nextPage,
       );
 
-      final allRestaurants = [...state.restaurants, ...moreRestaurants];
+      await res.when(
+        success: (moreRestaurants) async {
+          final allRestaurants = [...state.restaurants, ...moreRestaurants];
 
-      state = state.copyWith(
-        restaurants: allRestaurants,
-        filteredRestaurants: allRestaurants,
-        currentPage: nextPage,
-        hasMore: moreRestaurants.length == state.pageSize,
-        isLoadingMore: false,
+          state = state.copyWith(
+            restaurants: allRestaurants,
+            filteredRestaurants: allRestaurants,
+            currentPage: nextPage,
+            hasMore: moreRestaurants.length == state.pageSize,
+            isLoadingMore: false,
+          );
+
+          if (state.selectedDietaryRestrictions.isNotEmpty) {
+            // Re-apply dietary filters after loading more
+            await loadAllMenuItemsForDietaryFiltering();
+          }
+        },
+        failure: (f) {
+          state = state.copyWith(isLoadingMore: false, errorMessage: f.message);
+        },
       );
-
-      if (state.selectedDietaryRestrictions.isNotEmpty) {
-        // Re-apply dietary filters after loading more
-        await loadAllMenuItemsForDietaryFiltering();
-      }
     } catch (e) {
       state = state.copyWith(isLoadingMore: false, errorMessage: e.toString());
     }
@@ -396,12 +410,19 @@ class RestaurantNotifier extends StateNotifier<RestaurantState> {
     state = state.copyWith(isLoading: true, selectedCategory: category);
 
     try {
-      final repo = RestaurantRepository();
-      final filteredRestaurants = await repo.fetchByCategory(category);
+      final repo = RestaurantRepositoryR();
+      final res = await repo.fetchByCategory(category);
 
-      state = state.copyWith(
-        filteredRestaurants: filteredRestaurants,
-        isLoading: false,
+      res.when(
+        success: (filteredRestaurants) {
+          state = state.copyWith(
+            filteredRestaurants: filteredRestaurants,
+            isLoading: false,
+          );
+        },
+        failure: (f) {
+          state = state.copyWith(isLoading: false, errorMessage: f.message);
+        },
       );
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());

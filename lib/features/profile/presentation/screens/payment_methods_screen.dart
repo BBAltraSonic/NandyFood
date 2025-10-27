@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:food_delivery_app/features/profile/presentation/providers/payment_methods_provider.dart';
+import 'package:food_delivery_app/core/providers/auth_provider.dart';
+
 import 'package:food_delivery_app/shared/widgets/loading_indicator.dart';
 import 'package:food_delivery_app/shared/widgets/error_message_widget.dart';
 
@@ -11,12 +13,16 @@ class PaymentMethodsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final paymentMethodsState = ref.watch(paymentMethodsProvider);
     final paymentMethodsNotifier = ref.read(paymentMethodsProvider.notifier);
+    final userId = ref.watch(authStateProvider).user?.id;
+
 
     // Load payment methods when the screen is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (paymentMethodsState.paymentMethods.isEmpty &&
           !paymentMethodsState.isLoading) {
-        paymentMethodsNotifier.loadPaymentMethods();
+        if (userId != null) {
+          paymentMethodsNotifier.loadPaymentMethods(userId);
+        }
       }
     });
 
@@ -29,12 +35,17 @@ class PaymentMethodsScreen extends ConsumerWidget {
           : paymentMethodsState.errorMessage != null
           ? ErrorMessageWidget(
               message: paymentMethodsState.errorMessage!,
-              onRetry: () => paymentMethodsNotifier.loadPaymentMethods(),
+              onRetry: () {
+                if (userId != null) {
+                  paymentMethodsNotifier.loadPaymentMethods(userId);
+                }
+              },
             )
           : _buildPaymentMethodsList(
               paymentMethodsState,
               paymentMethodsNotifier,
               context,
+              userId,
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -49,6 +60,7 @@ class PaymentMethodsScreen extends ConsumerWidget {
     PaymentMethodsState state,
     PaymentMethodsNotifier notifier,
     BuildContext context,
+    String? userId,
   ) {
     if (state.paymentMethods.isEmpty) {
       return const Center(
@@ -72,13 +84,13 @@ class PaymentMethodsScreen extends ConsumerWidget {
     }
 
     return RefreshIndicator(
-      onRefresh: () => Future.sync(() => notifier.loadPaymentMethods()),
+      onRefresh: () => Future.sync(() => userId != null ? notifier.loadPaymentMethods(userId) : Future.value()),
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: state.paymentMethods.length,
         itemBuilder: (context, index) {
           final method = state.paymentMethods[index];
-          return _buildPaymentMethodCard(method, notifier, context);
+          return _buildPaymentMethodCard(method, notifier, context, userId);
         },
       ),
     );
@@ -88,6 +100,7 @@ class PaymentMethodsScreen extends ConsumerWidget {
     PaymentMethodInfo method,
     PaymentMethodsNotifier notifier,
     BuildContext context,
+    String? userId,
   ) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -144,7 +157,9 @@ class PaymentMethodsScreen extends ConsumerWidget {
             PopupMenuButton<String>(
               onSelected: (String value) async {
                 if (value == 'set_default') {
-                  await notifier.setDefaultPaymentMethod(method.id);
+                  if (userId != null) {
+                    await notifier.setDefaultPaymentMethod(userId, method.id);
+                  }
                 } else if (value == 'remove') {
                   final confirmed = await _showDeleteConfirmationDialog(
                     context,

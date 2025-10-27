@@ -22,6 +22,7 @@ class Favourite {
     this.restaurantId,
     this.menuItemId,
     required this.createdAt,
+    required this.updatedAt,
     this.restaurant,
     this.menuItem,
   });
@@ -41,10 +42,13 @@ class Favourite {
   
   @JsonKey(name: 'created_at')
   final DateTime createdAt;
-  
+
+  @JsonKey(name: 'updated_at')
+  final DateTime updatedAt;
+
   // Nested objects (loaded with joins)
   final Restaurant? restaurant;
-  
+
   @JsonKey(name: 'menu_item')
   final MenuItem? menuItem;
 
@@ -60,6 +64,7 @@ class Favourite {
     String? restaurantId,
     String? menuItemId,
     DateTime? createdAt,
+    DateTime? updatedAt,
     Restaurant? restaurant,
     MenuItem? menuItem,
   }) {
@@ -70,6 +75,7 @@ class Favourite {
       restaurantId: restaurantId ?? this.restaurantId,
       menuItemId: menuItemId ?? this.menuItemId,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
       restaurant: restaurant ?? this.restaurant,
       menuItem: menuItem ?? this.menuItem,
     );

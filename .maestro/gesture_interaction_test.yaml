@@ -1,0 +1,72 @@
+appId: com.example.food_delivery_app
+---
+# Test all gesture types
+- launchApp
+
+# Test tap gestures
+- tapOn:
+    text: "Home"
+- tapOn:
+    index: 0
+    id: "restaurant_card"
+- back
+
+# Test long press
+- longPressOn:
+    index: 0
+    id: "restaurant_card"
+    optional: true
+- back
+
+# Test swipe gestures
+- swipe:
+    direction: LEFT
+    duration: 500
+- swipe:
+    direction: RIGHT
+    duration: 500
+
+# Test scroll gestures
+- scroll:
+    direction: DOWN
+    duration: 1000
+- scroll:
+    direction: UP
+    duration: 1000
+
+# Test pull to refresh
+- tapOn:
+    text: "Home"
+- scroll:
+    direction: DOWN
+    startPoint: "50%,10%"
+    endPoint: "50%,80%"
+- waitForAnimationToEnd
+
+# Test horizontal scrolling (categories)
+- swipe:
+    direction: LEFT
+    startPoint: "80%,20%"
+    endPoint: "20%,20%"
+
+# Test double tap (zoom if applicable)
+- tapOn:
+    index: 0
+    id: "restaurant_card"
+- tapOn:
+    id: "restaurant_image"
+- tapOn:
+    id: "restaurant_image"
+
+# Test drag gesture (reorder if applicable)
+- back
+- tapOn:
+    text: "Cart"
+    optional: true
+
+# Test pinch gesture (if map is available)
+- tapOn:
+    text: "Profile"
+- tapOn:
+    text: "Addresses"
+    optional: true

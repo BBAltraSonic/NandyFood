@@ -8,6 +8,10 @@ import '../../../../shared/models/menu_item.dart';
 
 import '../../../../core/services/cache_service.dart';
 
+import '../../data/repositories/favourites_repository.dart' as v1;
+import '../../data/repositories/favourites_repository_result.dart';
+
+
 /// Favourite type enum
 enum FavouriteType {
   restaurant,
@@ -144,10 +148,14 @@ class FavouritesNotifier extends StateNotifier<FavouritesState> {
   FavouritesNotifier({
     required this.databaseService,
   }) : super(const FavouritesState()) {
+    _legacyRepo = v1.FavouritesRepository(databaseService: databaseService);
+    _repository = FavouritesRepositoryR(inner: _legacyRepo);
     _initialize();
   }
 
   final DatabaseService databaseService;
+  late final v1.FavouritesRepository _legacyRepo;
+  late final FavouritesRepositoryR _repository;
   final SupabaseClient _supabase = Supabase.instance.client;
 
   /// Initialize favourites
@@ -162,10 +170,7 @@ class FavouritesNotifier extends StateNotifier<FavouritesState> {
 
       final userId = _supabase.auth.currentUser?.id;
       if (userId == null) {
-        state = state.copyWith(
-          isLoading: false,
-          error: 'User not authenticated',
-        );
+        state = state.copyWith(isLoading: false, error: 'User not authenticated');
         return;
       }
 
@@ -191,49 +196,44 @@ class FavouritesNotifier extends StateNotifier<FavouritesState> {
         }
       }
 
-      // 2) Fetch fresh data from Supabase
-      final response = await _supabase
-          .from('favourites')
-          .select('''
-            *,
-            restaurant:restaurants(*),
-            menu_item:menu_items(*)
-          ''')
-          .eq('user_id', userId)
-          .order('created_at', ascending: false);
+      // 2) Fetch fresh data using Result repo
+      final res = await _repository.fetchFavourites(userId);
 
-      final List<FavouriteItem> favourites = [];
+      res.when(
+        success: (list) async {
+          final favourites = list
+              .map((f) => FavouriteItem.fromJson(f.toJson()))
+              .toList();
 
-      for (final item in response) {
-        try {
-          favourites.add(FavouriteItem.fromJson(item));
-        } catch (e) {
-          AppLogger.error('Error parsing favourite item', error: e);
-        }
-      }
+          state = state.copyWith(
+            favourites: favourites,
+            isLoading: false,
+            lastUpdated: DateTime.now(),
+            error: null,
+          );
 
-      state = state.copyWith(
-        favourites: favourites,
-        isLoading: false,
-        lastUpdated: DateTime.now(),
+          // 3) Update cache with fresh payload
+          try {
+            await CacheService.instance.cacheFavourites(
+              userId,
+              favourites.map((f) => f.toJson()).toList(),
+            );
+          } catch (e) {
+            AppLogger.error('Failed to cache favourites after fetch', error: e);
+          }
+
+          AppLogger.success('Loaded ${favourites.length} favourites');
+        },
+        failure: (f) {
+          state = state.copyWith(
+            isLoading: false,
+            error: f.message,
+          );
+        },
       );
-
-      // 3) Update cache with fresh payload
-      try {
-        final List<Map<String, dynamic>> rawList =
-            List<Map<String, dynamic>>.from((response as List).map((e) => Map<String, dynamic>.from(e as Map)));
-        await CacheService.instance.cacheFavourites(userId, rawList);
-      } catch (e) {
-        AppLogger.error('Failed to cache favourites after fetch', error: e);
-      }
-
-      AppLogger.success('Loaded ${favourites.length} favourites');
     } catch (e, stack) {
       AppLogger.error('Failed to load favourites', error: e, stack: stack);
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Failed to load favourites: $e',
-      );
+      state = state.copyWith(isLoading: false, error: 'Failed to load favourites: $e');
     }
   }
 
@@ -253,39 +253,35 @@ class FavouritesNotifier extends StateNotifier<FavouritesState> {
 
       AppLogger.info('Adding restaurant to favourites: $restaurantId');
 
-      final response = await _supabase
-          .from('favourites')
-          .insert({
-            'user_id': userId,
-            'type': 'restaurant',
-            'restaurant_id': restaurantId,
-            'created_at': DateTime.now().toIso8601String(),
-          })
-          .select('''
-            *,
-            restaurant:restaurants(*)
-          ''')
-          .single();
+      final res = await _repository.addRestaurantFavourite(userId, restaurantId);
 
-      final favourite = FavouriteItem.fromJson(response);
+      return await res.when(
+        success: (f) async {
+          final favourite = FavouriteItem.fromJson(f.toJson());
 
-      state = state.copyWith(
-        favourites: [favourite, ...state.favourites],
-        lastUpdated: DateTime.now(),
+          state = state.copyWith(
+            favourites: [favourite, ...state.favourites],
+            lastUpdated: DateTime.now(),
+          );
+
+          // Update cache
+          try {
+            await CacheService.instance.cacheFavourites(
+              userId,
+              state.favourites.map((f) => f.toJson()).toList(),
+            );
+          } catch (e) {
+            AppLogger.error('Failed to update favourites cache after adding restaurant', error: e);
+          }
+
+          AppLogger.success('Restaurant added to favourites');
+          return true;
+        },
+        failure: (fail) {
+          state = state.copyWith(error: fail.message);
+          return false;
+        },
       );
-
-      // Update cache
-      try {
-        await CacheService.instance.cacheFavourites(
-          userId,
-          state.favourites.map((f) => f.toJson()).toList(),
-        );
-      } catch (e) {
-        AppLogger.error('Failed to update favourites cache after adding restaurant', error: e);
-      }
-
-      AppLogger.success('Restaurant added to favourites');
-      return true;
     } catch (e, stack) {
       AppLogger.error('Failed to add restaurant to favourites', error: e, stack: stack);
       state = state.copyWith(error: 'Failed to add to favourites: $e');
@@ -309,39 +305,35 @@ class FavouritesNotifier extends StateNotifier<FavouritesState> {
 
       AppLogger.info('Adding menu item to favourites: $menuItemId');
 
-      final response = await _supabase
-          .from('favourites')
-          .insert({
-            'user_id': userId,
-            'type': 'menu_item',
-            'menu_item_id': menuItemId,
-            'created_at': DateTime.now().toIso8601String(),
-          })
-          .select('''
-            *,
-            menu_item:menu_items(*)
-          ''')
-          .single();
+      final res = await _repository.addMenuItemFavourite(userId, menuItemId);
 
-      final favourite = FavouriteItem.fromJson(response);
+      return await res.when(
+        success: (f) async {
+          final favourite = FavouriteItem.fromJson(f.toJson());
 
-      state = state.copyWith(
-        favourites: [favourite, ...state.favourites],
-        lastUpdated: DateTime.now(),
+          state = state.copyWith(
+            favourites: [favourite, ...state.favourites],
+            lastUpdated: DateTime.now(),
+          );
+
+          // Update cache
+          try {
+            await CacheService.instance.cacheFavourites(
+              userId,
+              state.favourites.map((f) => f.toJson()).toList(),
+            );
+          } catch (e) {
+            AppLogger.error('Failed to update favourites cache after adding menu item', error: e);
+          }
+
+          AppLogger.success('Menu item added to favourites');
+          return true;
+        },
+        failure: (fail) {
+          state = state.copyWith(error: fail.message);
+          return false;
+        },
       );
-
-      // Update cache
-      try {
-        await CacheService.instance.cacheFavourites(
-          userId,
-          state.favourites.map((f) => f.toJson()).toList(),
-        );
-      } catch (e) {
-        AppLogger.error('Failed to update favourites cache after adding menu item', error: e);
-      }
-
-      AppLogger.success('Menu item added to favourites');
-      return true;
     } catch (e, stack) {
       AppLogger.error('Failed to add menu item to favourites', error: e, stack: stack);
       state = state.copyWith(error: 'Failed to add to favourites: $e');
@@ -359,32 +351,35 @@ class FavouritesNotifier extends StateNotifier<FavouritesState> {
 
       AppLogger.info('Removing restaurant from favourites: $restaurantId');
 
-      await _supabase
-          .from('favourites')
-          .delete()
-          .eq('user_id', userId)
-          .eq('restaurant_id', restaurantId)
-          .eq('type', 'restaurant');
+      final res = await _repository.removeRestaurantFavourite(userId, restaurantId);
 
-      state = state.copyWith(
-        favourites: state.favourites
-            .where((f) => !(f.type == FavouriteType.restaurant && f.restaurantId == restaurantId))
-            .toList(),
-        lastUpdated: DateTime.now(),
+      return await res.when(
+        success: (_) async {
+          state = state.copyWith(
+            favourites: state.favourites
+                .where((f) => !(f.type == FavouriteType.restaurant && f.restaurantId == restaurantId))
+                .toList(),
+            lastUpdated: DateTime.now(),
+          );
+
+          // Update cache
+          try {
+            await CacheService.instance.cacheFavourites(
+              userId,
+              state.favourites.map((f) => f.toJson()).toList(),
+            );
+          } catch (e) {
+            AppLogger.error('Failed to update favourites cache after removing restaurant', error: e);
+          }
+
+          AppLogger.success('Restaurant removed from favourites');
+          return true;
+        },
+        failure: (fail) {
+          state = state.copyWith(error: fail.message);
+          return false;
+        },
       );
-
-      // Update cache
-      try {
-        await CacheService.instance.cacheFavourites(
-          userId,
-          state.favourites.map((f) => f.toJson()).toList(),
-        );
-      } catch (e) {
-        AppLogger.error('Failed to update favourites cache after removing restaurant', error: e);
-      }
-
-      AppLogger.success('Restaurant removed from favourites');
-      return true;
     } catch (e, stack) {
       AppLogger.error('Failed to remove restaurant from favourites', error: e, stack: stack);
       state = state.copyWith(error: 'Failed to remove from favourites: $e');
@@ -402,32 +397,35 @@ class FavouritesNotifier extends StateNotifier<FavouritesState> {
 
       AppLogger.info('Removing menu item from favourites: $menuItemId');
 
-      await _supabase
-          .from('favourites')
-          .delete()
-          .eq('user_id', userId)
-          .eq('menu_item_id', menuItemId)
-          .eq('type', 'menu_item');
+      final res = await _repository.removeMenuItemFavourite(userId, menuItemId);
 
-      state = state.copyWith(
-        favourites: state.favourites
-            .where((f) => !(f.type == FavouriteType.menuItem && f.menuItemId == menuItemId))
-            .toList(),
-        lastUpdated: DateTime.now(),
+      return await res.when(
+        success: (_) async {
+          state = state.copyWith(
+            favourites: state.favourites
+                .where((f) => !(f.type == FavouriteType.menuItem && f.menuItemId == menuItemId))
+                .toList(),
+            lastUpdated: DateTime.now(),
+          );
+
+          // Update cache
+          try {
+            await CacheService.instance.cacheFavourites(
+              userId,
+              state.favourites.map((f) => f.toJson()).toList(),
+            );
+          } catch (e) {
+            AppLogger.error('Failed to update favourites cache after removing menu item', error: e);
+          }
+
+          AppLogger.success('Menu item removed from favourites');
+          return true;
+        },
+        failure: (fail) {
+          state = state.copyWith(error: fail.message);
+          return false;
+        },
       );
-
-      // Update cache
-      try {
-        await CacheService.instance.cacheFavourites(
-          userId,
-          state.favourites.map((f) => f.toJson()).toList(),
-        );
-      } catch (e) {
-        AppLogger.error('Failed to update favourites cache after removing menu item', error: e);
-      }
-
-      AppLogger.success('Menu item removed from favourites');
-      return true;
     } catch (e, stack) {
       AppLogger.error('Failed to remove menu item from favourites', error: e, stack: stack);
       state = state.copyWith(error: 'Failed to remove from favourites: $e');
@@ -463,28 +461,30 @@ class FavouritesNotifier extends StateNotifier<FavouritesState> {
 
       AppLogger.warning('Clearing all favourites for user: $userId');
 
-      await _supabase
-          .from('favourites')
-          .delete()
-          .eq('user_id', userId);
+      final res = await _repository.clearUserFavourites(userId);
 
-      state = state.copyWith(
-        favourites: [],
-        lastUpdated: DateTime.now(),
+      return await res.when(
+        success: (_) async {
+          state = state.copyWith(
+            favourites: [],
+            lastUpdated: DateTime.now(),
+          );
+
+          // Update cache
+          try {
+            await CacheService.instance.cacheFavourites(userId, const []);
+          } catch (e) {
+            AppLogger.error('Failed to update favourites cache after clearing', error: e);
+          }
+
+          AppLogger.success('All favourites cleared');
+          return true;
+        },
+        failure: (fail) {
+          state = state.copyWith(error: fail.message);
+          return false;
+        },
       );
-
-      // Update cache
-      try {
-        await CacheService.instance.cacheFavourites(
-          userId,
-          const [],
-        );
-      } catch (e) {
-        AppLogger.error('Failed to update favourites cache after clearing', error: e);
-      }
-
-      AppLogger.success('All favourites cleared');
-      return true;
     } catch (e, stack) {
       AppLogger.error('Failed to clear favourites', error: e, stack: stack);
       state = state.copyWith(error: 'Failed to clear favourites: $e');

@@ -18,7 +18,7 @@ class _DeliverySettingsScreenState
     extends ConsumerState<DeliverySettingsScreen> {
   bool _isLoading = true;
   bool _isSaving = false;
-  String? _restaurantId;
+  late String _restaurantId;
 
   // Form controllers
   final _deliveryFeeController = TextEditingController();
@@ -47,9 +47,9 @@ class _DeliverySettingsScreenState
       final restaurants = await roleService.getUserRestaurants(userId);
       if (restaurants.isEmpty) return;
 
-      _restaurantId = restaurants.first;
+      _restaurantId = restaurants.first.restaurantId;
       final restaurant =
-          await _restaurantService.getRestaurant(_restaurantId!);
+          await _restaurantService.getRestaurant(_restaurantId);
 
       // Populate form
       _deliveryFeeController.text = restaurant.deliveryFee?.toString() ?? '20.00';
@@ -224,7 +224,9 @@ class _DeliverySettingsScreenState
               title: const Text('Fixed Fee'),
               subtitle: const Text('Same fee for all deliveries'),
               value: 'fixed',
+              // ignore: deprecated_member_use
               groupValue: _feeStructure,
+              // ignore: deprecated_member_use
               onChanged: (value) {
                 setState(() => _feeStructure = value!);
               },
@@ -247,7 +249,9 @@ class _DeliverySettingsScreenState
               title: const Text('Distance-Based'),
               subtitle: const Text('Fee increases with distance (coming soon)'),
               value: 'distance',
+              // ignore: deprecated_member_use
               groupValue: _feeStructure,
+              // ignore: deprecated_member_use
               onChanged: null, // Disabled for now
             ),
             const Divider(),
@@ -255,7 +259,9 @@ class _DeliverySettingsScreenState
               title: const Text('Free Above Threshold'),
               subtitle: const Text('Free delivery for large orders (coming soon)'),
               value: 'free_threshold',
+              // ignore: deprecated_member_use
               groupValue: _feeStructure,
+              // ignore: deprecated_member_use
               onChanged: null, // Disabled for now
             ),
           ],
@@ -476,7 +482,7 @@ class _DeliverySettingsScreenState
         'updated_at': DateTime.now().toIso8601String(),
       };
 
-      await _restaurantService.updateRestaurant(_restaurantId!, updates);
+      await _restaurantService.updateRestaurant(_restaurantId, updates);
 
       if (!mounted) return;
 

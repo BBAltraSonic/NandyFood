@@ -98,9 +98,7 @@ class _LocationSelectorWidgetState extends State<LocationSelectorWidget> {
           _isLoading = false;
         });
 
-        if (widget.onLocationSelected != null) {
-          widget.onLocationSelected!(location);
-        }
+        widget.onLocationSelected?.call(location);
       } else {
         throw Exception('Unable to get address from location');
       }
@@ -148,9 +146,7 @@ class _LocationSelectorWidgetState extends State<LocationSelectorWidget> {
             _isLoading = false;
           });
 
-          if (widget.onLocationSelected != null) {
-            widget.onLocationSelected!(selectedLocation);
-          }
+          widget.onLocationSelected?.call(selectedLocation);
         } else {
           throw Exception('Unable to get address from location');
         }

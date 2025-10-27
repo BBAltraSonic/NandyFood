@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:food_delivery_app/core/services/database_service.dart';
+import 'package:food_delivery_app/features/profile/data/repositories/profile_repository.dart';
 import 'package:food_delivery_app/shared/models/user_profile.dart';
 
 class ProfileState {
@@ -33,31 +33,21 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     state = state.copyWith(isLoading: true);
 
     try {
-      final db = DatabaseService();
-      await db.initialize();
+      final repo = ProfileRepository();
+      final res = await repo.getUserProfile(userId);
 
-      Map<String, dynamic>? profileData;
-
-      try {
-        profileData = await db.getUserProfile(userId);
-      } catch (e) {
-        final isInitializationError =
-            e is StateError || e.toString().contains('not initialized');
-        if (!isInitializationError) {
-          rethrow;
-        }
-      }
-
-      if (profileData != null) {
-        state = state.copyWith(
-          profile: UserProfile.fromJson(profileData),
-          isLoading: false,
-          errorMessage: null,
-        );
-        return;
-      }
-
-      state = state.copyWith(isLoading: false);
+      res.when(
+        success: (profile) {
+          state = state.copyWith(
+            profile: profile,
+            isLoading: false,
+            errorMessage: null,
+          );
+        },
+        failure: (f) {
+          state = state.copyWith(isLoading: false, errorMessage: f.message);
+        },
+      );
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
@@ -69,44 +59,46 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     try {
       _validateProfile(profile);
 
-      final db = DatabaseService();
-      await db.initialize();
+      final repo = ProfileRepository();
 
-      final payload = profile.toJson();
-      payload['updatedAt'] = DateTime.now().toIso8601String();
-
-      try {
-        if (state.profile == null) {
-          await db.createUserProfile(payload);
-        } else {
-          await db.updateUserProfile(profile.id, payload);
-        }
-      } catch (e) {
-        final isInitializationError =
-            e is StateError || e.toString().contains('not initialized');
-        if (!isInitializationError) {
-          rethrow;
-        }
+      if (state.profile == null) {
+        final res = await repo.createUserProfile(profile);
+        res.when(
+          success: (created) {
+            state = state.copyWith(
+              profile: created,
+              isLoading: false,
+              errorMessage: null,
+            );
+          },
+          failure: (f) {
+            state = state.copyWith(isLoading: false, errorMessage: f.message);
+          },
+        );
+      } else {
+        final payload = profile.toJson();
+        payload['updatedAt'] = DateTime.now().toIso8601String();
+        final res = await repo.updateUserProfile(profile.id, payload);
+        res.when(
+          success: (_) {
+            final preservedCreatedAt = state.profile?.createdAt ?? profile.createdAt;
+            final updatedProfile = profile.copyWith(
+              createdAt: preservedCreatedAt,
+              updatedAt: DateTime.now(),
+            );
+            state = state.copyWith(
+              profile: updatedProfile,
+              isLoading: false,
+              errorMessage: null,
+            );
+          },
+          failure: (f) {
+            state = state.copyWith(isLoading: false, errorMessage: f.message);
+          },
+        );
       }
-
-      final preservedCreatedAt = state.profile?.createdAt ?? profile.createdAt;
-      final updatedProfile = profile.copyWith(
-        createdAt: preservedCreatedAt,
-        updatedAt: DateTime.now(),
-      );
-
-      state = state.copyWith(
-        profile: updatedProfile,
-        isLoading: false,
-        errorMessage: null,
-      );
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
-      final isInitializationError =
-          e is StateError || e.toString().contains('not initialized');
-      if (!isInitializationError) {
-        rethrow;
-      }
     }
   }
 
@@ -136,26 +128,8 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
 
   Future<void> deleteProfile() async {
     state = state.copyWith(isLoading: true);
-
     try {
-      final db = DatabaseService();
-      await db.initialize();
-
-      try {
-        if (state.profile != null) {
-          // Delete user profile by updating the database
-          // In a real implementation, this would be handled by Supabase auth
-          // For now, we'll just log out which clears the session
-          state = const ProfileState(isLoading: false);
-        }
-      } catch (e) {
-        final isInitializationError =
-            e is StateError || e.toString().contains('not initialized');
-        if (!isInitializationError) {
-          rethrow;
-        }
-      }
-
+      // For now, just clear local state; actual deletion handled by auth backend
       state = const ProfileState(isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());

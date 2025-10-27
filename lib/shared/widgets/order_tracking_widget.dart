@@ -78,17 +78,17 @@ class OrderTrackingWidget extends StatelessWidget {
 
   /// Build status timeline
   Widget _buildStatusTimeline(OrderStatus status) {
-    final steps = [
-      {'title': 'Order Placed', 'status': OrderStatus.placed},
-      {'title': 'Preparing', 'status': OrderStatus.preparing},
-      {'title': 'Out for Delivery', 'status': OrderStatus.out_for_delivery},
-      {'title': 'Delivered', 'status': OrderStatus.delivered},
+    final List<_StatusStep> steps = const [
+      _StatusStep('Order Placed', OrderStatus.placed),
+      _StatusStep('Preparing', OrderStatus.preparing),
+      _StatusStep('Out for Delivery', OrderStatus.out_for_delivery),
+      _StatusStep('Delivered', OrderStatus.delivered),
     ];
 
     return Column(
       children: List.generate(steps.length, (index) {
         final step = steps[index];
-        final stepStatus = step['status'] as OrderStatus;
+        final stepStatus = step.status;
         final isCompleted = _isStepCompleted(status, stepStatus);
         final isCurrent = status == stepStatus;
 
@@ -113,7 +113,7 @@ class OrderTrackingWidget extends StatelessWidget {
                 const SizedBox(width: 16),
                 // Step title
                 Text(
-                  step['title'] as String,
+                  step.title,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
@@ -159,4 +159,11 @@ class OrderTrackingWidget extends StatelessWidget {
   String _formatDateTime(DateTime dateTime) {
     return '${dateTime.day}/${dateTime.month}/${dateTime.year} at ${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
+}
+
+
+class _StatusStep {
+  final String title;
+  final OrderStatus status;
+  const _StatusStep(this.title, this.status);
 }

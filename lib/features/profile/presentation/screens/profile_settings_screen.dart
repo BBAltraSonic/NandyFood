@@ -1,6 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:food_delivery_app/core/providers/auth_provider.dart';
+import 'package:food_delivery_app/core/services/image_upload_service.dart';
+import 'package:food_delivery_app/core/services/database_service.dart';
+import 'package:food_delivery_app/features/authentication/presentation/providers/user_provider.dart';
 import 'package:food_delivery_app/shared/models/user_profile.dart';
 import 'package:food_delivery_app/shared/widgets/loading_indicator.dart';
 
@@ -13,6 +17,9 @@ class ProfileSettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
+  final _imageService = ImageUploadService();
+  String? _avatarUrl;
+
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -27,15 +34,16 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
   }
 
   void _loadUserProfile() async {
-    // In a real implementation, this would fetch the user profile from the database
-    // For now, we'll simulate by getting the current user from auth state
     final authState = ref.read(authStateProvider);
+    final user = ref.read(userProvider).userProfile;
     if (authState.user != null) {
-      _nameController.text =
+      _nameController.text = user?.fullName ??
           authState.user!.userMetadata?['full_name'] ??
           authState.user!.email?.split('@')[0] ??
           '';
       _emailController.text = authState.user!.email ?? '';
+      _phoneController.text = user?.phoneNumber ?? '';
+      _avatarUrl = user?.avatarUrl;
     }
   }
 
@@ -70,35 +78,36 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                   children: [
                     // Profile picture section
                     Stack(
+                      alignment: Alignment.center,
                       children: [
-                        Container(
-                          width: 120,
-                          height: 120,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.grey.shade300,
-                          ),
-                          child: const Icon(
-                            Icons.person,
-                            size: 60,
-                            color: Colors.grey,
-                          ),
+                        CircleAvatar(
+                          radius: 60,
+                          backgroundColor: Colors.grey.shade300,
+                          backgroundImage: (_avatarUrl ?? ref.watch(userProvider).userProfile?.avatarUrl) != null
+                              ? NetworkImage((_avatarUrl ?? ref.watch(userProvider).userProfile!.avatarUrl)!)
+                              : null,
+                          child: (_avatarUrl ?? ref.watch(userProvider).userProfile?.avatarUrl) == null
+                              ? const Icon(Icons.person, size: 60, color: Colors.grey)
+                              : null,
                         ),
                         Positioned(
                           bottom: 0,
                           right: 0,
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.deepOrange,
-                              border: Border.all(color: Colors.white, width: 3),
-                            ),
-                            child: const Icon(
-                              Icons.camera_alt,
-                              size: 20,
-                              color: Colors.white,
+                          child: InkWell(
+                            onTap: _isLoading ? null : _pickAndUploadAvatar,
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.deepOrange,
+                                border: Border.all(color: Colors.white, width: 3),
+                              ),
+                              child: const Icon(
+                                Icons.camera_alt,
+                                size: 20,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
@@ -208,39 +217,123 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
   }
 
   Future<void> _updateProfile() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
+    if (!_formKey.currentState!.validate()) return;
 
-      try {
-        // In a real implementation, this would update the user profile in the database
-        // For now, we'll just show a success message
-        await Future.delayed(const Duration(seconds: 1));
+    final userId = ref.read(authStateProvider).user?.id;
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please sign in')),
+      );
+      return;
+    }
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile updated successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
+    setState(() => _isLoading = true);
 
-        // Navigate back to the profile screen
-        if (context.mounted) {
-          Navigator.of(context).pop();
-        }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error updating profile: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      } finally {
-        setState(() {
-          _isLoading = false;
-        });
+    try {
+      final data = <String, dynamic>{
+        'full_name': _nameController.text.trim(),
+      };
+      if (_phoneController.text.trim().isNotEmpty) {
+        data['phone_number'] = _phoneController.text.trim();
+      }
+      if (_avatarUrl != null && _avatarUrl!.isNotEmpty) {
+        data['avatar_url'] = _avatarUrl;
+      }
+
+      await DatabaseService().updateUserProfile(userId, data);
+
+      // Update local provider state
+      final current = ref.read(userProvider).userProfile;
+      if (current != null) {
+        await ref.read(userProvider.notifier).updateUserProfile(
+              current.copyWith(
+                fullName: _nameController.text.trim(),
+                phoneNumber: _phoneController.text.trim().isEmpty
+                    ? null
+                    : _phoneController.text.trim(),
+                avatarUrl: _avatarUrl ?? current.avatarUrl,
+              ),
+            );
+      }
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Profile updated successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.of(context).pop();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error updating profile: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
       }
     }
   }
+
+  Future<void> _pickAndUploadAvatar() async {
+    final userId = ref.read(authStateProvider).user?.id;
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please sign in to change avatar')),
+      );
+      return;
+    }
+
+    try {
+      final File? image = await _imageService.showImageSourceDialog(context: context);
+      if (image == null) return;
+
+      setState(() => _isLoading = true);
+
+      final oldUrl = _avatarUrl ?? ref.read(userProvider).userProfile?.avatarUrl;
+
+      final newUrl = await _imageService.uploadAvatar(image, userId);
+
+      // Delete old avatar (best-effort)
+      if (oldUrl != null && oldUrl.isNotEmpty) {
+        await _imageService.deleteOldAvatar(oldUrl);
+      }
+
+      // Persist new avatar URL to DB
+      await DatabaseService().updateUserProfile(userId, {
+        'avatar_url': newUrl,
+      });
+
+      // Update local state/provider
+      final current = ref.read(userProvider).userProfile;
+      if (current != null) {
+        await ref.read(userProvider.notifier).updateUserProfile(
+              current.copyWith(avatarUrl: newUrl),
+            );
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _avatarUrl = newUrl;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Avatar updated')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update avatar: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
 }

@@ -196,7 +196,9 @@ class SettingsScreen extends ConsumerWidget {
             RadioListTile<AppThemeMode>(
               title: const Text('Light'),
               value: AppThemeMode.light,
+              // ignore: deprecated_member_use
               groupValue: currentTheme,
+              // ignore: deprecated_member_use
               onChanged: (value) {
                 if (value != null) {
                   ref.read(themeProvider.notifier).setThemeMode(value);
@@ -207,7 +209,9 @@ class SettingsScreen extends ConsumerWidget {
             RadioListTile<AppThemeMode>(
               title: const Text('Dark'),
               value: AppThemeMode.dark,
+              // ignore: deprecated_member_use
               groupValue: currentTheme,
+              // ignore: deprecated_member_use
               onChanged: (value) {
                 if (value != null) {
                   ref.read(themeProvider.notifier).setThemeMode(value);
@@ -218,7 +222,9 @@ class SettingsScreen extends ConsumerWidget {
             RadioListTile<AppThemeMode>(
               title: const Text('System default'),
               value: AppThemeMode.system,
+              // ignore: deprecated_member_use
               groupValue: currentTheme,
+              // ignore: deprecated_member_use
               onChanged: (value) {
                 if (value != null) {
                   ref.read(themeProvider.notifier).setThemeMode(value);

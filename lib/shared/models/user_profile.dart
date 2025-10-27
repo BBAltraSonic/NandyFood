@@ -10,6 +10,8 @@ class UserProfile {
   final String? fullName;
   @JsonKey(name: 'phone_number')
   final String? phoneNumber;
+  @JsonKey(name: 'avatar_url')
+  final String? avatarUrl;
   @JsonKey(name: 'created_at')
   final DateTime createdAt;
   @JsonKey(name: 'updated_at')
@@ -23,6 +25,7 @@ class UserProfile {
     required this.email,
     this.fullName,
     this.phoneNumber,
+    this.avatarUrl,
     required this.createdAt,
     required this.updatedAt,
     this.preferences,
@@ -39,6 +42,7 @@ class UserProfile {
     String? email,
     String? fullName,
     String? phoneNumber,
+    String? avatarUrl,
     DateTime? createdAt,
     DateTime? updatedAt,
     Map<String, dynamic>? preferences,
@@ -49,6 +53,7 @@ class UserProfile {
       email: email ?? this.email,
       fullName: fullName ?? this.fullName,
       phoneNumber: phoneNumber ?? this.phoneNumber,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       preferences: preferences ?? this.preferences,

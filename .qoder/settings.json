@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "ask": [
+      "Read(!C:\\Users\\BB\\Documents\\NandyFood/**)",
+      "Edit(!C:\\Users\\BB\\Documents\\NandyFood/**)"
+    ],
+    "allow": [
+      "Read(C:\\Users\\BB\\Documents\\NandyFood/**)",
+      "Edit(C:\\Users\\BB\\Documents\\NandyFood/**)"
+    ]
+  },
+  "memoryImport": {},
+  "monitoring": {}
+}

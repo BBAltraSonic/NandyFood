@@ -211,7 +211,8 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
       ),
     );
 
-    if (confirmed == true) {
+    // ignore: use_if_null_to_convert_nulls_to_bools
+    if (confirmed ?? false) {
       final success = await ref.read(reviewProvider.notifier).deleteReview(reviewId);
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

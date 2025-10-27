@@ -109,9 +109,7 @@ class _CouponInputWidgetState extends State<CouponInputWidget> {
                   OutlinedButton(
                     onPressed: widget.isLoading ? null : () {
                       _controller.clear();
-                      if (widget.onRemove != null) {
-                        widget.onRemove!();
-                      }
+                      widget.onRemove?.call();
                       _focusNode.requestFocus();
                     },
                     style: OutlinedButton.styleFrom(

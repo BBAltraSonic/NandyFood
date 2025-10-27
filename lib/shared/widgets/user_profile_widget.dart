@@ -25,15 +25,16 @@ class UserProfileWidget extends StatelessWidget {
             // Profile header
             Row(
               children: [
-                // Profile picture placeholder
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: Colors.deepOrange.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.person, color: Colors.deepOrange, size: 30),
+                // Profile picture
+                CircleAvatar(
+                  radius: 30,
+                  backgroundColor: Colors.deepOrange.withValues(alpha: 0.1),
+                  backgroundImage: userProfile.avatarUrl != null
+                      ? NetworkImage(userProfile.avatarUrl!)
+                      : null,
+                  child: userProfile.avatarUrl == null
+                      ? const Icon(Icons.person, color: Colors.deepOrange, size: 30)
+                      : null,
                 ),
                 const SizedBox(width: 16),
                 // User name and email

@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:food_delivery_app/core/services/database_service.dart';
 import 'package:food_delivery_app/shared/models/address.dart';
+import 'package:food_delivery_app/features/profile/data/repositories/address_repository.dart';
 
 class AddressState {
   final List<Address> addresses;
@@ -35,15 +35,16 @@ final addressProvider = StateNotifierProvider<AddressNotifier, AddressState>(
 );
 
 class AddressNotifier extends StateNotifier<AddressState> {
-  AddressNotifier() : super(const AddressState());
+  final AddressRepository _repo;
+  AddressNotifier({AddressRepository? repo})
+      : _repo = repo ?? AddressRepository(),
+        super(const AddressState());
 
   Future<void> loadAddresses(String userId) async {
     state = state.copyWith(isLoading: true);
 
     try {
-      await Future.delayed(const Duration(milliseconds: 200));
-
-      final addresses = <Address>[];
+      final addresses = await _repo.fetchAddresses(userId);
 
       state = state.copyWith(
         addresses: addresses,
@@ -60,26 +61,29 @@ class AddressNotifier extends StateNotifier<AddressState> {
     state = state.copyWith(isLoading: true);
 
     try {
-      await _persistAddress(address.toJson());
+      final created = await _repo.createAddress(
+        userId: address.userId,
+        type: address.type,
+        street: address.street,
+        city: address.city,
+        state: address.state,
+        zipCode: address.zipCode,
+        country: address.country,
+        apartment: address.apartment,
+        deliveryInstructions: address.deliveryInstructions,
+        isDefault: address.isDefault || state.addresses.isEmpty,
+        latitude: address.latitude,
+        longitude: address.longitude,
+      );
 
-      final updatedAddresses = [...state.addresses];
-      final shouldBeDefault = address.isDefault || updatedAddresses.isEmpty;
-
-      final newAddress = shouldBeDefault
-          ? address.copyWith(isDefault: true)
-          : address.copyWith(isDefault: false);
-
-      final normalizedAddresses = shouldBeDefault
-          ? updatedAddresses
-                .map((addr) => addr.copyWith(isDefault: false))
-                .toList()
-          : updatedAddresses;
-
-      normalizedAddresses.add(newAddress);
+      final updatedAddresses = state.addresses
+          .map((a) => created.isDefault ? a.copyWith(isDefault: false) : a)
+          .toList();
+      updatedAddresses.add(created);
 
       state = state.copyWith(
-        addresses: normalizedAddresses,
-        defaultAddress: _findDefault(normalizedAddresses),
+        addresses: updatedAddresses,
+        defaultAddress: _findDefault(updatedAddresses),
         isLoading: false,
         errorMessage: null,
       );
@@ -92,13 +96,27 @@ class AddressNotifier extends StateNotifier<AddressState> {
     state = state.copyWith(isLoading: true);
 
     try {
-      await _persistAddress(updated.toJson());
+      final saved = await _repo.updateAddress(
+        updated.id,
+        userId: updated.userId,
+        type: updated.type,
+        street: updated.street,
+        city: updated.city,
+        state: updated.state,
+        zipCode: updated.zipCode,
+        country: updated.country,
+        apartment: updated.apartment,
+        deliveryInstructions: updated.deliveryInstructions,
+        isDefault: updated.isDefault,
+        latitude: updated.latitude,
+        longitude: updated.longitude,
+      );
 
       final updatedAddresses = state.addresses.map((address) {
-        if (address.id == updated.id) {
-          return updated;
+        if (address.id == saved.id) {
+          return saved;
         }
-        return updated.isDefault ? address.copyWith(isDefault: false) : address;
+        return saved.isDefault ? address.copyWith(isDefault: false) : address;
       }).toList();
 
       state = state.copyWith(
@@ -116,6 +134,15 @@ class AddressNotifier extends StateNotifier<AddressState> {
     state = state.copyWith(isLoading: true);
 
     try {
+      // Derive userId from current addresses list
+      final target = state.addresses.firstWhere(
+        (a) => a.id == addressId,
+        orElse: () => state.addresses.first,
+      );
+      final userId = target.userId;
+
+      await _repo.setDefaultAddress(userId, addressId);
+
       final updatedAddresses = state.addresses.map((address) {
         return address.copyWith(isDefault: address.id == addressId);
       }).toList();
@@ -126,8 +153,6 @@ class AddressNotifier extends StateNotifier<AddressState> {
             ? updatedAddresses.first
             : throw StateError('No addresses available'),
       );
-
-      await _persistAddress(defaultAddress.copyWith(isDefault: true).toJson());
 
       state = state.copyWith(
         addresses: updatedAddresses,
@@ -144,6 +169,8 @@ class AddressNotifier extends StateNotifier<AddressState> {
     state = state.copyWith(isLoading: true);
 
     try {
+      await _repo.deleteAddress(addressId);
+
       final remainingAddresses = state.addresses
           .where((address) => address.id != addressId)
           .toList();
@@ -174,19 +201,5 @@ class AddressNotifier extends StateNotifier<AddressState> {
     );
   }
 
-  Future<void> _persistAddress(Map<String, dynamic> data) async {
-    try {
-      final db = DatabaseService();
-      await db.initialize();
-      // Accessing the client ensures initialization; any missing plugin/state errors are ignored in tests.
-      // ignore: unused_local_variable
-      final _ = db.client;
-    } catch (e) {
-      final isInitializationError =
-          e is StateError || e.toString().contains('not initialized');
-      if (!isInitializationError) {
-        rethrow;
-      }
-    }
-  }
+
 }

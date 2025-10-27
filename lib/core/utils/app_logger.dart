@@ -61,7 +61,7 @@ class AppLogger {
     // If the whole string looks like a JWT or long token, mask partially
     if (RegExp(r'^[A-Za-z0-9\-_.]{24,}$').hasMatch(s)) {
       if (s.length > 10) {
-        s = s.substring(0, 4) + '***' + s.substring(s.length - 4);
+        s = '${s.substring(0, 4)}***${s.substring(s.length - 4)}';
       } else {
         s = '***';
       }

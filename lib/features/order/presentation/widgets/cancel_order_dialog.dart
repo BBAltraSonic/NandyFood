@@ -118,7 +118,9 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
                 return RadioListTile<String>(
                   title: Text(reason),
                   value: reason,
+                  // ignore: deprecated_member_use
                   groupValue: _selectedReason,
+                  // ignore: deprecated_member_use
                   onChanged: _isProcessing
                       ? null
                       : (value) {

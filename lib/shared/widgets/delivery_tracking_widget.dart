@@ -91,17 +91,17 @@ class DeliveryTrackingWidget extends StatelessWidget {
 
   /// Build status timeline
   Widget _buildStatusTimeline(DeliveryStatus status) {
-    final steps = [
-      {'title': 'Order Assigned', 'status': DeliveryStatus.assigned},
-      {'title': 'Picked Up', 'status': DeliveryStatus.pickedUp},
-      {'title': 'In Transit', 'status': DeliveryStatus.inTransit},
-      {'title': 'Delivered', 'status': DeliveryStatus.delivered},
+    final List<_DeliveryStep> steps = const [
+      _DeliveryStep('Order Assigned', DeliveryStatus.assigned),
+      _DeliveryStep('Picked Up', DeliveryStatus.pickedUp),
+      _DeliveryStep('In Transit', DeliveryStatus.inTransit),
+      _DeliveryStep('Delivered', DeliveryStatus.delivered),
     ];
 
     return Column(
       children: List.generate(steps.length, (index) {
         final step = steps[index];
-        final stepStatus = step['status'] as DeliveryStatus;
+        final stepStatus = step.status;
         final isCompleted = _isStepCompleted(status, stepStatus);
         final isCurrent = status == stepStatus;
 
@@ -127,7 +127,7 @@ class DeliveryTrackingWidget extends StatelessWidget {
                 // Step title
                 Expanded(
                   child: Text(
-                    step['title'] as String,
+                    step.title,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: isCurrent
@@ -195,4 +195,11 @@ class DeliveryTrackingWidget extends StatelessWidget {
         return Colors.green;
     }
   }
+}
+
+
+class _DeliveryStep {
+  final String title;
+  final DeliveryStatus status;
+  const _DeliveryStep(this.title, this.status);
 }

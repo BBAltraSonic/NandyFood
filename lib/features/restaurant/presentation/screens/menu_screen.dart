@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:food_delivery_app/features/restaurant/presentation/providers/restaurant_provider.dart';
 import 'package:food_delivery_app/features/restaurant/presentation/widgets/menu_item_card.dart';
 import 'package:food_delivery_app/shared/models/restaurant.dart';
+import 'package:food_delivery_app/shared/models/menu_item.dart';
+
 import 'package:food_delivery_app/shared/widgets/loading_indicator.dart';
 import 'package:food_delivery_app/shared/widgets/error_message_widget.dart';
 import 'package:food_delivery_app/shared/widgets/filter_widget.dart';
@@ -64,7 +66,7 @@ class MenuScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          '${restaurant?.name ?? restaurantState.selectedRestaurant?.name ?? "Menu"}',
+          restaurant?.name ?? restaurantState.selectedRestaurant?.name ?? 'Menu',
         ),
         centerTitle: true,
       ),
@@ -153,11 +155,11 @@ class MenuScreen extends ConsumerWidget {
     }
 
     // Group menu items by category
-    final Map<String, List> categories = {};
+    final Map<String, List<MenuItem>> categories = {};
     for (final item in menuItems) {
       final category = item.category ?? 'Other';
       if (!categories.containsKey(category)) {
-        categories[category] = [];
+        categories[category] = <MenuItem>[];
       }
       categories[category]!.add(item);
     }
@@ -175,7 +177,7 @@ class MenuScreen extends ConsumerWidget {
         itemCount: categories.length,
         itemBuilder: (context, index) {
           final categoryName = categories.keys.elementAt(index);
-          final items = categories[categoryName] as List;
+          final items = categories[categoryName]!;
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,

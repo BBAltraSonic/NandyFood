@@ -25,7 +25,12 @@ class ProfileHeaderWidget extends StatelessWidget {
             CircleAvatar(
               radius: 50,
               backgroundColor: Colors.deepOrange.withValues(alpha: 0.1),
-              child: Icon(Icons.person, size: 50, color: Colors.deepOrange),
+              backgroundImage: userProfile.avatarUrl != null
+                  ? NetworkImage(userProfile.avatarUrl!)
+                  : null,
+              child: userProfile.avatarUrl == null
+                  ? const Icon(Icons.person, size: 50, color: Colors.deepOrange)
+                  : null,
             ),
             const SizedBox(height: 16),
             // User name

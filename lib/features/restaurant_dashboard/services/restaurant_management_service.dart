@@ -251,6 +251,8 @@ class RestaurantManagementService {
       }).eq('id', orderId);
 
       AppLogger.success('Order status updated: $newStatus');
+      // Best-effort customer notification
+      await _notifyOrderStatusChange(orderId, newStatus);
     } catch (e, stack) {
       AppLogger.error('Failed to update order status', error: e, stack: stack);
       rethrow;
@@ -270,6 +272,12 @@ class RestaurantManagementService {
       }).eq('id', orderId);
 
       AppLogger.success('Order accepted with prep time: $estimatedPrepTimeMinutes min');
+      // Best-effort customer notification
+      await _notifyOrderStatusChange(
+        orderId,
+        'accepted',
+        estimatedDeliveryTime: estimatedTime,
+      );
     } catch (e, stack) {
       AppLogger.error('Failed to accept order', error: e, stack: stack);
       rethrow;
@@ -286,6 +294,8 @@ class RestaurantManagementService {
       }).eq('id', orderId);
 
       AppLogger.success('Order rejected');
+      // Best-effort customer notification
+      await _notifyOrderStatusChange(orderId, 'rejected');
     } catch (e, stack) {
       AppLogger.error('Failed to reject order', error: e, stack: stack);
       rethrow;
@@ -438,4 +448,27 @@ class RestaurantManagementService {
         )
         .subscribe();
   }
+
+  Future<void> _notifyOrderStatusChange(
+    String orderId,
+    String status, {
+    DateTime? estimatedDeliveryTime,
+  }) async {
+    try {
+      await _supabase.functions.invoke(
+        'send-order-notification',
+        body: {
+          'order_id': orderId,
+          'status': status,
+          if (estimatedDeliveryTime != null)
+            'estimated_time': estimatedDeliveryTime.toIso8601String(),
+        },
+      );
+      AppLogger.info('Customer notified for order $orderId status: $status');
+    } catch (e) {
+      // Non-fatal: do not block order update flow
+      AppLogger.warning('Failed to notify customer for order $orderId: $e');
+    }
+  }
+
 }

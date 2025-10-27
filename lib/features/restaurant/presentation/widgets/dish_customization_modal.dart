@@ -89,7 +89,7 @@ class _DishCustomizationModalState extends State<DishCustomizationModal> {
     _loadModifiers();
   }
 
-  bool get _useDynamic => _dto?.hasModifiers == true;
+  bool get _useDynamic => _dto?.hasModifiers ?? false;
 
   Future<void> _loadModifiers() async {
     setState(() => _loadingModifiers = true);

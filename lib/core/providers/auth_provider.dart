@@ -76,6 +76,8 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
   late final RoleService _roleService;
   StreamSubscription<String>? _fcmTokenSub;
 
+  String? _subscribedRestaurantTopic;
+
 
   void _initializeAuthListener() {
     try {
@@ -99,10 +101,13 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
           // Upsert FCM token and listen for refreshes
           await _upsertDeviceTokenIfAvailable();
           await _ensureFcmTokenRefreshListener();
+          // Subscribe to restaurant topic if applicable
+          await _subscribeToRestaurantTopicIfApplicable();
         } else {
           // User is signed out: clean up listener and remove device token
           await _cancelFcmTokenRefreshListener();
           await _deleteDeviceTokenIfAvailable();
+          await _unsubscribeFromRestaurantTopic();
           state = AuthState(user: null, isAuthenticated: false);
         }
       });
@@ -306,6 +311,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true);
     try {
       // Best-effort: delete current device token before signing out (RLS requires auth)
+      await _unsubscribeFromRestaurantTopic();
       await _deleteDeviceTokenIfAvailable();
       await _cancelFcmTokenRefreshListener();
 
@@ -391,6 +397,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(isLoading: true);
       await _roleService.switchPrimaryRole(state.user!.id, roleType);
       await _loadUserRoles(state.user!);
+      await _subscribeToRestaurantTopicIfApplicable();
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -478,4 +485,48 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
       print('Warning: failed to delete device token: $e');
     }
   }
+
+  Future<void> _subscribeToRestaurantTopicIfApplicable() async {
+    try {
+      if (state.user == null) return;
+      if (!state.canAccessRestaurantDashboard) {
+        await _unsubscribeFromRestaurantTopic();
+        return;
+      }
+      final primaryRestaurant = await _roleService.getPrimaryRestaurant(state.user!.id);
+      final restaurantId = primaryRestaurant?.restaurantId;
+      if (restaurantId == null || restaurantId.isEmpty) return;
+      final topic = 'restaurant_$restaurantId';
+
+      // If already subscribed to same topic, skip
+      if (_subscribedRestaurantTopic == topic) return;
+
+      // If subscribed to a different topic, unsubscribe first
+      if (_subscribedRestaurantTopic != null && _subscribedRestaurantTopic != topic) {
+        try {
+          await FirebaseMessaging.instance.unsubscribeFromTopic(_subscribedRestaurantTopic!);
+        } catch (_) {}
+      }
+
+      await FirebaseMessaging.instance.subscribeToTopic(topic);
+      _subscribedRestaurantTopic = topic;
+    } catch (e) {
+      // Non-fatal: do not block auth/role flow
+      print('Warning: failed to subscribe to restaurant topic: $e');
+    }
+  }
+
+  Future<void> _unsubscribeFromRestaurantTopic() async {
+    try {
+      if (_subscribedRestaurantTopic != null) {
+        await FirebaseMessaging.instance.unsubscribeFromTopic(_subscribedRestaurantTopic!);
+      }
+    } catch (e) {
+      // Non-fatal
+      print('Warning: failed to unsubscribe from restaurant topic: $e');
+    } finally {
+      _subscribedRestaurantTopic = null;
+    }
+  }
 }
+

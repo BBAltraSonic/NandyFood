@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -227,28 +226,22 @@ class ImageUploadService {
               leading: const Icon(Icons.photo_library),
               title: const Text('Choose from Gallery'),
               onTap: () async {
-                Navigator.pop(context);
                 final file = await pickImageFromGallery();
-                if (context.mounted && file != null) {
-                  Navigator.pop(context, file);
-                }
+                Navigator.of(context).pop(file);
               },
             ),
             ListTile(
               leading: const Icon(Icons.photo_camera),
               title: const Text('Take a Photo'),
               onTap: () async {
-                Navigator.pop(context);
                 final file = await pickImageFromCamera();
-                if (context.mounted && file != null) {
-                  Navigator.pop(context, file);
-                }
+                Navigator.of(context).pop(file);
               },
             ),
             ListTile(
               leading: const Icon(Icons.cancel),
               title: const Text('Cancel'),
-              onTap: () => Navigator.pop(context),
+              onTap: () => Navigator.of(context).pop(),
             ),
           ],
         ),

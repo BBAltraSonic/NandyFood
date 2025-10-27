@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:food_delivery_app/shared/models/restaurant.dart';
 import 'package:food_delivery_app/core/utils/accessibility_utils.dart';
 
@@ -103,7 +102,8 @@ class AccessibleRestaurantCard extends StatelessWidget {
                       ),
 
                       // Dietary restrictions badges
-                      if (restaurant.dietaryOptions?.isNotEmpty == true) ...[
+                      // ignore: use_if_null_to_convert_nulls_to_bools
+                      if (restaurant.dietaryOptions?.isNotEmpty ?? false) ...[
                         const SizedBox(height: 8),
                         Wrap(
                           spacing: 8,

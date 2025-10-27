@@ -32,6 +32,8 @@ class RoutePaths {
   static const String restaurantMenu = '/restaurant/menu';
   static const String restaurantAnalytics = '/restaurant/analytics';
 
+  static const String restaurantSettings = '/restaurant/settings';
+
   // Promotions
   static const String promotions = '/promotions';
   static const String promoByIdPattern = '/promo/:id';

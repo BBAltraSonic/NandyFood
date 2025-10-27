@@ -191,18 +191,19 @@ Security hygiene (Android OAuth/Firebase)
 - [ ] Ensure provider TOS compliance documentation
 - [x] Implement rationale dialogs for permissions
 - [x] Implement denied/forever-denied flows and fallbacks
+- [x] Centralize permission flow via LocationService.ensureServiceAndPermission()
 
 ### ✅ Task 12: Data Layer & Error Handling (Remaining)
-- [ ] Implement Result<T>/Failure model (sealed classes)
-- [ ] Map Dio/Supabase errors to Failure with user-friendly messages
-- [ ] Implement AuthRepository with Result returns
-- [ ] Implement RestaurantRepository with Result returns
-- [ ] Implement MenuRepository with Result returns
-- [ ] Implement CartOrderRepository with Result returns
-- [ ] Implement ProfileRepository with Result returns
-- [ ] Implement FavouritesRepository with Result returns
-- [ ] Implement OwnerRepository with Result returns
-- [ ] Adopt Riverpod Notifier/AsyncNotifier with codegen for providers
+- [x] Implement Result<T>/Failure model (sealed classes)
+- [x] Map Dio/Supabase errors to Failure with user-friendly messages
+- [x] Implement AuthRepository with Result returns
+- [x] Implement RestaurantRepository with Result returns
+- [x] Implement MenuRepository with Result returns
+- [x] Implement CartOrderRepository with Result returns
+- [x] Implement ProfileRepository with Result returns
+- [x] Implement FavouritesRepository with Result returns
+- [x] Implement OwnerRepository with Result returns
+- [x] Adopt Riverpod Notifier/AsyncNotifier (featuredRestaurantsProvider) — codegen optional to add later
 - [ ] Remove state_notifier if unused after migration
 
 ### ✅ Task 13: Security & Privacy (Remaining)
@@ -252,7 +253,12 @@ Security hygiene (Android OAuth/Firebase)
   - [x] Ensure DeliveryTrackingService streams unsubscribe on dispose
 - Analyzer cleanup (targeted)
   - [x] Replace deprecated withOpacity usages with withValues()
-  - [ ] Remove unnecessary imports and casts flagged by analyze
+  - [x] Remove unused fields; fix string interpolation/single quotes; add null-aware calls
+  - [x] Fix nullable-to-nonnullable casts (e.g., address_screen) and introduce typed helper classes for tracking widgets
+  - [x] Use `late` for private fields where lifecycle guarantees non-null (delivery_settings/operating_hours)
+  - [x] Temporarily ignore deprecated Radio API usages (groupValue/onChanged) pending RadioGroup migration
+  - [ ] Remaining analyzer infos: 6 total (5 unnecessary imports; 1 deprecated color role). Consider RadioGroup migration and restart/reindex to clear stale import flags.
+  - [ ] Migrate Radio/RadioListTile usages to RadioGroup
 - Targeted tests (widget/deep link)
   - [x] PaymentResultScreen widget tests (success/failure CTAs navigate correctly)
   - [x] PromoDetailScreen apply flow test (disabled state + error actions)
