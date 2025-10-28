@@ -397,13 +397,13 @@ class BorderRadiusExtension extends ThemeExtension<BorderRadiusExtension> {
 @immutable
 class ShadowExtension extends ThemeExtension<ShadowExtension> {
   const ShadowExtension({
-    this.xs = ShadowTokens.shadowXs,
-    this.sm = ShadowTokens.shadowSm,
-    this.md = ShadowTokens.shadowMd,
-    this.lg = ShadowTokens.shadowLg,
-    this.xl = ShadowTokens.shadowXl,
-    this.primaryShadow = ShadowTokens.primaryShadow,
-    this.secondaryShadow = ShadowTokens.secondaryShadow,
+    required this.xs,
+    required this.sm,
+    required this.md,
+    required this.lg,
+    required this.xl,
+    required this.primaryShadow,
+    required this.secondaryShadow,
   });
 
   final List<BoxShadow> xs;

@@ -119,8 +119,8 @@ class RestaurantDashboardNotifier
       ]);
 
       state = state.copyWith(
-        pendingOrders: results[0] as List<Order>,
-        recentOrders: results[1] as List<Order>,
+        pendingOrders: results[0],
+        recentOrders: results[1],
       );
     } catch (e) {
       state = state.copyWith(
@@ -243,7 +243,7 @@ class RestaurantDashboardNotifier
       final order = Order.fromJson(data);
       
       // Update pending orders if new order
-      if (order.status == 'pending' || order.status == 'placed') {
+      if (order.status == OrderStatus.placed) {
         final updatedPending = [...state.pendingOrders];
         final existingIndex = updatedPending.indexWhere((o) => o.id == order.id);
         

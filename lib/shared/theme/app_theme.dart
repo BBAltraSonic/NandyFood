@@ -71,7 +71,15 @@ class AppTheme {
         const MealTimeColorsExtension(),
         const SpacingExtension(),
         const BorderRadiusExtension(),
-        const ShadowExtension(),
+        const ShadowExtension(
+        xs: ShadowTokens.shadowXs,
+        sm: ShadowTokens.shadowSm,
+        md: ShadowTokens.shadowMd,
+        lg: ShadowTokens.shadowLg,
+        xl: ShadowTokens.shadowXl,
+        primaryShadow: ShadowTokens.primaryShadow,
+        secondaryShadow: ShadowTokens.secondaryShadow,
+      ),
       ],
     );
   }
@@ -90,8 +98,8 @@ class AppTheme {
       onSecondary: NeutralColors.textOnPrimary,
       surface: NeutralColors.surface,
       onSurface: NeutralColors.textPrimary,
-      background: NeutralColors.background,
-      onBackground: NeutralColors.textPrimary,
+      surfaceContainer: NeutralColors.background,
+      onSurface: NeutralColors.textPrimary,
       error: SemanticColors.error,
       onError: NeutralColors.textOnPrimary,
     );
@@ -107,8 +115,8 @@ class AppTheme {
       onSecondary: NeutralColors.textPrimary,
       surface: NeutralColors.gray800,
       onSurface: NeutralColors.textTertiary,
-      background: NeutralColors.gray900,
-      onBackground: NeutralColors.textTertiary,
+      surfaceContainer: NeutralColors.gray900,
+      onSurface: NeutralColors.textTertiary,
       error: SemanticColors.errorLight,
       onError: NeutralColors.textPrimary,
     );
@@ -376,8 +384,8 @@ class AppTheme {
     );
   }
 
-  static CardTheme _buildCardTheme() {
-    return CardTheme(
+  static CardThemeData _buildCardTheme() {
+    return CardThemeData(
       elevation: 2,
       shadowColor: ShadowTokens.shadowMd.first.color,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(BorderRadiusTokens.lg)),
@@ -453,14 +461,14 @@ class AppTheme {
 
   static SwitchThemeData _buildSwitchTheme() {
     return SwitchThemeData(
-      thumbColor: MaterialStateProperty.resolveWith((states) {
-        if (states.contains(MaterialState.selected)) {
+      thumbColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
           return BrandColors.primary;
         }
         return NeutralColors.gray400;
       }),
-      trackColor: MaterialStateProperty.resolveWith((states) {
-        if (states.contains(MaterialState.selected)) {
+      trackColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
           return BrandColors.primary.withValues(alpha: 0.5);
         }
         return NeutralColors.gray300;
@@ -471,8 +479,8 @@ class AppTheme {
 
   static CheckboxThemeData _buildCheckboxTheme() {
     return CheckboxThemeData(
-      fillColor: MaterialStateProperty.resolveWith((states) {
-        if (states.contains(MaterialState.selected)) {
+      fillColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
           return BrandColors.primary;
         }
         return NeutralColors.gray400;
@@ -484,8 +492,8 @@ class AppTheme {
 
   static RadioThemeData _buildRadioTheme() {
     return RadioThemeData(
-      fillColor: MaterialStateProperty.resolveWith((states) {
-        if (states.contains(MaterialState.selected)) {
+      fillColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
           return BrandColors.primary;
         }
         return NeutralColors.gray400;
@@ -533,8 +541,8 @@ class AppTheme {
     );
   }
 
-  static DialogTheme _buildDialogTheme() {
-    return DialogTheme(
+  static DialogThemeData _buildDialogTheme() {
+    return DialogThemeData(
       backgroundColor: NeutralColors.surface,
       elevation: 8,
       shadowColor: ShadowTokens.shadowLg.first.color,

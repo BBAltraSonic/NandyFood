@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 
 /// List optimization utilities for better performance with large lists
 class ListOptimizer {
