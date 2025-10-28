@@ -44,7 +44,7 @@ class PaymentMethodInfo {
         'expiry_year': expiryYear,
         'is_default': isDefault,
       };
-
+}
 
 // Payment methods state
 class PaymentMethodsState {

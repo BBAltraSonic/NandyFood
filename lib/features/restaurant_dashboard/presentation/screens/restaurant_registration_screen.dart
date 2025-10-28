@@ -1,9 +1,12 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:food_delivery_app/core/providers/auth_provider.dart';
 import 'package:food_delivery_app/core/services/database_service.dart';
+import 'package:food_delivery_app/core/services/image_upload_service.dart';
 import 'package:food_delivery_app/core/utils/app_logger.dart';
 
 class RestaurantRegistrationScreen extends ConsumerStatefulWidget {
@@ -42,6 +45,14 @@ class _RestaurantRegistrationScreenState
 
   final List<String> _selectedDietaryOptions = [];
   final Map<String, Map<String, String>> _operatingHours = {};
+
+  // Document capture fields
+  final ImageUploadService _imageUploadService = ImageUploadService();
+  File? _businessLicenseDocument;
+  File? _foodHandlingPermitDocument;
+  File? _restaurantPhotoDocument;
+  bool _uploadingDocuments = false;
+  final Map<String, String> _uploadedDocumentUrls = {};
 
   final List<String> _cuisineTypes = [
     'Italian',
@@ -99,6 +110,7 @@ class _RestaurantRegistrationScreenState
                 _buildLocationStep(),
                 _buildDetailsStep(),
                 _buildOperatingHoursStep(),
+                _buildDocumentCaptureStep(),
                 _buildReviewStep(),
               ],
             ),
@@ -113,14 +125,14 @@ class _RestaurantRegistrationScreenState
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
-        children: List.generate(5, (index) {
+        children: List.generate(6, (index) {
           final isCompleted = index < _currentStep;
           final isCurrent = index == _currentStep;
 
           return Expanded(
             child: Container(
               height: 4,
-              margin: EdgeInsets.only(right: index < 4 ? 8 : 0),
+              margin: EdgeInsets.only(right: index < 5 ? 8 : 0),
               decoration: BoxDecoration(
                 color: isCompleted || isCurrent
                     ? Theme.of(context).colorScheme.primary
@@ -487,6 +499,193 @@ class _RestaurantRegistrationScreenState
     );
   }
 
+  Widget _buildDocumentCaptureStep() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Document Verification',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Please upload required documents for verification',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey.shade600,
+                ),
+          ),
+          const SizedBox(height: 32),
+
+          // Business License Document
+          _buildDocumentUploadSection(
+            'Business License',
+            'Upload your valid business license or registration document',
+            _businessLicenseDocument,
+            'business_license',
+            Icons.business_center_rounded,
+          ),
+
+          const SizedBox(height: 24),
+
+          // Food Handling Permit
+          _buildDocumentUploadSection(
+            'Food Handling Permit',
+            'Upload your food handler\'s certificate or health department permit',
+            _foodHandlingPermitDocument,
+            'food_handling_permit',
+            Icons.health_and_safety_rounded,
+          ),
+
+          const SizedBox(height: 24),
+
+          // Restaurant Photo
+          _buildDocumentUploadSection(
+            'Restaurant Photo',
+            'Upload a clear photo of your restaurant exterior',
+            _restaurantPhotoDocument,
+            'restaurant_photo',
+            Icons.storefront_rounded,
+          ),
+
+          const SizedBox(height: 32),
+          Card(
+            color: Colors.blue.shade50,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, color: Colors.blue.shade700),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'All documents are securely stored and used only for verification purposes. Verification typically takes 1-2 business days.',
+                      style: TextStyle(color: Colors.blue.shade700),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDocumentUploadSection(
+    String title,
+    String description,
+    File? selectedFile,
+    String documentType,
+    IconData icon,
+  ) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: Theme.of(context).colorScheme.primary),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        description,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.grey.shade600,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (selectedFile != null)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.green.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.green.shade700),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        selectedFile.path.split('/').last,
+                        style: TextStyle(
+                          color: Colors.green.shade700,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          switch (documentType) {
+                            case 'business_license':
+                              _businessLicenseDocument = null;
+                              break;
+                            case 'food_handling_permit':
+                              _foodHandlingPermitDocument = null;
+                              break;
+                            case 'restaurant_photo':
+                              _restaurantPhotoDocument = null;
+                              break;
+                          }
+                          _uploadedDocumentUrls.remove(documentType);
+                        });
+                      },
+                      icon: Icon(Icons.close, color: Colors.red.shade600),
+                    ),
+                  ],
+                ),
+              )
+            else
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _uploadingDocuments ? null : () => _selectDocument(documentType, ImageSource.gallery),
+                      icon: const Icon(Icons.photo_library),
+                      label: const Text('Choose from Gallery'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: _uploadingDocuments ? null : () => _selectDocument(documentType, ImageSource.camera),
+                      icon: const Icon(Icons.camera_alt),
+                      label: const Text('Take Photo'),
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildReviewStep() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -527,6 +726,12 @@ class _RestaurantRegistrationScreenState
             _buildReviewItem('Delivery Time', '$_estimatedDeliveryTime minutes'),
             if (_selectedDietaryOptions.isNotEmpty)
               _buildReviewItem('Dietary Options', _selectedDietaryOptions.join(', ')),
+          ]),
+          const SizedBox(height: 16),
+          _buildReviewSection('Documents', [
+            _buildReviewItem('Business License', _businessLicenseDocument != null ? '✓ Uploaded' : '✗ Not uploaded'),
+            _buildReviewItem('Food Handling Permit', _foodHandlingPermitDocument != null ? '✓ Uploaded' : '✗ Not uploaded'),
+            _buildReviewItem('Restaurant Photo', _restaurantPhotoDocument != null ? '✓ Uploaded' : '✗ Not uploaded'),
           ]),
         ],
       ),
@@ -610,11 +815,11 @@ class _RestaurantRegistrationScreenState
           Expanded(
             flex: 2,
             child: ElevatedButton(
-              onPressed: _isLoading ? null : _nextStep,
+              onPressed: (_isLoading || _uploadingDocuments) ? null : _nextStep,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
-              child: _isLoading
+              child: _isLoading || _uploadingDocuments
                   ? const SizedBox(
                       height: 20,
                       width: 20,
@@ -623,7 +828,7 @@ class _RestaurantRegistrationScreenState
                         color: Colors.white,
                       ),
                     )
-                  : Text(_currentStep == 4 ? 'Submit' : 'Continue'),
+                  : Text(_currentStep == 5 ? 'Submit' : 'Continue'),
             ),
           ),
         ],
@@ -653,6 +858,47 @@ class _RestaurantRegistrationScreenState
     }
   }
 
+  Future<void> _selectDocument(String documentType, ImageSource source) async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: source,
+        maxWidth: 1920,
+        maxHeight: 1920,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        setState(() {
+          final file = File(image.path);
+          switch (documentType) {
+            case 'business_license':
+              _businessLicenseDocument = file;
+              break;
+            case 'food_handling_permit':
+              _foodHandlingPermitDocument = file;
+              break;
+            case 'restaurant_photo':
+              _restaurantPhotoDocument = file;
+              break;
+          }
+        });
+
+        AppLogger.success('Document selected: $documentType');
+      }
+    } catch (e) {
+      AppLogger.error('Error selecting document: $documentType', error: e);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to select document: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   void _previousStep() {
     if (_currentStep > 0) {
       setState(() => _currentStep--);
@@ -664,10 +910,25 @@ class _RestaurantRegistrationScreenState
   }
 
   Future<void> _nextStep() async {
-    if (_currentStep < 4) {
+    if (_currentStep < 5) {
       // Validate current step
       if (_currentStep == 0 && !_formKey.currentState!.validate()) {
         return;
+      }
+
+      // Validate document capture step
+      if (_currentStep == 4) {
+        if (_businessLicenseDocument == null ||
+            _foodHandlingPermitDocument == null ||
+            _restaurantPhotoDocument == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please upload all required documents'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          return;
+        }
       }
 
       setState(() => _currentStep++);
@@ -713,7 +974,7 @@ class _RestaurantRegistrationScreenState
         // Continue with 0,0 coordinates if geocoding fails
       }
 
-      // Create restaurant record
+      // Create restaurant record first to get restaurant ID
       final response = await DatabaseService().client.from('restaurants').insert({
         'name': _nameController.text,
         'description': _descriptionController.text,
@@ -734,11 +995,60 @@ class _RestaurantRegistrationScreenState
         'estimated_delivery_time': _estimatedDeliveryTime,
         'is_active': false, // Needs approval
         'dietary_options': _selectedDietaryOptions,
+        'verification_status': 'pending', // Pending document verification
         'created_at': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),
       }).select().single();
 
       final restaurantId = response['id'] as String;
+
+      // Upload documents
+      setState(() => _uploadingDocuments = true);
+
+      try {
+        if (_businessLicenseDocument != null) {
+          final url = await _imageUploadService.uploadRestaurantDocument(
+            _businessLicenseDocument!,
+            restaurantId,
+            'business_license',
+          );
+          _uploadedDocumentUrls['business_license'] = url;
+        }
+
+        if (_foodHandlingPermitDocument != null) {
+          final url = await _imageUploadService.uploadRestaurantDocument(
+            _foodHandlingPermitDocument!,
+            restaurantId,
+            'food_handling_permit',
+          );
+          _uploadedDocumentUrls['food_handling_permit'] = url;
+        }
+
+        if (_restaurantPhotoDocument != null) {
+          final url = await _imageUploadService.uploadRestaurantDocument(
+            _restaurantPhotoDocument!,
+            restaurantId,
+            'restaurant_photo',
+          );
+          _uploadedDocumentUrls['restaurant_photo'] = url;
+        }
+
+        // Update restaurant record with document URLs
+        await DatabaseService().client.from('restaurants').update({
+          'verification_documents': _uploadedDocumentUrls,
+          'updated_at': DateTime.now().toIso8601String(),
+        }).eq('id', restaurantId);
+
+      } catch (e) {
+        AppLogger.error('Document upload failed', error: e);
+        // Continue with registration even if documents fail
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Documents upload failed: $e. You can upload them later.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
 
       // Create restaurant owner record
       await DatabaseService().client.from('restaurant_owners').insert({
@@ -752,7 +1062,7 @@ class _RestaurantRegistrationScreenState
           'view_analytics': true,
           'manage_settings': true,
         },
-        'status': 'pending',
+        'status': 'pending_verification', // Pending document verification
         'created_at': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),
       });
@@ -762,8 +1072,9 @@ class _RestaurantRegistrationScreenState
       // Show success and navigate
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Restaurant registered successfully!'),
+          content: Text('Restaurant registered successfully! Your documents will be reviewed within 1-2 business days.'),
           backgroundColor: Colors.green,
+          duration: Duration(seconds: 4),
         ),
       );
 
@@ -779,7 +1090,10 @@ class _RestaurantRegistrationScreenState
       );
     } finally {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() {
+          _isLoading = false;
+          _uploadingDocuments = false;
+        });
       }
     }
   }

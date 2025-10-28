@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/providers/analytics_provider.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/widgets/sales_chart.dart';
+import 'package:food_delivery_app/features/restaurant_dashboard/presentation/widgets/revenue_pie_chart.dart' as pie;
+import 'package:food_delivery_app/features/restaurant_dashboard/presentation/widgets/peak_hours_chart.dart' as peak;
 
 /// Restaurant analytics dashboard screen
 class RestaurantAnalyticsScreen extends ConsumerStatefulWidget {
@@ -123,7 +125,7 @@ class _RestaurantAnalyticsScreenState
             const SizedBox(height: 16),
 
             // Revenue pie chart
-            RevenuePieChart(
+            pie.RevenuePieChart(
               grossRevenue: analytics.revenueAnalytics.grossRevenue,
               platformFees: analytics.revenueAnalytics.platformFees,
               deliveryFees: analytics.revenueAnalytics.deliveryFees,
@@ -135,7 +137,7 @@ class _RestaurantAnalyticsScreenState
             const SizedBox(height: 16),
 
             // Peak hours chart
-            PeakHoursChart(
+            peak.PeakHoursChart(
               peakHoursData: analytics.peakHours,
             ),
             const SizedBox(height: 16),

@@ -140,6 +140,24 @@ class EnvironmentConfig {
     return _currentEnvironment == Environment.production ? 2 : 1;
   }
 
+  /// Google Server Client ID for Google Sign-In
+  static String? get googleServerClientId {
+    final clientId = dotenv.maybeGet('GOOGLE_SERVER_CLIENT_ID');
+    if (clientId == null || clientId.isEmpty) {
+      return null;
+    }
+    return clientId;
+  }
+
+  /// Check if Google Sign-In is properly configured
+  static bool get isGoogleSignInEnabled {
+    final clientId = googleServerClientId;
+    return clientId != null &&
+           clientId.isNotEmpty &&
+           !clientId.contains('YOUR_') &&
+           !clientId.contains('placeholder');
+  }
+
   /// Cache duration
   static Duration get cacheDuration {
     switch (_currentEnvironment) {

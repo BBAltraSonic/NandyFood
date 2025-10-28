@@ -23,10 +23,13 @@ class CheckoutScreen extends ConsumerWidget {
     final cartState = ref.watch(cartProvider);
     final orderNotifier = ref.read(orderProvider.notifier);
     final paymentMethodsNotifier = ref.read(paymentMethodsProvider.notifier);
+    final authState = ref.watch(authProvider);
 
     // Load payment methods when the screen is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      paymentMethodsNotifier.loadPaymentMethods();
+      if (authState.user != null) {
+        paymentMethodsNotifier.loadPaymentMethods(authState.user!.id);
+      }
     });
 
     return Scaffold(

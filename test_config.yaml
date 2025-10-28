@@ -1,0 +1,207 @@
+# NandyFood Test Configuration
+
+# Test Categories
+test_categories:
+  unit:
+    enabled: true
+    timeout: "5m"
+    retry_count: 2
+    coverage_threshold: 80
+
+  integration:
+    enabled: true
+    timeout: "10m"
+    retry_count: 1
+    coverage_threshold: 70
+
+  widget:
+    enabled: true
+    timeout: "8m"
+    retry_count: 2
+    coverage_threshold: 75
+
+  payment:
+    enabled: true
+    timeout: "15m"
+    retry_count: 3
+    coverage_threshold: 95
+    critical: true
+
+# Coverage Configuration
+coverage:
+  enabled: true
+  format: ["lcov", "json", "html"]
+  exclude_paths:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "test/**"
+    - "integration_test/**"
+    - "**/generated/**"
+
+  minimum_coverage:
+    overall: 75
+    critical_files:
+      - "lib/core/services/payment_service.dart": 95
+      - "lib/shared/models/order.dart": 90
+      - "lib/features/auth/**": 85
+
+# Reporting
+reporting:
+  enabled: true
+  formats: ["json", "html", "markdown"]
+  output_directory: "test_reports"
+
+  notifications:
+    enabled: true
+    channels:
+      - email
+      - slack
+    on_failure: true
+    on_success: false
+
+# CI/CD Integration
+ci_cd:
+  enabled: true
+  platforms:
+    - github_actions
+    - gitlab_ci
+
+  triggers:
+    - push
+    - pull_request
+    - schedule
+
+  schedule:
+    payment_health_check: "0 2 * * *"  # Daily at 2 AM UTC
+    full_test_suite: "0 6 * * 0"      # Weekly on Sunday at 6 AM UTC
+
+# Performance Testing
+performance:
+  enabled: true
+  metrics:
+    - test_execution_time
+    - memory_usage
+    - cpu_usage
+    - startup_time
+
+  thresholds:
+    max_test_time: "15m"
+    max_memory_mb: 1024
+    max_startup_time: "30s"
+
+# Security Testing
+security:
+  enabled: true
+  scans:
+    - dependency_vulnerabilities
+    - code_analysis
+    - secrets_detection
+    - input_validation
+
+  tools:
+    - trivy
+    - semgrep
+    - gitleaks
+
+# Environment Configuration
+environments:
+  development:
+    supabase_url: "https://dev-nandyfood.supabase.co"
+    api_timeout: "30s"
+    log_level: "debug"
+
+  staging:
+    supabase_url: "https://staging-nandyfood.supabase.co"
+    api_timeout: "15s"
+    log_level: "info"
+
+  production:
+    supabase_url: "https://nandyfood.supabase.co"
+    api_timeout: "10s"
+    log_level: "error"
+
+# Test Data Management
+test_data:
+  cleanup_after_test: true
+  backup_before_test: false
+
+  fixtures:
+    users: "test/fixtures/users.json"
+    restaurants: "test/fixtures/restaurants.json"
+    orders: "test/fixtures/orders.json"
+    payment_methods: "test/fixtures/payment_methods.json"
+
+# Mock Services
+mock_services:
+  enabled: true
+
+  payment_gateway:
+    mock_payfast: true
+    mock_cash_on_delivery: true
+
+  notification_service:
+    mock_fcm: true
+    mock_email: true
+
+  geolocation_service:
+    mock_gps: true
+
+  analytics_service:
+    mock_segment: true
+
+# Test Parallelization
+parallelization:
+  enabled: true
+  max_workers: 4
+  shard_strategy: "by_test_file"
+
+  isolation:
+    database: true
+    file_system: false
+    network: true
+
+# Quality Gates
+quality_gates:
+  enabled: true
+
+  criteria:
+    test_pass_rate:
+      minimum: 95
+      critical: true
+
+    coverage_percentage:
+      minimum: 75
+      critical: false
+
+    performance_regression:
+      max_degradation_percent: 10
+      critical: false
+
+    security_vulnerabilities:
+      max_high: 0
+      max_medium: 5
+      critical: true
+
+# Test Environment Setup
+environment_setup:
+  pre_test_commands:
+    - "flutter pub get"
+    - "dart run build_runner build --delete-conflicting-outputs"
+    - "flutter clean"
+
+  post_test_commands:
+    - "flutter clean"
+    - "rm -rf coverage/"
+    - "rm -rf test_results/"
+
+# Debugging
+debugging:
+  enabled: true
+  verbose_output: false
+  save_logs: true
+  log_directory: "test_logs"
+
+  on_failure:
+    take_screenshot: true
+    save_network_logs: true
+    generate_memory_dump: false

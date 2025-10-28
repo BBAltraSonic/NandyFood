@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter analyze:*)",
+      "Bash(flutter build:*)",
+      "Bash(dart run build_runner build:*)",
+      "Bash(dir \"C:\\Users\\BB\\Documents\\NandyFood\\lib\\core\\providers\")",
+      "Bash(flutter test:*)",
+      "Bash(dart run:*)",
+      "Bash(dart:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

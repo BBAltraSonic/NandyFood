@@ -4,11 +4,14 @@ import 'package:go_router/go_router.dart';
 import 'package:food_delivery_app/core/routing/route_paths.dart';
 
 import 'package:food_delivery_app/core/providers/auth_provider.dart';
+import 'package:food_delivery_app/core/providers/role_provider.dart';
 import 'package:food_delivery_app/core/services/role_service.dart';
 import 'package:food_delivery_app/core/utils/app_logger.dart';
+import 'package:food_delivery_app/core/widgets/role_guard.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/providers/restaurant_dashboard_provider.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/widgets/dashboard_stat_card.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/widgets/pending_order_card.dart';
+import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/notifications_screen.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/services/realtime_order_service.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/services/audio_notification_service.dart';
 import 'dart:async';
@@ -91,56 +94,104 @@ class _RestaurantDashboardScreenState
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading || _restaurantId == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
+    return RestaurantAccessGuard(
+      checkVerification: true,
+      redirectTo: '/home',
+      child: Builder(
+        builder: (context) {
+          if (_isLoading || _restaurantId == null) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
 
-    final dashboardState =
-        ref.watch(restaurantDashboardProvider(_restaurantId!));
+          final dashboardState =
+              ref.watch(restaurantDashboardProvider(_restaurantId!));
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Dashboard'),
-            if (dashboardState.restaurant != null)
-              Text(
-                dashboardState.restaurant!.name,
-                style: Theme.of(context).textTheme.bodySmall,
+          return Scaffold(
+            appBar: AppBar(
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Dashboard'),
+                  if (dashboardState.restaurant != null)
+                    Text(
+                      dashboardState.restaurant!.name,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                ],
               ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {
-              // TODO: Navigate to notifications
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () {
-              context.push('/restaurant/settings');
-            },
-          ),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          await ref
-              .read(restaurantDashboardProvider(_restaurantId!).notifier)
-              .loadDashboardData();
+              actions: [
+                Consumer(
+                  builder: (context, ref, child) {
+                    final notifications = ref.watch(notificationsProvider);
+                    final unreadCount = ref.watch(notificationsProvider.notifier).unreadCount;
+
+                    return Stack(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.notifications_outlined),
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => const NotificationsScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                        if (unreadCount > 0)
+                          Positioned(
+                            right: 8,
+                            top: 8,
+                            child: Container(
+                              padding: const EdgeInsets.all(2),
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              constraints: const BoxConstraints(
+                                minWidth: 16,
+                                minHeight: 16,
+                              ),
+                              child: Text(
+                                unreadCount > 99 ? '99+' : unreadCount.toString(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.settings_outlined),
+                  onPressed: () {
+                    context.push('/restaurant/settings');
+                  },
+                ),
+              ],
+            ),
+            body: RefreshIndicator(
+              onRefresh: () async {
+                await ref
+                    .read(restaurantDashboardProvider(_restaurantId!).notifier)
+                    .loadDashboardData();
+              },
+              child: dashboardState.isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : dashboardState.error != null
+                      ? _buildErrorState(dashboardState.error!)
+                      : _buildDashboardContent(dashboardState),
+            ),
+            bottomNavigationBar: _buildBottomNav(),
+          );
         },
-        child: dashboardState.isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : dashboardState.error != null
-                ? _buildErrorState(dashboardState.error!)
-                : _buildDashboardContent(dashboardState),
       ),
-      bottomNavigationBar: _buildBottomNav(),
     );
   }
 
@@ -230,6 +281,24 @@ class _RestaurantDashboardScreenState
         // Quick actions
         _buildQuickActions(),
         const SizedBox(height: 24),
+
+        // Owner-only features
+        Consumer(
+          builder: (context, ref, child) {
+            final isOwner = ref.watch(isRestaurantOwnerProvider);
+
+            if (isOwner) {
+              return Column(
+                children: [
+                  _buildOwnerOnlyActions(),
+                  const SizedBox(height: 24),
+                ],
+              );
+            }
+
+            return const SizedBox.shrink();
+          },
+        ),
 
         // Recent activity
         if (state.recentOrders.isNotEmpty) ...[
@@ -404,6 +473,54 @@ class _RestaurantDashboardScreenState
               Icons.analytics_rounded,
               Colors.purple,
               () => context.push(RoutePaths.restaurantAnalytics),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOwnerOnlyActions() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Owner Actions',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        const SizedBox(height: 12),
+        GridView.count(
+          crossAxisCount: 2,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          children: [
+            _buildQuickActionCard(
+              'Restaurant Info',
+              Icons.info_rounded,
+              Colors.indigo,
+              () => context.push('/restaurant/info'),
+            ),
+            _buildQuickActionCard(
+              'Staff Management',
+              Icons.people_rounded,
+              Colors.teal,
+              () => context.push('/restaurant/staff'),
+            ),
+            _buildQuickActionCard(
+              'Financial Reports',
+              Icons.attach_money_rounded,
+              Colors.green,
+              () => context.push('/restaurant/reports'),
+            ),
+            _buildQuickActionCard(
+              'Promotions',
+              Icons.local_offer_rounded,
+              Colors.red,
+              () => context.push('/restaurant/promotions'),
             ),
           ],
         ),
@@ -591,6 +708,22 @@ class _RestaurantDashboardScreenState
       (order) {
         AppLogger.success('🆕 NEW ORDER: ${order.id}');
 
+        // Add notification to notifications list
+        final notification = RestaurantNotification(
+          id: 'new_order_${order.id}_${DateTime.now().millisecondsSinceEpoch}',
+          title: 'New Order Received!',
+          message: 'Order #${order.id.substring(0, 8)} for R${order.totalAmount.toStringAsFixed(2)}',
+          type: NotificationType.newOrder,
+          timestamp: DateTime.now(),
+          data: {
+            'orderId': order.id,
+            'totalAmount': order.totalAmount,
+            'customerName': order.customerName ?? 'Customer',
+          },
+          actionUrl: RoutePaths.restaurantOrders,
+        );
+        ref.read(notificationsProvider.notifier).addNotification(notification);
+
         // Play notification sound
         _audioService.playNewOrderSound();
         _audioService.vibrateForNewOrder();
@@ -648,6 +781,24 @@ class _RestaurantDashboardScreenState
     _statusChangeSubscription = _realtimeService.orderStatusStream.listen(
       (order) {
         AppLogger.info('Order ${order.id} status changed to: ${order.status}');
+
+        // Add notification for important status changes
+        if (order.status.name == 'delivered' || order.status.name == 'cancelled') {
+          final notification = RestaurantNotification(
+            id: 'status_change_${order.id}_${DateTime.now().millisecondsSinceEpoch}',
+            title: 'Order ${order.status.name == 'delivered' ? 'Delivered' : 'Cancelled'}',
+            message: 'Order #${order.id.substring(0, 8)} has been ${order.status.name}',
+            type: NotificationType.orderStatusChange,
+            timestamp: DateTime.now(),
+            data: {
+              'orderId': order.id,
+              'status': order.status.name,
+              'totalAmount': order.totalAmount,
+            },
+            actionUrl: RoutePaths.restaurantOrders,
+          );
+          ref.read(notificationsProvider.notifier).addNotification(notification);
+        }
 
         // Play soft notification
         _audioService.playStatusChangeSound();

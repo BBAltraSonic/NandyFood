@@ -97,7 +97,7 @@ class AddressNotifier extends StateNotifier<AddressState> {
 
     try {
       final saved = await _repo.updateAddress(
-        updated.id,
+        id: updated.id,
         userId: updated.userId,
         type: updated.type,
         street: updated.street,

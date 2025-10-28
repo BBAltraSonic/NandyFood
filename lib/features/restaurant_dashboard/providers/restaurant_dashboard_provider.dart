@@ -253,11 +253,11 @@ class RestaurantDashboardNotifier
           updatedPending.insert(0, order);
           // Show notification for new order
           final customerAddress = order.deliveryAddress['name'] as String? ?? 'Customer';
-          _notificationService.showNewOrderNotification(
-            orderId: order.id,
-            customerName: customerAddress,
-            orderTotal: order.total,
-            itemCount: order.items.length,
+          _notificationService.showNotification(
+            id: DateTime.now().millisecondsSinceEpoch.remainder(100000),
+            title: 'New Order Received!',
+            body: 'Order from $customerAddress for ${order.total.toStringAsFixed(2)}',
+            payload: 'order:${order.id}',
           );
         }
         

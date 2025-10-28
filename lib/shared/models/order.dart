@@ -7,6 +7,7 @@ part 'order.g.dart';
 class Order {
   final String id;
   final String userId;
+  final String? customerName;
   final String restaurantId;
   final String? restaurantName;
   final Map<String, dynamic> deliveryAddress;
@@ -40,6 +41,7 @@ class Order {
   Order({
     required this.id,
     required this.userId,
+    this.customerName,
     required this.restaurantId,
     this.restaurantName,
     required this.deliveryAddress,
@@ -87,6 +89,7 @@ class Order {
   Order copyWith({
     String? id,
     String? userId,
+    String? customerName,
     String? restaurantId,
     String? restaurantName,
     Map<String, dynamic>? deliveryAddress,
@@ -114,6 +117,7 @@ class Order {
     return Order(
       id: id ?? this.id,
       userId: userId ?? this.userId,
+      customerName: customerName ?? this.customerName,
       restaurantId: restaurantId ?? this.restaurantId,
       deliveryAddress: deliveryAddress ?? this.deliveryAddress,
       status: status ?? this.status,

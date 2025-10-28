@@ -13,6 +13,7 @@ Favourite _$FavouriteFromJson(Map<String, dynamic> json) => Favourite(
   restaurantId: json['restaurant_id'] as String?,
   menuItemId: json['menu_item_id'] as String?,
   createdAt: DateTime.parse(json['created_at'] as String),
+  updatedAt: DateTime.parse(json['updated_at'] as String),
   restaurant: json['restaurant'] == null
       ? null
       : Restaurant.fromJson(json['restaurant'] as Map<String, dynamic>),
@@ -28,6 +29,7 @@ Map<String, dynamic> _$FavouriteToJson(Favourite instance) => <String, dynamic>{
   'restaurant_id': instance.restaurantId,
   'menu_item_id': instance.menuItemId,
   'created_at': instance.createdAt.toIso8601String(),
+  'updated_at': instance.updatedAt.toIso8601String(),
   'restaurant': instance.restaurant?.toJson(),
   'menu_item': instance.menuItem?.toJson(),
 };

@@ -23,6 +23,7 @@ import 'package:food_delivery_app/features/restaurant_dashboard/presentation/scr
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_orders_screen.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_menu_screen.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_analytics_screen.dart';
+import 'package:food_delivery_app/features/restaurant_dashboard/presentation/widgets/restaurant_analytics_session_wrapper.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_settings_screen.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_info_screen.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/delivery_settings_screen.dart';
@@ -258,7 +259,7 @@ class _FoodDeliveryAppState extends ConsumerState<FoodDeliveryApp> {
         ),
         GoRoute(
           path: RoutePaths.restaurantAnalytics,
-          builder: (context, state) => const RestaurantAnalyticsScreen(),
+          builder: (context, state) => const RestaurantAnalyticsSessionWrapper(),
           redirect: (context, state) => RouteGuards.requireRestaurantRole(state),
         ),
         GoRoute(

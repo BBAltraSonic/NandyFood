@@ -2,6 +2,8 @@ import 'dart:io' show Platform;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:food_delivery_app/core/config/environment_config.dart';
 
 class AuthService {
   static final AuthService _instance = AuthService._internal();
@@ -68,11 +70,20 @@ class AuthService {
   // Sign in with Google
   Future<AuthResponse> signInWithGoogle() async {
     try {
+      // Get Google Sign-In configuration from environment
+      // For now, use environment variable directly
+      final serverClientId = dotenv.env['GOOGLE_SERVER_CLIENT_ID'];
+      if (serverClientId == null || serverClientId.isEmpty) {
+        throw AuthException(
+          'Google Sign-In is not properly configured. Please contact support.',
+          statusCode: 'config_error',
+        );
+      }
+
       // Initialize Google Sign-In if not already done
       _googleSignIn ??= GoogleSignIn(
-        serverClientId: Platform.isAndroid
-            ? 'YOUR_ANDROID_CLIENT_ID.apps.googleusercontent.com'
-            : null,
+        serverClientId: serverClientId,
+        scopes: ['email', 'profile'],
       );
 
       // Trigger Google Sign-In flow
@@ -235,17 +246,6 @@ class AuthService {
     }
   }
 
-  // Sign out
-  Future<void> signOut() async {
-    // Sign out from Google if logged in
-    if (_googleSignIn != null && await _googleSignIn!.isSignedIn()) {
-      await _googleSignIn!.signOut();
-    }
-
-    // Sign out from Supabase
-    await auth.signOut();
-  }
-
   // Get current user
   User? getCurrentUser() {
     return auth.currentUser;
@@ -317,4 +317,73 @@ class AuthService {
       print('Error ensuring user profile exists: $e');
     }
   }
+
+  /// Get Google Server Client ID from environment configuration
+  String? get _googleServerClientId {
+    return EnvironmentConfig.googleServerClientId;
+  }
+
+  /// Validate Google Sign-In configuration
+  bool get isGoogleSignInConfigured {
+    return EnvironmentConfig.isGoogleSignInEnabled;
+  }
+
+  /// Get supported authentication methods
+  List<AuthMethod> get supportedAuthMethods {
+    final methods = <AuthMethod>[AuthMethod.email];
+
+    if (isGoogleSignInConfigured) {
+      methods.add(AuthMethod.google);
+    }
+
+    // Note: Apple Sign-In can be added here when configured
+    // if (_isAppleSignInConfigured) {
+    //   methods.add(AuthMethod.apple);
+    // }
+
+    return methods;
+  }
+
+  /// Enhanced sign out with cleanup
+  Future<void> signOut() async {
+    try {
+      await auth.signOut();
+
+      // Sign out from Google if signed in
+      if (_googleSignIn != null && await _googleSignIn!.isSignedIn()) {
+        await _googleSignIn!.signOut();
+      }
+
+      // Note: Apple Sign-In sign out can be added here when implemented
+
+      print('User signed out successfully');
+    } catch (e) {
+      print('Error during sign out: $e');
+      // Still try to clear local session even if provider sign out fails
+      await auth.signOut();
+      rethrow;
+    }
+  }
+
+  /// Check if user is currently signed in with any provider
+  Future<bool> isSignedIn() async {
+    return auth.currentUser != null;
+  }
+
+  /// Get current user with enhanced error handling
+  User? get currentUser {
+    try {
+      return auth.currentUser;
+    } catch (e) {
+      print('Error getting current user: $e');
+      return null;
+    }
+  }
+}
+
+/// Supported authentication methods
+enum AuthMethod {
+  email,
+  google,
+  apple,
 }

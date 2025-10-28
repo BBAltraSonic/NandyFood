@@ -56,7 +56,7 @@ class _OperatingHoursScreenState extends ConsumerState<OperatingHoursScreen> {
       final restaurants = await roleService.getUserRestaurants(userId);
       if (restaurants.isEmpty) return;
 
-      _restaurantId = restaurants.first.restaurantId;
+      _restaurantId = restaurants.first;
       final restaurant =
           await _restaurantService.getRestaurant(_restaurantId);
 

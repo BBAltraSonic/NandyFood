@@ -1,0 +1,184 @@
+name: NandyFood Test CI/CD
+
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master ]
+  schedule:
+    # Run tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        flutter-version: ['3.35.5']
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Java JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ matrix.flutter-version }}
+        channel: 'stable'
+        cache: true
+
+    - name: Install dependencies
+      run: flutter pub get
+
+    - name: Generate code (build_runner)
+      run: dart run build_runner build --delete-conflicting-outputs
+
+    - name: Verify formatting
+      run: dart format --set-exit-if-changed .
+
+    - name: Analyze code
+      run: flutter analyze --fatal-infos --fatal-warnings
+
+    - name: Run unit tests
+      run: flutter test --coverage test/unit/
+
+    - name: Run integration tests
+      run: flutter test --coverage test/integration/
+
+    - name: Run payment system health check
+      run: dart tools/test_infrastructure.dart --payment-health
+
+    - name: Generate coverage report
+      run: |
+        sudo apt-get install -y lcov
+        genhtml coverage/lcov.info --output-directory coverage/html
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: coverage/lcov.info
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+    - name: Upload coverage HTML
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: coverage/html/
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: |
+          test_results/
+          test_reports/
+
+  build-android:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Java JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.35.5'
+        channel: 'stable'
+        cache: true
+
+    - name: Install dependencies
+      run: flutter pub get
+
+    - name: Generate code (build_runner)
+      run: dart run build_runner build --delete-conflicting-outputs
+
+    - name: Build APK (debug)
+      run: flutter build apk --debug
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: nandyfood-debug-apk
+        path: build/app/outputs/flutter-apk/app-debug.apk
+
+  security-scan:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  payment-health-check:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || contains(github.event.head_commit.message, '[payment-test]')
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Java JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.35.5'
+        channel: 'stable'
+        cache: true
+
+    - name: Install dependencies
+      run: flutter pub get
+
+    - name: Run comprehensive payment tests
+      run: |
+        echo "Running payment system comprehensive health check..."
+        dart tools/test_infrastructure.dart --payment-health
+
+    - name: Notify on payment test failure
+      if: failure()
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: 'Payment System Health Check Failed',
+            body: 'The automated payment system health check failed. Please investigate the payment integration.',
+            labels: ['payment', 'critical', 'automated-test']
+          })

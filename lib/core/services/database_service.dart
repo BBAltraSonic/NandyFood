@@ -685,6 +685,20 @@ class DatabaseService {
     }
   }
 
+  Future<Map<String, dynamic>> updatePaymentMethod(String id, Map<String, dynamic> data) async {
+    try {
+      final response = await client
+          .from('payment_methods')
+          .update(data)
+          .eq('id', id)
+          .select()
+          .single();
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<void> deletePaymentMethod(String id) async {
     try {
       await client.from('payment_methods').delete().eq('id', id);

@@ -196,13 +196,40 @@ class ImageUploadService {
     }
   }
 
+  /// Upload restaurant document to Supabase Storage
+  Future<String> uploadRestaurantDocument(File documentFile, String restaurantId, String documentType) async {
+    try {
+      AppLogger.info('Uploading restaurant document for: $restaurantId, type: $documentType');
+
+      final fileExt = path.extension(documentFile.path);
+      final fileName = '$restaurantId-$documentType-${DateTime.now().millisecondsSinceEpoch}$fileExt';
+      final filePath = 'restaurant-documents/$fileName';
+
+      // Upload to Supabase Storage
+      final String fullPath = await _supabase.storage
+          .from('restaurant-documents')
+          .upload(filePath, documentFile);
+
+      // Get public URL
+      final String publicUrl = _supabase.storage
+          .from('restaurant-documents')
+          .getPublicUrl(filePath);
+
+      AppLogger.success('Restaurant document uploaded successfully: $publicUrl');
+      return publicUrl;
+    } catch (e) {
+      AppLogger.error('Error uploading restaurant document', error: e);
+      rethrow;
+    }
+  }
+
   /// Delete old avatar when uploading new one
   Future<void> deleteOldAvatar(String oldAvatarUrl) async {
     try {
       // Extract file path from URL
       final uri = Uri.parse(oldAvatarUrl);
       final segments = uri.pathSegments;
-      
+
       if (segments.length >= 3 && segments[segments.length - 3] == 'user-avatars') {
         final filePath = 'avatars/${segments.last}';
         await deleteImage('user-avatars', filePath);
