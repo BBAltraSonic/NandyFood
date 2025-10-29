@@ -8,72 +8,74 @@ part of 'order.dart';
 
 Order _$OrderFromJson(Map<String, dynamic> json) => Order(
   id: json['id'] as String,
-  userId: json['userId'] as String,
-  restaurantId: json['restaurantId'] as String,
+  userId: json['user_id'] as String,
+  customerName: json['customerName'] as String?,
+  restaurantId: json['restaurant_id'] as String,
   restaurantName: json['restaurantName'] as String?,
-  deliveryAddress: json['deliveryAddress'] as Map<String, dynamic>,
+  deliveryAddress: json['delivery_address'] as Map<String, dynamic>,
   status: $enumDecode(_$OrderStatusEnumMap, json['status']),
   orderItems: (json['orderItems'] as List<dynamic>?)
       ?.map((e) => OrderItem.fromJson(e as Map<String, dynamic>))
       .toList(),
-  totalAmount: (json['totalAmount'] as num).toDouble(),
+  totalAmount: (json['total_amount'] as num).toDouble(),
   subtotal: (json['subtotal'] as num?)?.toDouble(),
-  deliveryFee: (json['deliveryFee'] as num).toDouble(),
-  taxAmount: (json['taxAmount'] as num).toDouble(),
-  tipAmount: (json['tipAmount'] as num?)?.toDouble(),
-  discountAmount: (json['discountAmount'] as num?)?.toDouble(),
-  promoCode: json['promoCode'] as String?,
-  paymentMethod: json['paymentMethod'] as String,
-  paymentStatus: $enumDecode(_$PaymentStatusEnumMap, json['paymentStatus']),
+  deliveryFee: (json['delivery_fee'] as num).toDouble(),
+  taxAmount: (json['tax_amount'] as num).toDouble(),
+  tipAmount: (json['tip_amount'] as num?)?.toDouble(),
+  discountAmount: (json['discount_amount'] as num?)?.toDouble(),
+  promoCode: json['promo_code'] as String?,
+  paymentMethod: json['payment_method'] as String,
+  paymentStatus: $enumDecode(_$PaymentStatusEnumMap, json['payment_status']),
   payfastTransactionId: json['payfast_transaction_id'] as String?,
   payfastSignature: json['payfast_signature'] as String?,
   paymentGateway: json['payment_gateway'] as String?,
   paymentReference: json['payment_reference'] as String?,
-  placedAt: DateTime.parse(json['placedAt'] as String),
-  estimatedDeliveryAt: json['estimatedDeliveryAt'] == null
+  placedAt: DateTime.parse(json['placed_at'] as String),
+  estimatedDeliveryAt: json['estimated_delivery_at'] == null
       ? null
-      : DateTime.parse(json['estimatedDeliveryAt'] as String),
-  deliveredAt: json['deliveredAt'] == null
+      : DateTime.parse(json['estimated_delivery_at'] as String),
+  deliveredAt: json['delivered_at'] == null
       ? null
-      : DateTime.parse(json['deliveredAt'] as String),
+      : DateTime.parse(json['delivered_at'] as String),
   notes: json['notes'] as String?,
-  specialInstructions: json['specialInstructions'] as String?,
-  createdAt: json['createdAt'] == null
+  specialInstructions: json['special_instructions'] as String?,
+  createdAt: json['created_at'] == null
       ? null
-      : DateTime.parse(json['createdAt'] as String),
-  updatedAt: json['updatedAt'] == null
+      : DateTime.parse(json['created_at'] as String),
+  updatedAt: json['updated_at'] == null
       ? null
-      : DateTime.parse(json['updatedAt'] as String),
+      : DateTime.parse(json['updated_at'] as String),
 );
 
 Map<String, dynamic> _$OrderToJson(Order instance) => <String, dynamic>{
   'id': instance.id,
-  'userId': instance.userId,
-  'restaurantId': instance.restaurantId,
+  'user_id': instance.userId,
+  'customerName': instance.customerName,
+  'restaurant_id': instance.restaurantId,
   'restaurantName': instance.restaurantName,
-  'deliveryAddress': instance.deliveryAddress,
+  'delivery_address': instance.deliveryAddress,
   'status': _$OrderStatusEnumMap[instance.status]!,
   'orderItems': instance.orderItems,
-  'totalAmount': instance.totalAmount,
+  'total_amount': instance.totalAmount,
   'subtotal': instance.subtotal,
-  'deliveryFee': instance.deliveryFee,
-  'taxAmount': instance.taxAmount,
-  'tipAmount': instance.tipAmount,
-  'discountAmount': instance.discountAmount,
-  'promoCode': instance.promoCode,
-  'paymentMethod': instance.paymentMethod,
-  'paymentStatus': _$PaymentStatusEnumMap[instance.paymentStatus]!,
+  'delivery_fee': instance.deliveryFee,
+  'tax_amount': instance.taxAmount,
+  'tip_amount': instance.tipAmount,
+  'discount_amount': instance.discountAmount,
+  'promo_code': instance.promoCode,
+  'payment_method': instance.paymentMethod,
+  'payment_status': _$PaymentStatusEnumMap[instance.paymentStatus]!,
   'payfast_transaction_id': instance.payfastTransactionId,
   'payfast_signature': instance.payfastSignature,
   'payment_gateway': instance.paymentGateway,
   'payment_reference': instance.paymentReference,
-  'placedAt': instance.placedAt.toIso8601String(),
-  'estimatedDeliveryAt': instance.estimatedDeliveryAt?.toIso8601String(),
-  'deliveredAt': instance.deliveredAt?.toIso8601String(),
+  'placed_at': instance.placedAt.toIso8601String(),
+  'estimated_delivery_at': instance.estimatedDeliveryAt?.toIso8601String(),
+  'delivered_at': instance.deliveredAt?.toIso8601String(),
   'notes': instance.notes,
-  'specialInstructions': instance.specialInstructions,
-  'createdAt': instance.createdAt.toIso8601String(),
-  'updatedAt': instance.updatedAt.toIso8601String(),
+  'special_instructions': instance.specialInstructions,
+  'created_at': instance.createdAt.toIso8601String(),
+  'updated_at': instance.updatedAt.toIso8601String(),
 };
 
 const _$OrderStatusEnumMap = {

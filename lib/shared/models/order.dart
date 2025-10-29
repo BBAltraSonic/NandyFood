@@ -6,21 +6,32 @@ part 'order.g.dart';
 @JsonSerializable()
 class Order {
   final String id;
+  @JsonKey(name: 'user_id')
   final String userId;
   final String? customerName;
+  @JsonKey(name: 'restaurant_id')
   final String restaurantId;
   final String? restaurantName;
+  @JsonKey(name: 'delivery_address')
   final Map<String, dynamic> deliveryAddress;
   final OrderStatus status;
   final List<OrderItem>? orderItems;
+  @JsonKey(name: 'total_amount')
   final double totalAmount;
   final double? subtotal;
+  @JsonKey(name: 'delivery_fee')
   final double deliveryFee;
+  @JsonKey(name: 'tax_amount')
   final double taxAmount;
+  @JsonKey(name: 'tip_amount')
   final double? tipAmount;
+  @JsonKey(name: 'discount_amount')
   final double? discountAmount;
+  @JsonKey(name: 'promo_code')
   final String? promoCode;
+  @JsonKey(name: 'payment_method')
   final String paymentMethod;
+  @JsonKey(name: 'payment_status')
   final PaymentStatus paymentStatus;
   @JsonKey(name: 'payfast_transaction_id')
   final String? payfastTransactionId;
@@ -30,12 +41,18 @@ class Order {
   final String? paymentGateway;
   @JsonKey(name: 'payment_reference')
   final String? paymentReference;
+  @JsonKey(name: 'placed_at')
   final DateTime placedAt;
+  @JsonKey(name: 'estimated_delivery_at')
   final DateTime? estimatedDeliveryAt;
+  @JsonKey(name: 'delivered_at')
   final DateTime? deliveredAt;
   final String? notes;
+  @JsonKey(name: 'special_instructions')
   final String? specialInstructions;
+  @JsonKey(name: 'created_at')
   final DateTime createdAt;
+  @JsonKey(name: 'updated_at')
   final DateTime updatedAt;
 
   Order({

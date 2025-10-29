@@ -5,9 +5,12 @@ part 'order_item.g.dart';
 @JsonSerializable()
 class OrderItem {
   final String id;
+  @JsonKey(name: 'order_id')
   final String orderId;
+  @JsonKey(name: 'menu_item_id')
   final String menuItemId;
   final int quantity;
+  @JsonKey(name: 'unit_price')
   final double unitPrice;
   final Map<String, dynamic>? customizations;
   final String? specialInstructions;

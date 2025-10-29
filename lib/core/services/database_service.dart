@@ -389,7 +389,9 @@ class DatabaseService {
       final Map<String, Map<String, dynamic>> uniqueRestaurants = {};
 
       for (var order in orders) {
-        final restaurantId = order['restaurant_id'] as String;
+        final restaurantId = order['restaurant_id'] as String?;
+        if (restaurantId == null) continue;
+
         final restaurantData = order['restaurants'] as Map<String, dynamic>?;
 
         // Skip if restaurant data is missing or restaurant is inactive
@@ -482,8 +484,10 @@ class DatabaseService {
       final Map<int, int> breakdown = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
 
       for (var review in reviews) {
-        final rating = review['rating'] as int;
-        breakdown[rating] = (breakdown[rating] ?? 0) + 1;
+        final rating = review['rating'] as int?;
+        if (rating != null && rating >= 1 && rating <= 5) {
+          breakdown[rating] = (breakdown[rating] ?? 0) + 1;
+        }
       }
 
       return breakdown;

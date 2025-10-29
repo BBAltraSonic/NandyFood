@@ -356,8 +356,8 @@ class RestaurantNotifier extends StateNotifier<RestaurantState> {
           return menuItem.restaurantId == restaurant.id &&
               state.selectedDietaryRestrictions.every(
                 (restriction) => menuItem.dietaryRestrictions
-                    .map((s) => s.toLowerCase())
-                    .contains(restriction.toLowerCase()),
+                    ?.map((s) => s.toLowerCase())
+                    .contains(restriction.toLowerCase()) ?? false,
               );
         });
 
@@ -382,8 +382,8 @@ class RestaurantNotifier extends StateNotifier<RestaurantState> {
         // Check if the menu item satisfies all selected dietary restrictions
         return state.selectedDietaryRestrictions.every(
           (restriction) => item.dietaryRestrictions
-              .map((s) => s.toLowerCase())
-              .contains(restriction.toLowerCase()),
+              ?.map((s) => s.toLowerCase())
+              .contains(restriction.toLowerCase()) ?? false,
         );
       }).toList();
     }

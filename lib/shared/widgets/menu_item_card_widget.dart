@@ -80,9 +80,9 @@ class MenuItemCardWidget extends StatelessWidget {
                             color: Colors.deepOrange,
                           ),
                         ),
-                        if (menuItem.dietaryRestrictions.isNotEmpty)
+                        if (menuItem.dietaryRestrictions?.isNotEmpty == true)
                           Row(
-                            children: menuItem.dietaryRestrictions.map((
+                            children: menuItem.dietaryRestrictions!.map((
                               restriction,
                             ) {
                               return Container(

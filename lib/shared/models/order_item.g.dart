@@ -8,20 +8,20 @@ part of 'order_item.dart';
 
 OrderItem _$OrderItemFromJson(Map<String, dynamic> json) => OrderItem(
   id: json['id'] as String,
-  orderId: json['orderId'] as String,
-  menuItemId: json['menuItemId'] as String,
+  orderId: json['order_id'] as String,
+  menuItemId: json['menu_item_id'] as String,
   quantity: (json['quantity'] as num).toInt(),
-  unitPrice: (json['unitPrice'] as num).toDouble(),
+  unitPrice: (json['unit_price'] as num).toDouble(),
   customizations: json['customizations'] as Map<String, dynamic>?,
   specialInstructions: json['specialInstructions'] as String?,
 );
 
 Map<String, dynamic> _$OrderItemToJson(OrderItem instance) => <String, dynamic>{
   'id': instance.id,
-  'orderId': instance.orderId,
-  'menuItemId': instance.menuItemId,
+  'order_id': instance.orderId,
+  'menu_item_id': instance.menuItemId,
   'quantity': instance.quantity,
-  'unitPrice': instance.unitPrice,
+  'unit_price': instance.unitPrice,
   'customizations': instance.customizations,
   'specialInstructions': instance.specialInstructions,
 };

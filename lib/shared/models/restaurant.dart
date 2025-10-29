@@ -7,28 +7,45 @@ class Restaurant {
   final String id;
   final String name;
   final String? description;
+  @JsonKey(name: 'cuisine_type')
   final String cuisineType;
   final Map<String, dynamic> address;
+  @JsonKey(name: 'phone_number')
   final String? phoneNumber;
   final String? email;
+  @JsonKey(name: 'website_url')
   final String? websiteUrl;
+  @JsonKey(name: 'address_line1')
   final String? addressLine1;
+  @JsonKey(name: 'address_line2')
   final String? addressLine2;
   final String? city;
   final String? state;
+  @JsonKey(name: 'postal_code')
   final String? postalCode;
+  @JsonKey(name: 'opening_hours')
   final Map<String, dynamic> openingHours;
   final double rating;
+  @JsonKey(name: 'delivery_radius')
   final double deliveryRadius;
+  @JsonKey(name: 'estimated_delivery_time')
   final int estimatedDeliveryTime;
+  @JsonKey(name: 'delivery_fee')
   final double? deliveryFee;
+  @JsonKey(name: 'minimum_order_amount')
   final double? minimumOrderAmount;
+  @JsonKey(name: 'is_active')
   final bool isActive;
+  @JsonKey(name: 'dietary_options')
   final List<String>? dietaryOptions;
   final List<String>? features;
+  @JsonKey(name: 'logo_url')
   final String? logoUrl;
+  @JsonKey(name: 'cover_image_url')
   final String? coverImageUrl;
+  @JsonKey(name: 'created_at')
   final DateTime createdAt;
+  @JsonKey(name: 'updated_at')
   final DateTime updatedAt;
 
   Restaurant({

@@ -5,16 +5,23 @@ part 'menu_item.g.dart';
 @JsonSerializable()
 class MenuItem {
   final String id;
+  @JsonKey(name: 'restaurant_id')
   final String restaurantId;
   final String name;
   final String? description;
   final double price;
   final String category;
+  @JsonKey(name: 'is_available')
   final bool isAvailable;
-  final List<String> dietaryRestrictions;
+  @JsonKey(name: 'dietary_tags')
+  final List<String>? dietaryRestrictions;
+  @JsonKey(name: 'image_url')
   final String? imageUrl;
+  @JsonKey(name: 'prep_time')
   final int preparationTime; // in minutes
+  @JsonKey(name: 'created_at')
   final DateTime createdAt;
+  @JsonKey(name: 'updated_at')
   final DateTime updatedAt;
 
   MenuItem({
