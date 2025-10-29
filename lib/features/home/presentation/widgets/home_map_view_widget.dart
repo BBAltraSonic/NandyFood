@@ -6,13 +6,17 @@ import 'package:food_delivery_app/shared/models/restaurant.dart';
 class HomeMapViewWidget extends StatefulWidget {
   final List<Restaurant> restaurants;
   final LatLng? userLocation;
-  final Function(Restaurant) onRestaurantTapped;
+  final Function(Restaurant)? onRestaurantTapped;
+  final double? height;
+  final bool showRestaurantPreview;
 
   const HomeMapViewWidget({
     super.key,
     required this.restaurants,
     this.userLocation,
-    required this.onRestaurantTapped,
+    this.onRestaurantTapped,
+    this.height,
+    this.showRestaurantPreview = true,
   });
 
   @override
@@ -200,7 +204,7 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Stack(
+    final mapWidget = Stack(
       children: [
         // Map
         FlutterMap(
@@ -345,6 +349,20 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
           ),
       ],
     );
+
+    // If height is provided, wrap with Container (for compatibility with existing usage)
+    if (widget.height != null) {
+      return Container(
+        height: widget.height,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: mapWidget,
+        ),
+      );
+    }
+
+    // Otherwise return full map widget
+    return mapWidget;
   }
 
   Widget _buildRestaurantPreviewCard(Restaurant restaurant) {
@@ -358,7 +376,7 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
         children: [
           InkWell(
             onTap: () {
-              widget.onRestaurantTapped(restaurant);
+              widget.onRestaurantTapped?.call(restaurant);
             },
             borderRadius: BorderRadius.circular(16),
             child: Padding(

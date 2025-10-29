@@ -319,6 +319,16 @@ class CartNotifier extends StateNotifier<CartState> {
     state = state.copyWith(tipAmount: tip);
   }
 
+  /// Remove promo code
+  void removePromoCode() {
+    state = state.copyWith(
+      promoCode: null,
+      discountAmount: 0.0,
+    );
+    // Recalculate totals with removed promo
+    state = _calculateTotals(state);
+  }
+
   /// Clear cart
   void clearCart() {
     state = state.copyWith(

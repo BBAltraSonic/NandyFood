@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:food_delivery_app/shared/theme/app_theme.dart';
+import 'package:food_delivery_app/shared/theme/design_tokens.dart';
 
 class ModernBottomNavigation extends StatelessWidget {
   final int currentIndex;
@@ -19,15 +19,9 @@ class ModernBottomNavigation extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
-          ),
-        ],
+        color: NeutralColors.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(BorderRadiusTokens.xxl)),
+        boxShadow: ShadowTokens.shadowLg,
       ),
       child: SafeArea(
         child: Padding(
@@ -97,7 +91,7 @@ class ModernBottomNavigation extends StatelessWidget {
             children: [
               Icon(
                 isActive ? activeIcon : icon,
-                color: isActive ? AppTheme.oliveGreen : AppTheme.textSecondary,
+                color: isActive ? BrandColors.primary : NeutralColors.textSecondary,
                 size: 26,
               ),
               const SizedBox(height: 4),
@@ -106,7 +100,7 @@ class ModernBottomNavigation extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-                  color: isActive ? AppTheme.oliveGreen : AppTheme.textSecondary,
+                  color: isActive ? BrandColors.primary : NeutralColors.textSecondary,
                 ),
               ),
             ],
@@ -121,18 +115,16 @@ class ModernBottomNavigation extends StatelessWidget {
       clipBehavior: Clip.none,
       children: [
         Container(
-          width: 64,
-          height: 64,
+          width: 68,
+          height: 68,
           decoration: BoxDecoration(
-            color: AppTheme.oliveGreen,
+            gradient: LinearGradient(
+              colors: [BrandColors.primary, BrandColors.primaryLight],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
             shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: AppTheme.oliveGreen.withValues(alpha: 0.4),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            boxShadow: ShadowTokens.primaryShadow,
           ),
           child: Material(
             color: Colors.transparent,
@@ -155,9 +147,9 @@ class ModernBottomNavigation extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.red,
+                color: BrandColors.accent,
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
+                border: Border.all(color: NeutralColors.surface, width: 2),
               ),
               child: Text(
                 cartItemCount > 99 ? '99+' : cartItemCount.toString(),

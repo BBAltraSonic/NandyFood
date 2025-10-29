@@ -235,7 +235,7 @@ class ImageUploadService {
         await deleteImage('user-avatars', filePath);
       }
     } catch (e) {
-      AppLogger.warning('Could not delete old avatar', error: e);
+      AppLogger.error('Could not delete old avatar', error: e);
       // Don't throw - it's not critical if old avatar deletion fails
     }
   }

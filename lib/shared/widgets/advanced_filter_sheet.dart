@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:food_delivery_app/shared/theme/design_tokens.dart';
 
 /// Advanced filter options for restaurant search
 class RestaurantFilters {
@@ -136,12 +137,14 @@ class _AdvancedFilterSheetState extends State<AdvancedFilterSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     return Container(
       decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        color: NeutralColors.surface,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(BorderRadiusTokens.xxl),
+        ),
+        boxShadow: ShadowTokens.shadowLg,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -152,234 +155,150 @@ class _AdvancedFilterSheetState extends State<AdvancedFilterSheet> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: colorScheme.onSurface.withValues(alpha: 0.2),
+              color: NeutralColors.gray300,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
 
-          // Header
+          // Enhanced Header
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(24),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Filters',
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [BrandColors.primary, BrandColors.primaryLight],
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(
+                        Icons.tune_rounded,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Filter Restaurants',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Customize your search',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: NeutralColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                TextButton(
+                TextButton.icon(
                   onPressed: _clearFilters,
-                  child: const Text('Clear All'),
+                  icon: const Icon(Icons.refresh_rounded, size: 18),
+                  label: const Text('Reset'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: BrandColors.primary,
+                  ),
                 ),
               ],
             ),
           ),
 
-          const Divider(height: 1),
-
           // Filter options
-          Expanded(
+          Flexible(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Sort By
-                  _buildSectionTitle('Sort By'),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: sortOptions.map((option) {
-                      final isSelected = _sortBy == option['value'];
-                      return ChoiceChip(
-                        label: Text(option['label']!),
-                        selected: isSelected,
-                        onSelected: (selected) {
-                          setState(() {
-                            _sortBy = selected ? option['value'] : null;
-                          });
-                        },
-                      );
-                    }).toList(),
-                  ),
+                  // Sort By Section
+                  _buildSectionHeader('Sort By', Icons.sort_rounded),
+                  const SizedBox(height: 12),
+                  _buildSortOptions(theme),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 32),
 
-                  // Dietary Restrictions
-                  _buildSectionTitle('Dietary Restrictions'),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: dietaryOptions.map((option) {
-                      final isSelected = _selectedDietaryRestrictions.contains(option);
-                      return FilterChip(
-                        label: Text(option),
-                        selected: isSelected,
-                        onSelected: (selected) {
-                          setState(() {
-                            if (selected) {
-                              _selectedDietaryRestrictions.add(option);
-                            } else {
-                              _selectedDietaryRestrictions.remove(option);
-                            }
-                          });
-                        },
-                      );
-                    }).toList(),
-                  ),
+                  // Dietary Restrictions Section
+                  _buildSectionHeader('Dietary Preferences', Icons.restaurant_rounded),
+                  const SizedBox(height: 12),
+                  _buildDietaryOptions(theme),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 32),
 
-                  // Price Range
-                  _buildSectionTitle('Price Range'),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('\$' * _priceRange.start.toInt()),
-                      Text('\$' * _priceRange.end.toInt()),
-                    ],
-                  ),
-                  RangeSlider(
-                    values: _priceRange,
-                    min: 1,
-                    max: 4,
-                    divisions: 3,
-                    labels: RangeLabels(
-                      '\$' * _priceRange.start.toInt(),
-                      '\$' * _priceRange.end.toInt(),
-                    ),
-                    onChanged: (values) {
-                      setState(() {
-                        _priceRange = values;
-                      });
-                    },
-                  ),
+                  // Price Range Section
+                  _buildSectionHeader('Price Range', Icons.attach_money_rounded),
+                  const SizedBox(height: 12),
+                  _buildPriceRangeSlider(theme),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 32),
 
-                  // Minimum Rating
-                  _buildSectionTitle('Minimum Rating'),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Slider(
-                          value: _minRating,
-                          min: 0,
-                          max: 5,
-                          divisions: 10,
-                          label: _minRating == 0 ? 'Any' : '${_minRating.toStringAsFixed(1)}+ ⭐',
-                          onChanged: (value) {
-                            setState(() {
-                              _minRating = value;
-                            });
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      SizedBox(
-                        width: 60,
-                        child: Text(
-                          _minRating == 0 ? 'Any' : '${_minRating.toStringAsFixed(1)}+',
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.titleMedium,
-                        ),
-                      ),
-                    ],
-                  ),
+                  // Minimum Rating Section
+                  _buildSectionHeader('Minimum Rating', Icons.star_rounded),
+                  const SizedBox(height: 12),
+                  _buildRatingSlider(theme),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 32),
 
-                  // Delivery Time
-                  _buildSectionTitle('Max Delivery Time'),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Slider(
-                          value: _maxDeliveryTime,
-                          min: 15,
-                          max: 60,
-                          divisions: 9,
-                          label: _maxDeliveryTime == 60 
-                              ? 'Any' 
-                              : '${_maxDeliveryTime.toInt()} min',
-                          onChanged: (value) {
-                            setState(() {
-                              _maxDeliveryTime = value;
-                            });
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      SizedBox(
-                        width: 60,
-                        child: Text(
-                          _maxDeliveryTime == 60 ? 'Any' : '${_maxDeliveryTime.toInt()} min',
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.titleMedium,
-                        ),
-                      ),
-                    ],
-                  ),
+                  // Delivery Time Section
+                  _buildSectionHeader('Max Delivery Time', Icons.schedule_rounded),
+                  const SizedBox(height: 12),
+                  _buildDeliveryTimeSlider(theme),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 32),
 
-                  // Distance
-                  _buildSectionTitle('Max Distance'),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Slider(
-                          value: _maxDistance,
-                          min: 1,
-                          max: 10,
-                          divisions: 9,
-                          label: _maxDistance == 10 
-                              ? 'Any' 
-                              : '${_maxDistance.toStringAsFixed(0)} km',
-                          onChanged: (value) {
-                            setState(() {
-                              _maxDistance = value;
-                            });
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      SizedBox(
-                        width: 60,
-                        child: Text(
-                          _maxDistance == 10 
-                              ? 'Any' 
-                              : '${_maxDistance.toStringAsFixed(0)} km',
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.titleMedium,
-                        ),
-                      ),
-                    ],
-                  ),
+                  // Distance Section
+                  _buildSectionHeader('Max Distance', Icons.location_on_rounded),
+                  const SizedBox(height: 12),
+                  _buildDistanceSlider(theme),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 32),
                 ],
               ),
             ),
           ),
 
-          // Apply button
+          // Apply Button
           Padding(
-            padding: const EdgeInsets.all(16),
-            child: FilledButton(
-              onPressed: _applyFilters,
-              style: FilledButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
+            padding: const EdgeInsets.all(24),
+            child: SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: _applyFilters,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: BrandColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(BorderRadiusTokens.xl),
+                  ),
+                  elevation: 4,
+                  shadowColor: BrandColors.primary.withValues(alpha: 0.3),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.check_rounded, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Apply Filters',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              child: const Text('Apply Filters'),
             ),
           ),
         ],
@@ -387,12 +306,340 @@ class _AdvancedFilterSheetState extends State<AdvancedFilterSheet> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
+  Widget _buildSectionHeader(String title, IconData icon) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: BrandColors.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
           ),
+          child: Icon(
+            icon,
+            color: BrandColors.primary,
+            size: 20,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: NeutralColors.textPrimary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSortOptions(ThemeData theme) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: sortOptions.map((option) {
+        final isSelected = _sortBy == option['value'];
+        return FilterChip(
+          label: Text(option['label']!),
+          selected: isSelected,
+          onSelected: (selected) {
+            setState(() {
+              _sortBy = selected ? option['value'] : null;
+            });
+          },
+          backgroundColor: NeutralColors.surface,
+          selectedColor: BrandColors.primary,
+          checkmarkColor: Colors.white,
+          labelStyle: TextStyle(
+            color: isSelected ? Colors.white : NeutralColors.textPrimary,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(
+              color: isSelected ? BrandColors.primary : NeutralColors.gray300,
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildDietaryOptions(ThemeData theme) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: dietaryOptions.map((option) {
+        final isSelected = _selectedDietaryRestrictions.contains(option);
+        IconData icon;
+        Color color;
+
+        switch (option.toLowerCase()) {
+          case 'vegetarian':
+            icon = Icons.eco;
+            color = BrandColors.secondary;
+            break;
+          case 'vegan':
+            icon = Icons.spa;
+            color = BrandColors.secondaryDark;
+            break;
+          case 'gluten-free':
+            icon = Icons.grain;
+            color = Colors.blue;
+            break;
+          case 'dairy-free':
+            icon = Icons.no_food;
+            color = Colors.lightBlue;
+            break;
+          case 'nut-free':
+            icon = Icons.egg;
+            color = Colors.amber;
+            break;
+          case 'halal':
+            icon = Icons.nights_stay_rounded;
+            color = Colors.green;
+            break;
+          case 'kosher':
+            icon = Icons.star_rounded;
+            color = Colors.blue.shade800;
+            break;
+          default:
+            icon = Icons.info;
+            color = Colors.grey;
+        }
+
+        return FilterChip(
+          label: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16, color: isSelected ? Colors.white : color),
+              const SizedBox(width: 6),
+              Text(option),
+            ],
+          ),
+          selected: isSelected,
+          onSelected: (selected) {
+            setState(() {
+              if (selected) {
+                _selectedDietaryRestrictions.add(option);
+              } else {
+                _selectedDietaryRestrictions.remove(option);
+              }
+            });
+          },
+          backgroundColor: NeutralColors.surface,
+          selectedColor: color,
+          checkmarkColor: Colors.white,
+          labelStyle: TextStyle(
+            color: isSelected ? Colors.white : NeutralColors.textPrimary,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(
+              color: isSelected ? color : NeutralColors.gray300,
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildPriceRangeSlider(ThemeData theme) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: BrandColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '\$' * _priceRange.start.toInt(),
+                style: TextStyle(
+                  color: BrandColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: BrandColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '\$' * _priceRange.end.toInt(),
+                style: TextStyle(
+                  color: BrandColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        RangeSlider(
+          values: _priceRange,
+          min: 1,
+          max: 4,
+          divisions: 3,
+          activeColor: BrandColors.primary,
+          inactiveColor: BrandColors.primary.withValues(alpha: 0.3),
+          onChanged: (values) {
+            setState(() {
+              _priceRange = values;
+            });
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRatingSlider(ThemeData theme) {
+    return Row(
+      children: [
+        Expanded(
+          child: SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: BrandColors.primary,
+              inactiveTrackColor: BrandColors.primary.withValues(alpha: 0.3),
+              thumbColor: BrandColors.primary,
+              overlayColor: BrandColors.primary.withValues(alpha: 0.2),
+              valueIndicatorColor: BrandColors.primary,
+              valueIndicatorTextStyle: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            child: Slider(
+              value: _minRating,
+              min: 0,
+              max: 5,
+              divisions: 10,
+              label: _minRating == 0 ? 'Any Rating' : '${_minRating.toStringAsFixed(1)}+ ⭐',
+              onChanged: (value) {
+                setState(() {
+                  _minRating = value;
+                });
+              },
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Container(
+          width: 80,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: BrandColors.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            _minRating == 0 ? 'Any' : '${_minRating.toStringAsFixed(1)}+',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: BrandColors.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDeliveryTimeSlider(ThemeData theme) {
+    return Row(
+      children: [
+        Expanded(
+          child: SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: BrandColors.secondary,
+              inactiveTrackColor: BrandColors.secondary.withValues(alpha: 0.3),
+              thumbColor: BrandColors.secondary,
+              overlayColor: BrandColors.secondary.withValues(alpha: 0.2),
+            ),
+            child: Slider(
+              value: _maxDeliveryTime,
+              min: 15,
+              max: 90,
+              divisions: 5,
+              label: '${_maxDeliveryTime.toInt()} min',
+              onChanged: (value) {
+                setState(() {
+                  _maxDeliveryTime = value;
+                });
+              },
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Container(
+          width: 80,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: BrandColors.secondary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            '${_maxDeliveryTime.toInt()} min',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: BrandColors.secondary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDistanceSlider(ThemeData theme) {
+    return Row(
+      children: [
+        Expanded(
+          child: SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: Colors.blue,
+              inactiveTrackColor: Colors.blue.withValues(alpha: 0.3),
+              thumbColor: Colors.blue,
+              overlayColor: Colors.blue.withValues(alpha: 0.2),
+            ),
+            child: Slider(
+              value: _maxDistance,
+              min: 1,
+              max: 20,
+              divisions: 19,
+              label: '${_maxDistance.toInt()} km',
+              onChanged: (value) {
+                setState(() {
+                  _maxDistance = value;
+                });
+              },
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Container(
+          width: 80,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.blue.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            '${_maxDistance.toInt()} km',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.blue,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

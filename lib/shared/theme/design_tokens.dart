@@ -10,20 +10,20 @@ import 'package:flutter/material.dart';
 // ==============================
 
 class BrandColors {
-  // Primary brand colors
-  static const Color primary = Color(0xFF4A7B59);      // Olive Green
-  static const Color primaryLight = Color(0xFF6B9C7A);   // Light Olive Green
-  static const Color primaryDark = Color(0xFF3A5A47);    // Dark Olive Green
+  // Primary brand colors - Grandfood inspired vibrant orange-red
+  static const Color primary = Color(0xFFFF6B35);      // Vibrant Orange-Red
+  static const Color primaryLight = Color(0xFFFF8A65);  // Light Orange
+  static const Color primaryDark = Color(0xFFE64A19);   // Dark Orange
 
-  // Secondary brand colors
-  static const Color secondary = Color(0xFFFF9800);     // Warm Orange
-  static const Color secondaryLight = Color(0xFFFFB74D); // Light Orange
-  static const Color secondaryDark = Color(0xFFE68900);  // Dark Orange
+  // Secondary brand colors - fresh natural green
+  static const Color secondary = Color(0xFF4CAF50);     // Fresh Green
+  static const Color secondaryLight = Color(0xFF66BB6A); // Light Green
+  static const Color secondaryDark = Color(0xFF388E3C);  // Dark Green
 
-  // Accent colors
-  static const Color accent = Color(0xFF8FA998);         // Muted Green
-  static const Color accentLight = Color(0xFFB8C9BE);   // Light Muted Green
-  static const Color accentDark = Color(0xFF6B8474);    // Dark Muted Green
+  // Accent colors - bright and energetic
+  static const Color accent = Color(0xFFFFC107);        // Bright Yellow
+  static const Color accentLight = Color(0xFFFFD54F);   // Light Yellow
+  static const Color accentDark = Color(0xFFFFA000);    // Dark Yellow
 }
 
 // ==============================
@@ -31,16 +31,16 @@ class BrandColors {
 // ==============================
 
 class NeutralColors {
-  // Background colors
-  static const Color background = Color(0xFFF5F7F4);     // Sage Background
-  static const Color surface = Color(0xFFFDFDFD);        // Card White
-  static const Color warmCream = Color(0xFFFFF8E7);      // Warm Cream
+  // Background colors - Modern and clean
+  static const Color background = Color(0xFFF8F9FA);     // Light Gray Background
+  static const Color surface = Color(0xFFFFFFFF);        // Pure White
+  static const Color warmCream = Color(0xFFFFF8E7);      // Warm Cream (unchanged)
 
-  // Text colors
-  static const Color textPrimary = Color(0xFF2C3E50);    // Primary Text
-  static const Color textSecondary = Color(0xFF7F8C8D);  // Secondary Text
-  static const Color textTertiary = Color(0xFFBDC3C7);   // Tertiary Text
-  static const Color textOnPrimary = Color(0xFFFFFFFF);  // White text on primary
+  // Text colors - Enhanced contrast
+  static const Color textPrimary = Color(0xFF2C3E50);    // Dark Charcoal (unchanged)
+  static const Color textSecondary = Color(0xFF6C757D);  // Softer Secondary Text
+  static const Color textTertiary = Color(0xFFADB5BD);   // Lighter Tertiary Text
+  static const Color textOnPrimary = Color(0xFFFFFFFF);  // White text on primary (unchanged)
 
   // Neutral grays
   static const Color gray50 = Color(0xFFFAFAFA);
@@ -120,32 +120,36 @@ class TypographyTokens {
   static const FontWeight fontWeightExtraBold = FontWeight.w800;
   static const FontWeight fontWeightBlack = FontWeight.w900;
 
-  // Font sizes
+  // Font sizes - Enhanced for better hierarchy
   static const double fontSizeXxs = 10.0;
   static const double fontSizeXs = 12.0;
   static const double fontSizeSm = 14.0;
   static const double fontSizeBase = 16.0;
   static const double fontSizeLg = 18.0;
   static const double fontSizeXl = 20.0;
-  static const double fontSize2xl = 24.0;
-  static const double fontSize3xl = 30.0;
-  static const double fontSize4xl = 36.0;
-  static const double fontSize5xl = 48.0;
+  static const double fontSize2xl = 26.0;  // Increased from 24
+  static const double fontSize3xl = 34.0;  // Increased from 30
+  static const double fontSize4xl = 42.0;  // Increased from 36
+  static const double fontSize5xl = 56.0;  // Increased from 48
 
-  // Line heights
+  // Line heights - Improved readability
   static const double lineHeightXxs = 1.2;
   static const double lineHeightXs = 1.3;
   static const double lineHeightSm = 1.4;
   static const double lineHeightBase = 1.5;
   static const double lineHeightLg = 1.6;
   static const double lineHeightXl = 1.7;
+  static const double lineHeightTight = 1.1;  // Added for headings
+  static const double lineHeightLoose = 1.8;  // Added for body text
 
-  // Letter spacing
+  // Letter spacing - Enhanced for brand feel
   static const double letterSpacingXs = -0.5;
   static const double letterSpacingSm = -0.25;
   static const double letterSpacingBase = 0.0;
   static const double letterSpacingLg = 0.25;
   static const double letterSpacingXl = 0.5;
+  static const double letterSpacingWide = 1.0;   // Added for display text
+  static const double letterSpacingTight = -0.75; // Added for compact text
 }
 
 // ==============================
@@ -187,12 +191,13 @@ class SpacingTokens {
 
 class BorderRadiusTokens {
   static const double none = 0.0;
-  static const double xs = 2.0;
-  static const double sm = 4.0;
-  static const double md = 8.0;
-  static const double lg = 12.0;
-  static const double xl = 16.0;
-  static const double xxl = 24.0;
+  static const double xs = 4.0;
+  static const double sm = 8.0;
+  static const double md = 12.0;
+  static const double lg = 16.0;     // Increased for more modern feel
+  static const double xl = 20.0;     // Increased for cards
+  static const double xxl = 28.0;    // Increased for larger elements
+  static const double xxxl = 32.0;   // Added for hero elements
   static const double full = 9999.0;
 
   // Common radius shortcuts
@@ -202,6 +207,7 @@ class BorderRadiusTokens {
   static BorderRadius borderRadiusLg = BorderRadius.circular(lg);
   static BorderRadius borderRadiusXl = BorderRadius.circular(xl);
   static BorderRadius borderRadiusXxl = BorderRadius.circular(xxl);
+  static BorderRadius borderRadiusXxxl = BorderRadius.circular(xxxl);
 }
 
 // ==============================
@@ -209,61 +215,78 @@ class BorderRadiusTokens {
 // ==============================
 
 class ShadowTokens {
-  // Elevation shadows
+  // Elevation shadows - Softer and more modern
   static const List<BoxShadow> shadowXs = [
     BoxShadow(
-      color: Color(0x0A000000),
+      color: Color(0x05000000),
       offset: Offset(0, 1),
-      blurRadius: 2,
+      blurRadius: 3,
+      spreadRadius: 0,
     ),
   ];
 
   static const List<BoxShadow> shadowSm = [
     BoxShadow(
-      color: Color(0x0F000000),
-      offset: Offset(0, 1),
-      blurRadius: 3,
+      color: Color(0x08000000),
+      offset: Offset(0, 2),
+      blurRadius: 6,
+      spreadRadius: 0,
     ),
   ];
 
   static const List<BoxShadow> shadowMd = [
     BoxShadow(
-      color: Color(0x14000000),
+      color: Color(0x0F000000),
       offset: Offset(0, 4),
-      blurRadius: 6,
+      blurRadius: 12,
+      spreadRadius: 0,
     ),
   ];
 
   static const List<BoxShadow> shadowLg = [
     BoxShadow(
-      color: Color(0x1A000000),
-      offset: Offset(0, 10),
-      blurRadius: 15,
+      color: Color(0x14000000),
+      offset: Offset(0, 8),
+      blurRadius: 20,
+      spreadRadius: 0,
     ),
   ];
 
   static const List<BoxShadow> shadowXl = [
     BoxShadow(
-      color: Color(0x1F000000),
-      offset: Offset(0, 20),
-      blurRadius: 25,
+      color: Color(0x1A000000),
+      offset: Offset(0, 16),
+      blurRadius: 32,
+      spreadRadius: 0,
     ),
   ];
 
-  // Colored shadows
+  // Colored shadows - Enhanced with brand colors
   static List<BoxShadow> primaryShadow = [
     BoxShadow(
-      color: BrandColors.primary.withValues(alpha: 0.2),
+      color: BrandColors.primary.withValues(alpha: 0.15),
       offset: const Offset(0, 4),
-      blurRadius: 12,
+      blurRadius: 16,
+      spreadRadius: 0,
     ),
   ];
 
   static List<BoxShadow> secondaryShadow = [
     BoxShadow(
-      color: BrandColors.secondary.withValues(alpha: 0.2),
+      color: BrandColors.secondary.withValues(alpha: 0.15),
       offset: const Offset(0, 4),
-      blurRadius: 12,
+      blurRadius: 16,
+      spreadRadius: 0,
+    ),
+  ];
+
+  // Special food card shadow
+  static List<BoxShadow> foodCardShadow = [
+    BoxShadow(
+      color: Color(0x10000000),
+      offset: const Offset(0, 8),
+      blurRadius: 24,
+      spreadRadius: 0,
     ),
   ];
 }

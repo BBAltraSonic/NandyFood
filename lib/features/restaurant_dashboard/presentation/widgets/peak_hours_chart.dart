@@ -57,10 +57,9 @@ class PeakHoursChart extends StatelessWidget {
                   maxY: _getMaxOrders() * 1.2,
                   barTouchData: BarTouchData(
                     touchTooltipData: BarTouchTooltipData(
-                      getTooltipColor: (group) => Colors.black87,
                       getTooltipItem: (group, groupIndex, rod, rodIndex) {
                         final hour = group.x.toInt();
-                        final orders = group.y.toInt();
+                        final orders = group.barRods[0].toY.toInt();
                         return BarTooltipItem(
                           '$hour:00\n$orders orders',
                           const TextStyle(color: Colors.white),

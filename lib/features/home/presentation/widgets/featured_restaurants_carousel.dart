@@ -458,7 +458,7 @@ class _FeaturedRestaurantsCarouselState
             const Icon(Icons.star, size: 14, color: Colors.white),
             const SizedBox(width: 4),
             Text(
-              restaurant.rating.toStringAsFixed(1),
+              _getRatingText(restaurant.rating),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -525,5 +525,17 @@ class _FeaturedRestaurantsCarouselState
         ],
       ),
     );
+  }
+
+  /// Helper method to safely get rating text
+  String _getRatingText(double rating) {
+    try {
+      if (rating.isNaN || rating.isInfinite || rating < 0) {
+        return 'N/A';
+      }
+      return rating.toStringAsFixed(1);
+    } catch (e) {
+      return 'N/A';
+    }
   }
 }

@@ -185,7 +185,7 @@ class _DeliveryStatusScreenState extends ConsumerState<DeliveryStatusScreen>
             children: [
               Row(
                 children: [
-                  _buildStatusIndicator(order.status.name),
+                  _buildStatusIndicator(order.status?.name ?? 'unknown'),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -200,10 +200,10 @@ class _DeliveryStatusScreenState extends ConsumerState<DeliveryStatusScreen>
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          _formatStatus(order.status.name),
+                          _formatStatus(order.status?.name ?? 'unknown'),
                           style: TextStyle(
                             fontSize: 14,
-                            color: _getStatusColor(order.status.name),
+                            color: _getStatusColor(order.status?.name ?? 'unknown'),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -223,7 +223,7 @@ class _DeliveryStatusScreenState extends ConsumerState<DeliveryStatusScreen>
                   Icon(Icons.receipt_outlined, size: 16, color: Colors.grey[600]),
                   const SizedBox(width: 8),
                   Text(
-                    'Order #${order.id.substring(0, 8)}',
+                    'Order #${order.id.length > 8 ? order.id.substring(0, 8) : order.id}',
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey[600],

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:food_delivery_app/features/order/presentation/providers/cart_provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:food_delivery_app/shared/theme/design_tokens.dart';
+import 'package:food_delivery_app/shared/widgets/animations/button_scale_animation.dart';
 
 /// A floating action button that displays the current cart state
 /// and provides quick access to the cart screen.
@@ -102,7 +104,7 @@ class _FloatingCartButtonState extends ConsumerState<FloatingCartButton>
       bottom: 80,
       child: GestureDetector(
         onTap: () {
-          context.push('/cart');
+          context.push('/order/cart');
         },
         onLongPress: () {
           _showCartPreview(context, cartState);
@@ -116,22 +118,16 @@ class _FloatingCartButtonState extends ConsumerState<FloatingCartButton>
             );
           },
           child: Container(
-            width: 60,
-            height: 60,
+            width: 64,
+            height: 64,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFFF6B6B), Color(0xFFFF8E53)],
+              gradient: LinearGradient(
+                colors: [BrandColors.primary, BrandColors.primaryLight],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.deepOrange.withValues(alpha: 0.4),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+              boxShadow: ShadowTokens.primaryShadow,
             ),
             child: Stack(
               children: [
@@ -156,8 +152,8 @@ class _FloatingCartButtonState extends ConsumerState<FloatingCartButton>
                     child: Center(
                       child: Text(
                         itemCount > 99 ? '99+' : '$itemCount',
-                        style: const TextStyle(
-                          color: Color(0xFFFF6B6B),
+                        style: TextStyle(
+                          color: BrandColors.primary,
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),
@@ -218,8 +214,8 @@ class _CartPreviewOverlay extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFFFF6B6B), Color(0xFFFF8E53)],
+                            gradient: LinearGradient(
+                              colors: [BrandColors.primary, BrandColors.primaryLight],
                             ),
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -269,8 +265,8 @@ class _CartPreviewOverlay extends StatelessWidget {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            const Color(0xFFFF6B6B).withValues(alpha: 0.1),
-                            const Color(0xFFFF8E53).withValues(alpha: 0.1),
+                            BrandColors.primary.withValues(alpha: 0.1),
+                            BrandColors.primaryLight.withValues(alpha: 0.1),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(12),
@@ -287,10 +283,10 @@ class _CartPreviewOverlay extends StatelessWidget {
                           ),
                           Text(
                             '\$${cartState.totalAmount.toStringAsFixed(2)}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFFFF6B6B),
+                              color: BrandColors.primary,
                             ),
                           ),
                         ],

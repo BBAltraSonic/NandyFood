@@ -62,14 +62,26 @@ class DeliveryOrdersNotifier extends StateNotifier<DeliveryOrdersState> {
 
   /// Initialize delivery orders
   Future<void> _initialize() async {
-    // Load from cache first for instant display
-    await _loadFromCache();
+    try {
+      // Ensure cache service is initialized
+      await cacheService.initialize();
 
-    // Then fetch fresh data from backend
-    await Future.wait([
-      loadActiveOrders(),
-      loadHistoryOrders(),
-    ]);
+      // Load from cache first for instant display
+      await _loadFromCache();
+
+      // Then fetch fresh data from backend
+      await Future.wait([
+        loadActiveOrders(),
+        loadHistoryOrders(),
+      ]);
+    } catch (e, stack) {
+      AppLogger.error('Failed to initialize delivery orders', error: e, stack: stack);
+      // Continue with backend fetch even if cache fails
+      await Future.wait([
+        loadActiveOrders(),
+        loadHistoryOrders(),
+      ]);
+    }
   }
 
   /// Load orders from cache
@@ -93,6 +105,7 @@ class DeliveryOrdersNotifier extends StateNotifier<DeliveryOrdersState> {
       }
     } catch (e, stack) {
       AppLogger.error('Failed to load from cache', error: e, stack: stack);
+      // Don't rethrow - cache failures shouldn't crash the app
     }
   }
 
@@ -123,7 +136,7 @@ class DeliveryOrdersNotifier extends StateNotifier<DeliveryOrdersState> {
             ),
             delivery_info:deliveries(
               *,
-              driver:profiles(*)
+              driver:user_profiles(*)
             )
           ''')
           .eq('user_id', userId)
@@ -201,7 +214,7 @@ class DeliveryOrdersNotifier extends StateNotifier<DeliveryOrdersState> {
             ),
             delivery_info:deliveries(
               *,
-              driver:profiles(*)
+              driver:user_profiles(*)
             )
           ''')
           .eq('user_id', userId)
@@ -438,7 +451,12 @@ class DeliveryOrdersNotifier extends StateNotifier<DeliveryOrdersState> {
 
 /// Provider for order cache service
 final orderCacheServiceProvider = Provider<OrderCacheService>((ref) {
-  return OrderCacheService();
+  final cacheService = OrderCacheService();
+  // Initialize the cache service to ensure it's ready
+  cacheService.initialize().catchError((e) {
+    AppLogger.error('Failed to initialize OrderCacheService in provider', error: e);
+  });
+  return cacheService;
 });
 
 /// Provider for delivery orders

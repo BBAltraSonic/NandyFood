@@ -71,7 +71,7 @@ class AppTheme {
         const MealTimeColorsExtension(),
         const SpacingExtension(),
         const BorderRadiusExtension(),
-        const ShadowExtension(
+        ShadowExtension(
         xs: ShadowTokens.shadowXs,
         sm: ShadowTokens.shadowSm,
         md: ShadowTokens.shadowMd,
@@ -99,7 +99,6 @@ class AppTheme {
       surface: NeutralColors.surface,
       onSurface: NeutralColors.textPrimary,
       surfaceContainer: NeutralColors.background,
-      onSurface: NeutralColors.textPrimary,
       error: SemanticColors.error,
       onError: NeutralColors.textOnPrimary,
     );
@@ -116,7 +115,6 @@ class AppTheme {
       surface: NeutralColors.gray800,
       onSurface: NeutralColors.textTertiary,
       surfaceContainer: NeutralColors.gray900,
-      onSurface: NeutralColors.textTertiary,
       error: SemanticColors.errorLight,
       onError: NeutralColors.textPrimary,
     );
@@ -278,9 +276,9 @@ class AppTheme {
       style: ElevatedButton.styleFrom(
         foregroundColor: NeutralColors.textOnPrimary,
         backgroundColor: BrandColors.primary,
-        elevation: 2,
+        elevation: 3,
         shadowColor: BrandColors.primary.withValues(alpha: 0.3),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(BorderRadiusTokens.lg)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(BorderRadiusTokens.xl)),
         padding: const EdgeInsets.symmetric(
           horizontal: SpacingTokens.spacing6,
           vertical: SpacingTokens.spacing3,
@@ -300,7 +298,7 @@ class AppTheme {
       style: OutlinedButton.styleFrom(
         foregroundColor: BrandColors.primary,
         side: const BorderSide(color: BrandColors.primary, width: 1.5),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(BorderRadiusTokens.lg)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(BorderRadiusTokens.xl)),
         padding: const EdgeInsets.symmetric(
           horizontal: SpacingTokens.spacing6,
           vertical: SpacingTokens.spacing3,
@@ -319,7 +317,7 @@ class AppTheme {
     return TextButtonThemeData(
       style: TextButton.styleFrom(
         foregroundColor: BrandColors.primary,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(BorderRadiusTokens.lg)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(BorderRadiusTokens.xl)),
         padding: const EdgeInsets.symmetric(
           horizontal: SpacingTokens.spacing4,
           vertical: SpacingTokens.spacing2,
@@ -339,27 +337,27 @@ class AppTheme {
       filled: true,
       fillColor: NeutralColors.surface,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(BorderRadiusTokens.lg),
+        borderRadius: BorderRadius.circular(BorderRadiusTokens.xl),
         borderSide: BorderSide(color: NeutralColors.gray300),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(BorderRadiusTokens.lg),
+        borderRadius: BorderRadius.circular(BorderRadiusTokens.xl),
         borderSide: BorderSide(color: NeutralColors.gray300),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(BorderRadiusTokens.lg),
+        borderRadius: BorderRadius.circular(BorderRadiusTokens.xl),
         borderSide: BorderSide(color: BrandColors.primary, width: 2),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(BorderRadiusTokens.lg),
+        borderRadius: BorderRadius.circular(BorderRadiusTokens.xl),
         borderSide: BorderSide(color: SemanticColors.error, width: 1.5),
       ),
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(BorderRadiusTokens.lg),
+        borderRadius: BorderRadius.circular(BorderRadiusTokens.xl),
         borderSide: BorderSide(color: SemanticColors.error, width: 2),
       ),
       disabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(BorderRadiusTokens.lg),
+        borderRadius: BorderRadius.circular(BorderRadiusTokens.xl),
         borderSide: BorderSide(color: NeutralColors.gray200),
       ),
       contentPadding: const EdgeInsets.symmetric(
@@ -386,9 +384,9 @@ class AppTheme {
 
   static CardThemeData _buildCardTheme() {
     return CardThemeData(
-      elevation: 2,
+      elevation: 4,
       shadowColor: ShadowTokens.shadowMd.first.color,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(BorderRadiusTokens.lg)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(BorderRadiusTokens.xl)),
       color: NeutralColors.surface,
       margin: const EdgeInsets.all(SpacingTokens.spacing2),
     );

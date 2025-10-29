@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:food_delivery_app/shared/models/restaurant.dart';
 import 'package:food_delivery_app/core/services/database_service.dart';
+import 'package:food_delivery_app/features/home/presentation/widgets/home_map_view_widget.dart';
+import 'package:food_delivery_app/features/home/presentation/providers/map_view_provider.dart';
+import 'package:food_delivery_app/features/restaurant/presentation/providers/restaurant_provider.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
@@ -20,6 +23,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   bool _isSearching = false;
   bool _hasSearched = false;
   Timer? _debounceTimer;
+  dynamic _userLocation; // Will store user location coordinates
 
   @override
   void initState() {
@@ -86,6 +90,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final mapViewState = ref.watch(mapViewProvider);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -102,6 +107,48 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             fontWeight: FontWeight.w600,
           ),
         ),
+        actions: [
+          // Map/List Toggle Button
+          Container(
+            margin: const EdgeInsets.only(right: 16),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => ref.read(mapViewProvider.notifier).toggleMapView(),
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        mapViewState.isMapView ? Icons.list : Icons.map,
+                        size: 18,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        mapViewState.isMapView ? 'List' : 'Map',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -155,8 +202,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             ),
           ),
 
-          // Search results
-          Expanded(child: _buildSearchResults(theme)),
+          // Map or List view based on toggle state
+          Expanded(
+            child: mapViewState.isMapView
+                ? _buildMapView(theme)
+                : _buildSearchResults(theme),
+          ),
         ],
       ),
     );
@@ -197,6 +248,98 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           },
         );
       },
+    );
+  }
+
+  Widget _buildMapView(ThemeData theme) {
+    return Stack(
+      children: [
+        // Map view with search results
+        HomeMapViewWidget(
+          restaurants: _searchResults,
+          userLocation: _userLocation,
+          onRestaurantTapped: (restaurant) {
+            context.push('/restaurant/${restaurant.id}');
+          },
+        ),
+
+        // Search results overlay
+        if (_searchResults.isNotEmpty)
+          Positioned(
+            top: 16,
+            left: 16,
+            right: 16,
+            child: Container(
+              height: 120,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: _searchResults.length > 5 ? 5 : _searchResults.length,
+                itemBuilder: (context, index) {
+                  final restaurant = _searchResults[index];
+                  return Container(
+                    width: 200,
+                    margin: const EdgeInsets.only(right: 12),
+                    child: Card(
+                      elevation: 4,
+                      child: InkWell(
+                        onTap: () {
+                          context.push('/restaurant/${restaurant.id}');
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  Icons.restaurant,
+                                  color: theme.colorScheme.primary,
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      restaurant.name,
+                                      style: theme.textTheme.titleSmall?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      restaurant.cuisineType,
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -360,4 +503,5 @@ class _RestaurantSearchResultCard extends StatelessWidget {
       ),
     );
   }
-}
+
+  }

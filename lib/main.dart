@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:food_delivery_app/firebase_options.dart';
 import 'package:food_delivery_app/core/services/database_service.dart';
 import 'package:food_delivery_app/core/services/notification_service.dart';
@@ -10,12 +11,16 @@ import 'package:food_delivery_app/features/authentication/presentation/screens/l
 import 'package:food_delivery_app/features/authentication/presentation/screens/signup_screen.dart';
 import 'package:food_delivery_app/features/authentication/presentation/screens/splash_screen.dart';
 import 'package:food_delivery_app/features/home/presentation/screens/home_screen.dart';
+import 'package:food_delivery_app/shared/screens/main_navigation_screen.dart';
 import 'package:food_delivery_app/features/profile/presentation/screens/add_edit_payment_screen.dart';
 import 'package:food_delivery_app/features/order/presentation/screens/order_tracking_screen.dart';
 import 'package:food_delivery_app/features/order/presentation/screens/cart_screen.dart';
 import 'package:food_delivery_app/features/order/presentation/screens/order_history_screen.dart';
 import 'package:food_delivery_app/features/order/presentation/screens/promotions_screen.dart';
 import 'package:food_delivery_app/features/order/presentation/screens/promo_detail_screen.dart';
+import 'package:food_delivery_app/features/order/presentation/screens/checkout_screen.dart';
+import 'package:food_delivery_app/features/home/presentation/screens/search_screen.dart';
+import 'package:food_delivery_app/features/onboarding/presentation/screens/onboarding_screen.dart';
 
 import 'package:food_delivery_app/core/routing/route_paths.dart';
 import 'package:food_delivery_app/core/routing/route_guards.dart';
@@ -93,59 +98,85 @@ String? derivePayloadFromMessage(RemoteMessage message) {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase
+  // Load environment variables first - this is fast and essential
   try {
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await dotenv.load(fileName: '.env');
+    print('✅ Environment variables loaded successfully');
   } catch (e) {
-    print('Error initializing Firebase: $e');
+    print('Error loading environment variables: $e');
   }
 
-  // Register FCM background handler
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-
-  // Request notification permissions (best-effort)
-  try {
-    await FirebaseMessaging.instance.requestPermission();
-  } catch (_) {}
-
-  // Capture initial message for cold start deep link
-  try {
-    final initialMsg = await FirebaseMessaging.instance.getInitialMessage();
-    if (initialMsg != null) {
-      pendingInitialNotificationPayload = derivePayloadFromMessage(initialMsg);
-    }
-  } catch (_) {}
-
-  // Initialize the DatabaseService
+  // Initialize DatabaseService synchronously since it's needed immediately
   final dbService = DatabaseService();
   try {
     await dbService.initialize();
+    print('✅ Database initialized');
   } catch (e) {
     print('Error initializing database service: $e');
   }
 
-    // Handle initial FCM deep link if present
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (pendingInitialNotificationPayload != null) {
-        navigateForPayload(pendingInitialNotificationPayload);
-        pendingInitialNotificationPayload = null;
-      }
-    });
+  // Start the app, initialize remaining services asynchronously
+  runApp(ProviderScope(child: FoodDeliveryApp()));
 
-    // Foreground/background message handling is registered inside app State
-    // to access BuildContext safely (see _FoodDeliveryAppState.initState).
-  // Initialize the NotificationService with tap navigation
+  // Initialize remaining heavy services in the background after app starts
+  _initializeRemainingServices();
+}
 
-  final notificationService = NotificationService();
+Future<void> _initializeRemainingServices() async {
+  // Initialize Firebase
   try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    print('✅ Firebase initialized');
+  } catch (e) {
+    print('Error initializing Firebase: $e');
+    return;
+  }
+
+  // Initialize services concurrently to reduce total time
+  final futures = <Future>[];
+
+  // Firebase messaging setup
+  futures.add(_setupFirebaseMessaging());
+
+  // Notification service initialization
+  futures.add(_initializeNotificationService());
+
+  try {
+    await Future.wait(futures);
+    print('✅ All services initialized');
+  } catch (e) {
+    print('Error initializing services: $e');
+  }
+}
+
+Future<void> _setupFirebaseMessaging() async {
+  try {
+    // Register FCM background handler
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+    // Request notification permissions (best-effort)
+    await FirebaseMessaging.instance.requestPermission();
+
+    // Capture initial message for cold start deep link
+    final initialMsg = await FirebaseMessaging.instance.getInitialMessage();
+    if (initialMsg != null) {
+      pendingInitialNotificationPayload = derivePayloadFromMessage(initialMsg);
+    }
+  } catch (e) {
+    print('Error setting up Firebase messaging: $e');
+  }
+}
+
+
+Future<void> _initializeNotificationService() async {
+  try {
+    final notificationService = NotificationService();
     await notificationService.initialize(onNotificationTap: (payload) {
       navigateForPayload(payload);
     });
   } catch (e) {
     print('Error initializing notification service: $e');
   }
-
-  runApp(ProviderScope(child: FoodDeliveryApp()));
 }
 
 class FoodDeliveryApp extends ConsumerStatefulWidget {
@@ -162,6 +193,7 @@ class _FoodDeliveryAppState extends ConsumerState<FoodDeliveryApp> {
   void initState() {
     super.initState();
     _router = _createRouter();
+
     // Handle initial FCM deep link if present
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (pendingInitialNotificationPayload != null) {
@@ -217,7 +249,7 @@ class _FoodDeliveryAppState extends ConsumerState<FoodDeliveryApp> {
         ),
         GoRoute(
           path: '/home',
-          builder: (context, state) => const HomeScreen(),
+          builder: (context, state) => const MainNavigationScreen(),
         ),
         GoRoute(
           path: '/profile/payment-methods',
@@ -282,6 +314,18 @@ class _FoodDeliveryAppState extends ConsumerState<FoodDeliveryApp> {
         GoRoute(
           path: '/order/cart',
           builder: (context, state) => const CartScreen(),
+        ),
+        GoRoute(
+          path: '/order/checkout',
+          builder: (context, state) => const CheckoutScreen(),
+        ),
+        GoRoute(
+          path: '/search',
+          builder: (context, state) => const SearchScreen(),
+        ),
+        GoRoute(
+          path: '/onboarding',
+          builder: (context, state) => const OnboardingScreen(),
         ),
         GoRoute(
           path: '/profile',
