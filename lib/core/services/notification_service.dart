@@ -110,6 +110,7 @@ class NotificationService {
     required String orderId,
     required String status,
     required String restaurantName,
+    int? estimatedMinutes,
   }) async {
     String title;
     String body;
@@ -117,23 +118,19 @@ class NotificationService {
     switch (status.toLowerCase()) {
       case 'confirmed':
         title = 'Order Confirmed!';
-        body = 'Your order from $restaurantName has been confirmed.';
+        body = 'Your order from $restaurantName has been confirmed and will start preparing soon.';
         break;
       case 'preparing':
         title = 'Order Preparing';
-        body = 'Your order from $restaurantName is being prepared.';
+        if (estimatedMinutes != null && estimatedMinutes > 0) {
+          body = 'Your order from $restaurantName is being prepared. Estimated time: $estimatedMinutes minutes.';
+        } else {
+          body = 'Your order from $restaurantName is being prepared.';
+        }
         break;
       case 'ready_for_pickup':
-        title = 'Order Ready';
-        body = 'Your order from $restaurantName is ready for pickup.';
-        break;
-      case 'out_for_delivery':
-        title = 'On the Way!';
-        body = 'Your order from $restaurantName is out for delivery.';
-        break;
-      case 'delivered':
-        title = 'Order Delivered!';
-        body = 'Your order from $restaurantName has been delivered. Enjoy your meal!';
+        title = 'Order Ready for Pickup! 🎉';
+        body = 'Your order from $restaurantName is ready! You can pick it up now.';
         break;
       case 'cancelled':
         title = 'Order Cancelled';
@@ -167,27 +164,49 @@ class NotificationService {
     );
   }
 
-  // Show delivery driver notifications
-  Future<void> showDeliveryNotification({
+  // Show preparation progress notifications
+  Future<void> showPreparationProgressNotification({
     required String orderId,
-    String? driverName,
-    String? vehicleInfo,
+    required String restaurantName,
+    required int remainingMinutes,
+    int totalMinutes = 15,
   }) async {
-    String title = 'Driver Update';
-    String body = driverName != null
-        ? 'Your driver $driverName is on the way with your order'
-        : 'Your order is on the way';
+    final progress = ((totalMinutes - remainingMinutes) / totalMinutes * 100).round();
 
-    if (vehicleInfo != null) {
-      body += ' in a $vehicleInfo';
-    }
+    await showProgressNotification(
+      id: orderId.hashCode + 2000,
+      title: 'Order Preparing',
+      body: '$remainingMinutes minutes remaining',
+      progress: progress,
+      maxProgress: 100,
+      payload: RoutePayloads.order(orderId),
+    );
+  }
 
-    body += '. Expect delivery soon!';
+  // Show pickup ready notification with actions
+  Future<void> showPickupReadyNotification({
+    required String orderId,
+    required String restaurantName,
+    required String pickupAddress,
+  }) async {
+    await showNotificationWithActions(
+      id: orderId.hashCode + 3000,
+      title: 'Order Ready for Pickup! 🎉',
+      body: 'Your order from $restaurantName is ready at $pickupAddress',
+      payload: RoutePayloads.order(orderId),
+    );
+  }
 
+  // Show preparation time estimate updates
+  Future<void> showPreparationTimeUpdate({
+    required String orderId,
+    required String restaurantName,
+    required int newEstimatedMinutes,
+  }) async {
     await showNotification(
-      id: orderId.hashCode + 1000,
-      title: title,
-      body: body,
+      id: orderId.hashCode + 4000,
+      title: 'Preparation Time Update',
+      body: 'Your order from $restaurantName will be ready in approximately $newEstimatedMinutes minutes',
       payload: RoutePayloads.order(orderId),
     );
   }
@@ -283,8 +302,8 @@ class NotificationService {
           showsUserInterface: true,
         ),
         AndroidNotificationAction(
-          'track_delivery',
-          'Track Delivery',
+          'track_preparation',
+          'Track Preparation',
           showsUserInterface: true,
         ),
       ],
@@ -499,12 +518,12 @@ class NotificationService {
         ),
       );
 
-      // Delivery updates channel
+      // Preparation updates channel
       await androidImplementation.createNotificationChannel(
         const AndroidNotificationChannel(
-          'delivery_updates',
-          'Delivery Updates',
-          description: 'Real-time delivery tracking updates',
+          'preparation_updates',
+          'Preparation Updates',
+          description: 'Real-time order preparation updates',
           importance: Importance.high,
           enableVibration: true,
         ),

@@ -61,50 +61,9 @@ class RealtimeService {
     return controller.stream;
   }
 
-  /// Subscribe to delivery updates for a specific order
-  Stream<Map<String, dynamic>> subscribeToDelivery(String orderId) {
-    final channelName = 'delivery:$orderId';
-
-    if (_controllers.containsKey(channelName)) {
-      return _controllers[channelName]!.stream;
-    }
-
-    final controller = StreamController<Map<String, dynamic>>.broadcast(
-      onCancel: () => _unsubscribe(channelName),
-    );
-    _controllers[channelName] = controller;
-
-    final channel = _supabase.channel(channelName);
-
-    channel
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'deliveries',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'order_id',
-            value: orderId,
-          ),
-          callback: (payload) {
-            debugPrint('Delivery update received: ${payload.newRecord}');
-            if (!controller.isClosed) {
-              controller.add(payload.newRecord);
-            }
-          },
-        )
-        .subscribe();
-
-    _channels[channelName] = channel;
-
-    debugPrint('Subscribed to delivery: $orderId');
-
-    return controller.stream;
-  }
-
-  /// Subscribe to driver location updates
-  Stream<Map<String, dynamic>> subscribeToDriverLocation(String driverId) {
-    final channelName = 'driver_location:$driverId';
+  /// Subscribe to preparation tracking view for a specific restaurant
+  Stream<Map<String, dynamic>> subscribeToPreparationTracking(String restaurantId) {
+    final channelName = 'preparation_tracking:$restaurantId';
 
     if (_controllers.containsKey(channelName)) {
       return _controllers[channelName]!.stream;
@@ -121,14 +80,14 @@ class RealtimeService {
         .onPostgresChanges(
           event: PostgresChangeEvent.update,
           schema: 'public',
-          table: 'driver_locations',
+          table: 'preparation_tracking_view',
           filter: PostgresChangeFilter(
             type: PostgresChangeFilterType.eq,
-            column: 'driver_id',
-            value: driverId,
+            column: 'restaurant_id',
+            value: restaurantId,
           ),
           callback: (payload) {
-            debugPrint('Driver location update: ${payload.newRecord}');
+            debugPrint('Preparation tracking update: ${payload.newRecord}');
             if (!controller.isClosed) {
               controller.add(payload.newRecord);
             }
@@ -138,7 +97,52 @@ class RealtimeService {
 
     _channels[channelName] = channel;
 
-    debugPrint('Subscribed to driver location: $driverId');
+    debugPrint('Subscribed to preparation tracking: $restaurantId');
+
+    return controller.stream;
+  }
+
+  /// Subscribe to preparation updates for a specific order
+  Stream<Map<String, dynamic>> subscribeToOrderPreparation(String orderId) {
+    final channelName = 'order_preparation:$orderId';
+
+    if (_controllers.containsKey(channelName)) {
+      return _controllers[channelName]!.stream;
+    }
+
+    final controller = StreamController<Map<String, dynamic>>.broadcast(
+      onCancel: () => _unsubscribe(channelName),
+    );
+    _controllers[channelName] = controller;
+
+    final channel = _supabase.channel(channelName);
+
+    channel
+        .onPostgresChanges(
+          event: PostgresChangeEvent.update,
+          schema: 'public',
+          table: 'orders',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'id',
+            value: orderId,
+          ),
+          callback: (payload) {
+            final record = payload.newRecord;
+            // Only notify about preparation-related status changes
+            if (['confirmed', 'preparing', 'ready_for_pickup'].contains(record['status'])) {
+              debugPrint('Order preparation update: $record');
+              if (!controller.isClosed) {
+                controller.add(record);
+              }
+            }
+          },
+        )
+        .subscribe();
+
+    _channels[channelName] = channel;
+
+    debugPrint('Subscribed to order preparation: $orderId');
 
     return controller.stream;
   }

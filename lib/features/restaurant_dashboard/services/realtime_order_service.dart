@@ -6,13 +6,15 @@ import 'package:food_delivery_app/shared/models/order.dart';
 class RealtimeOrderService {
   final SupabaseClient _supabase = Supabase.instance.client;
   RealtimeChannel? _ordersChannel;
-  
+
   final _newOrderController = StreamController<Order>.broadcast();
   final _orderStatusController = StreamController<Order>.broadcast();
-  
+  final _preparationUpdateController = StreamController<Map<String, dynamic>>.broadcast();
+
   Stream<Order> get newOrdersStream => _newOrderController.stream;
   Stream<Order> get orderStatusStream => _orderStatusController.stream;
-  
+  Stream<Map<String, dynamic>> get preparationUpdateStream => _preparationUpdateController.stream;
+
   bool _isSubscribed = false;
 
   /// Subscribe to real-time order updates for a specific restaurant
@@ -171,9 +173,165 @@ class RealtimeOrderService {
     }
   }
 
+  /// Start preparation for an order
+  Future<bool> startOrderPreparation(String orderId, {int? estimatedMinutes}) async {
+    try {
+      final response = await _supabase.rpc('start_order_preparation', params: {
+        'order_id_param': orderId,
+        'estimated_minutes': estimatedMinutes,
+      });
+
+      if (response['success'] == true) {
+        AppLogger.success('Order preparation started: $orderId');
+        _broadcastPreparationUpdate(orderId, 'preparation_started', {
+          'estimated_minutes': estimatedMinutes,
+          'message': response['message'] ?? 'Preparation started',
+        });
+        return true;
+      } else {
+        AppLogger.error('Failed to start preparation: ${response['message']}');
+        return false;
+      }
+    } catch (e) {
+      AppLogger.error('Error starting order preparation: $e');
+      return false;
+    }
+  }
+
+  /// Mark order as ready for pickup
+  Future<bool> markOrderReadyForPickup(String orderId) async {
+    try {
+      final response = await _supabase.rpc('mark_order_ready_for_pickup', params: {
+        'order_id_param': orderId,
+      });
+
+      if (response['success'] == true) {
+        AppLogger.success('Order marked as ready: $orderId');
+        _broadcastPreparationUpdate(orderId, 'ready_for_pickup', {
+          'message': response['message'] ?? 'Order ready for pickup',
+        });
+        return true;
+      } else {
+        AppLogger.error('Failed to mark order ready: ${response['message']}');
+        return false;
+      }
+    } catch (e) {
+      AppLogger.error('Error marking order ready: $e');
+      return false;
+    }
+  }
+
+  /// Update order status
+  Future<bool> updateOrderStatus(String orderId, OrderStatus newStatus) async {
+    try {
+      final now = DateTime.now().toIso8601String();
+
+      await _supabase
+          .from('orders')
+          .update({
+            'status': newStatus.name,
+            'updated_at': now,
+          })
+          .eq('id', orderId);
+
+      AppLogger.success('Order status updated: $orderId -> ${newStatus.name}');
+
+      _broadcastPreparationUpdate(orderId, 'status_updated', {
+        'new_status': newStatus.name,
+        'updated_at': now,
+      });
+
+      return true;
+    } catch (e) {
+      AppLogger.error('Error updating order status: $e');
+      return false;
+    }
+  }
+
+  /// Get preparation analytics for a restaurant
+  Future<Map<String, dynamic>> getPreparationAnalytics(String restaurantId, {int days = 7}) async {
+    try {
+      final response = await _supabase.rpc('get_restaurant_preparation_analytics', params: {
+        'restaurant_id_param': restaurantId,
+        'days_param': days,
+      });
+
+      if (response is List && response.isNotEmpty) {
+        final latest = response.first;
+        return {
+          'avg_estimated_time': latest['avg_estimated_time']?.toDouble() ?? 0.0,
+          'avg_actual_time': latest['avg_actual_time']?.toDouble() ?? 0.0,
+          'efficiency': latest['preparation_efficiency']?.toDouble() ?? 0.0,
+          'total_orders': latest['total_orders'] ?? 0,
+        };
+      }
+
+      return {
+        'avg_estimated_time': 0.0,
+        'avg_actual_time': 0.0,
+        'efficiency': 0.0,
+        'total_orders': 0,
+      };
+    } catch (e) {
+      AppLogger.error('Error getting preparation analytics: $e');
+      return {
+        'avg_estimated_time': 0.0,
+        'avg_actual_time': 0.0,
+        'efficiency': 0.0,
+        'total_orders': 0,
+      };
+    }
+  }
+
+  /// Get orders currently in preparation
+  Future<List<Order>> getOrdersInPreparation(String restaurantId) async {
+    try {
+      final response = await _supabase
+          .from('preparation_tracking_view')
+          .select('*')
+          .eq('restaurant_id', restaurantId)
+          .eq('status', 'preparing')
+          .order('placed_at', ascending: false);
+
+      return response.map((data) => Order.fromJson(data)).toList();
+    } catch (e) {
+      AppLogger.error('Error getting orders in preparation: $e');
+      return [];
+    }
+  }
+
+  /// Get orders ready for pickup
+  Future<List<Order>> getOrdersReadyForPickup(String restaurantId) async {
+    try {
+      final response = await _supabase
+          .from('preparation_tracking_view')
+          .select('*')
+          .eq('restaurant_id', restaurantId)
+          .eq('status', 'ready_for_pickup')
+          .order('ready_at', ascending: false);
+
+      return response.map((data) => Order.fromJson(data)).toList();
+    } catch (e) {
+      AppLogger.error('Error getting orders ready for pickup: $e');
+      return [];
+    }
+  }
+
+  void _broadcastPreparationUpdate(String orderId, String type, Map<String, dynamic> data) {
+    final update = {
+      'order_id': orderId,
+      'type': type,
+      'timestamp': DateTime.now().toIso8601String(),
+      ...data,
+    };
+
+    _preparationUpdateController.add(update);
+  }
+
   void dispose() {
     _newOrderController.close();
     _orderStatusController.close();
+    _preparationUpdateController.close();
     unsubscribe();
   }
 }
