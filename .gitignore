@@ -83,3 +83,9 @@ firebase_options.dart
 
 # Supabase MCP (external repo)
 supabase-mcp/
+
+# OAuth and Google Sign-in credentials
+*_oauth_config.sql
+*_google_oauth.sql
+*google_signin*.sql
+GOOGLE_SIGNIN_*.md
