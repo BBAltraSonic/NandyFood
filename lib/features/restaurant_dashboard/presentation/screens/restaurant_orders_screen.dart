@@ -1,10 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:food_delivery_app/core/providers/auth_provider.dart';
 import 'package:food_delivery_app/core/services/role_service.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/services/restaurant_management_service.dart';
 import 'package:food_delivery_app/shared/models/order.dart';
+import 'package:food_delivery_app/shared/models/order_conversation.dart';
+import 'package:food_delivery_app/shared/models/order_call.dart';
+import 'package:food_delivery_app/core/services/order_chat_service.dart';
+import 'package:food_delivery_app/core/services/order_calling_service.dart';
+import 'package:food_delivery_app/shared/widgets/order_chat_widget.dart';
+import 'package:food_delivery_app/shared/widgets/order_call_widget.dart';
 import 'package:intl/intl.dart';
+import 'package:food_delivery_app/core/utils/app_logger.dart';
 
 class RestaurantOrdersScreen extends ConsumerStatefulWidget {
   final String? initialStatus;
@@ -28,6 +37,15 @@ class _RestaurantOrdersScreenState
   List<Order> _orders = [];
   String _currentStatus = 'pending';
 
+  // Communication state
+  final Map<String, OrderConversation> _conversations = {};
+  final Map<String, int> _unreadCounts = {};
+  bool _showChatModal = false;
+  bool _showCallModal = false;
+  OrderConversation? _selectedConversation;
+  OrderCall? _activeCall;
+  StreamSubscription<CallEvent>? _callSubscription;
+
   final _restaurantManagementService = RestaurantManagementService();
 
   @override
@@ -36,11 +54,13 @@ class _RestaurantOrdersScreenState
     _tabController = TabController(length: 5, vsync: this);
     _tabController.addListener(_onTabChanged);
     _loadRestaurantAndOrders();
+    _initializeCommunication();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _callSubscription?.cancel();
     super.dispose();
   }
 
@@ -109,6 +129,345 @@ class _RestaurantOrdersScreenState
     }
   }
 
+  /// Initialize communication features
+  Future<void> _initializeCommunication() async {
+    try {
+      final chatService = ref.read(orderChatServiceProvider);
+      final callingService = ref.read(orderCallingServiceProvider);
+
+      // Initialize services
+      await chatService.initialize();
+      await callingService.initialize();
+
+      // Set up call event listener
+      _callSubscription = callingService.callEvents.listen((event) {
+        if (!mounted) return;
+        _handleCallEvent(event);
+      });
+
+      AppLogger.info('Communication initialized for restaurant dashboard');
+    } catch (e) {
+      AppLogger.error('Failed to initialize communication: $e');
+    }
+  }
+
+  /// Handle call events
+  void _handleCallEvent(CallEvent event) {
+    setState(() {
+      switch (event.type) {
+        case CallEventType.incoming:
+          _activeCall = event.call;
+          _showCallModal = true;
+          break;
+        case CallEventType.connected:
+          _activeCall = event.call;
+          break;
+        case CallEventType.ended:
+        case CallEventType.missed:
+        case CallEventType.rejected:
+          _activeCall = null;
+          _showCallModal = false;
+          break;
+        default:
+          break;
+      }
+    });
+  }
+
+  /// Get or create conversation for an order
+  Future<OrderConversation?> _getConversationForOrder(String orderId) async {
+    if (_conversations.containsKey(orderId)) {
+      return _conversations[orderId];
+    }
+
+    try {
+      final chatService = ref.read(orderChatServiceProvider);
+      final conversation = await chatService.getOrCreateConversation(orderId);
+
+      if (mounted) {
+        setState(() {
+          _conversations[orderId] = conversation;
+        });
+      }
+
+      return conversation;
+    } catch (e) {
+      AppLogger.error('Failed to get conversation for order $orderId: $e');
+      return null;
+    }
+  }
+
+  /// Get unread message count for an order
+  Future<int> _getUnreadCountForOrder(String orderId) async {
+    if (_unreadCounts.containsKey(orderId)) {
+      return _unreadCounts[orderId]!;
+    }
+
+    final conversation = await _getConversationForOrder(orderId);
+    if (conversation == null) return 0;
+
+    try {
+      final chatService = ref.read(orderChatServiceProvider);
+      final count = await chatService.getUnreadCount(conversation.id);
+
+      if (mounted) {
+        setState(() {
+          _unreadCounts[orderId] = count;
+        });
+      }
+
+      return count;
+    } catch (e) {
+      AppLogger.error('Failed to get unread count for order $orderId: $e');
+      return 0;
+    }
+  }
+
+  /// Open chat for an order
+  Future<void> _openChatForOrder(Order order) async {
+    final conversation = await _getConversationForOrder(order.id);
+    if (conversation == null) return;
+
+    setState(() {
+      _selectedConversation = conversation;
+      _showChatModal = true;
+    });
+
+    // Reset unread count when opening chat
+    if (_unreadCounts[order.id] != null && _unreadCounts[order.id]! > 0) {
+      setState(() {
+        _unreadCounts[order.id] = 0;
+      });
+    }
+  }
+
+  /// Close chat modal
+  void _closeChat() {
+    setState(() {
+      _showChatModal = false;
+      _selectedConversation = null;
+    });
+  }
+
+  /// Start voice call for an order
+  Future<void> _startVoiceCallForOrder(Order order) async {
+    final conversation = await _getConversationForOrder(order.id);
+    if (conversation == null) return;
+
+    try {
+      final callingService = ref.read(orderCallingServiceProvider);
+      final authState = ref.read(authStateProvider);
+      final currentUser = authState.user;
+      if (currentUser == null) return;
+
+      final call = await callingService.initiateCall(
+        conversationId: conversation.id,
+        orderId: order.id,
+        receiverId: conversation.customerId,
+        callType: CallType.voice,
+        isVideoCall: false,
+      );
+
+      setState(() {
+        _activeCall = call;
+        _showCallModal = true;
+      });
+    } catch (e) {
+      AppLogger.error('Failed to start voice call: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to start call: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Start video call for an order
+  Future<void> _startVideoCallForOrder(Order order) async {
+    final conversation = await _getConversationForOrder(order.id);
+    if (conversation == null) return;
+
+    try {
+      final callingService = ref.read(orderCallingServiceProvider);
+      final authState = ref.read(authStateProvider);
+      final currentUser = authState.user;
+      if (currentUser == null) return;
+
+      final call = await callingService.initiateCall(
+        conversationId: conversation.id,
+        orderId: order.id,
+        receiverId: conversation.customerId,
+        callType: CallType.video,
+        isVideoCall: true,
+      );
+
+      setState(() {
+        _activeCall = call;
+        _showCallModal = true;
+      });
+    } catch (e) {
+      AppLogger.error('Failed to start video call: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to start video call: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Get stream of unread message count for an order
+  Stream<int> _getUnreadMessageCountStream(String orderId) {
+    // This would integrate with your chat service to get unread count
+    // For now, return a stream that always emits 0
+    return Stream.value(0);
+  }
+
+  /// Build communication indicators for an order
+  Widget _buildCommunicationIndicators(Order order) {
+    return StreamBuilder<int>(
+      stream: _getUnreadMessageCountStream(order.id),
+      builder: (context, snapshot) {
+        final unreadCount = snapshot.data ?? 0;
+
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Chat button with unread indicator
+            InkWell(
+              onTap: () => _openChatForOrder(order),
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Stack(
+                  children: [
+                    Icon(
+                      Icons.chat_outlined,
+                      color: Colors.blue.shade700,
+                      size: 20,
+                    ),
+                    if (unreadCount > 0)
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 14,
+                            minHeight: 14,
+                          ),
+                          child: Text(
+                            unreadCount > 99 ? '99+' : '$unreadCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 8,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Voice call button
+            InkWell(
+              onTap: () => _startVoiceCallForOrder(order),
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Icon(
+                  Icons.call_outlined,
+                  color: Colors.green.shade700,
+                  size: 20,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Video call button
+            InkWell(
+              onTap: () => _startVideoCallForOrder(order),
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.purple.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Icon(
+                  Icons.videocam_outlined,
+                  color: Colors.purple.shade700,
+                  size: 20,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Build communication modals
+  Widget _buildCommunicationModals() {
+    return Stack(
+      children: [
+        // Chat modal
+        if (_showChatModal && _selectedConversation != null)
+          Positioned(
+            top: 100,
+            left: 16,
+            right: 16,
+            bottom: 100,
+            child: Material(
+              elevation: 8,
+              borderRadius: BorderRadius.circular(16),
+              child: OrderChatWidget(
+                orderId: _selectedConversation!.orderId,
+                conversationId: _selectedConversation!.id,
+                onClose: _closeChat,
+                height: MediaQuery.of(context).size.height * 0.6,
+              ),
+            ),
+          ),
+
+        // Call modal
+        if (_showCallModal && _activeCall != null)
+          Container(
+            color: Colors.black.withValues(alpha: 0.8),
+            child: OrderCallWidget(
+              call: _activeCall!,
+              isVideoCall: _activeCall!.isVideoCall,
+              onCallEnded: () {
+                setState(() {
+                  _showCallModal = false;
+                  _activeCall = null;
+                });
+              },
+            ),
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -126,20 +485,28 @@ class _RestaurantOrdersScreenState
           ],
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _loadOrders,
-              child: _orders.isEmpty
-                  ? _buildEmptyState()
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _orders.length,
-                      itemBuilder: (context, index) {
-                        return _buildOrderCard(_orders[index]);
-                      },
-                    ),
-            ),
+      body: Stack(
+        children: [
+          // Main content
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : RefreshIndicator(
+                  onRefresh: _loadOrders,
+                  child: _orders.isEmpty
+                      ? _buildEmptyState()
+                      : ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _orders.length,
+                          itemBuilder: (context, index) {
+                            return _buildOrderCard(_orders[index]);
+                          },
+                        ),
+                ),
+
+          // Communication modals
+          _buildCommunicationModals(),
+        ],
+      ),
     );
   }
 
@@ -219,6 +586,7 @@ class _RestaurantOrdersScreenState
             ),
           ],
         ),
+        trailing: const SizedBox(), // _buildCommunicationIndicators(order),
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 8),
           child: Row(
@@ -261,7 +629,7 @@ class _RestaurantOrdersScreenState
                     ),
                   ),
                 ),
-                if (order.specialInstructions != null) ...[
+                if (order.notes != null) ...[
                   const SizedBox(height: 12),
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -276,7 +644,7 @@ class _RestaurantOrdersScreenState
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            order.specialInstructions!,
+                            order.notes!,
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                         ),
@@ -473,10 +841,6 @@ class _RestaurantOrdersScreenState
         return Colors.blue;
       case OrderStatus.ready_for_pickup:
         return Colors.purple;
-      case OrderStatus.out_for_delivery:
-        return Colors.indigo;
-      case OrderStatus.delivered:
-        return Colors.green;
       case OrderStatus.cancelled:
         return Colors.red;
     }
@@ -607,4 +971,5 @@ class _RejectReasonDialogState extends State<_RejectReasonDialog> {
       ],
     );
   }
-}
+
+  }

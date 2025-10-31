@@ -12,7 +12,6 @@ import 'package:food_delivery_app/features/order/presentation/widgets/driver_inf
 import 'package:food_delivery_app/features/order/presentation/widgets/live_tracking_map.dart';
 import 'package:food_delivery_app/features/order/presentation/widgets/order_status_timeline.dart';
 import 'package:food_delivery_app/shared/models/order.dart';
-import 'package:food_delivery_app/shared/widgets/delivery_tracking_map_widget.dart';
 
 /// Unified order tracking screen that supports both basic and advanced tracking
 class UnifiedOrderTrackingScreen extends ConsumerStatefulWidget {

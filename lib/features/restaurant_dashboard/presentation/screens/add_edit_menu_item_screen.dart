@@ -118,7 +118,7 @@ class _AddEditMenuItemScreenState
     // _isFeatured = item.isFeatured ?? false;
     // _isPopular = item.isPopular ?? false;
 
-    _selectedDietaryTags.addAll(item.dietaryRestrictions);
+    _selectedDietaryTags.addAll(item.dietaryRestrictions ?? []);
     // _selectedAllergens.addAll(item.allergens ?? []);
     // _customizationOptions = List<Map<String, dynamic>>.from(
     //   item.customizationOptions ?? [],

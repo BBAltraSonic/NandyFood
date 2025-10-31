@@ -497,7 +497,15 @@ extension ThemeExtensions on ThemeData {
 
   // Shadows
   ShadowExtension get shadows =>
-      extension<ShadowExtension>() ?? const ShadowExtension();
+      extension<ShadowExtension>() ?? const ShadowExtension(
+        xs: [],
+        sm: [],
+        md: [],
+        lg: [],
+        xl: [],
+        primaryShadow: [],
+        secondaryShadow: [],
+      );
 }
 
 // Helper function for double linear interpolation

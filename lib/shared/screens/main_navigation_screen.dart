@@ -5,7 +5,7 @@ import 'package:food_delivery_app/core/routing/route_paths.dart';
 
 import 'package:food_delivery_app/features/home/presentation/screens/home_screen.dart';
 import 'package:food_delivery_app/features/favourites/presentation/screens/favourites_screen.dart';
-import 'package:food_delivery_app/features/delivery/presentation/screens/delivery_status_screen.dart';
+import 'package:food_delivery_app/features/order/presentation/screens/order_history_screen.dart';
 import 'package:food_delivery_app/features/profile/presentation/screens/profile_screen.dart';
 import 'package:food_delivery_app/shared/widgets/modern_bottom_navigation.dart';
 import 'package:food_delivery_app/features/order/presentation/providers/cart_provider.dart';
@@ -70,7 +70,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
         children: const [
           HomeScreen(),           // Index 0: Home
           FavouritesScreen(),     // Index 1: Favourites
-          DeliveryStatusScreen(), // Index 2: Delivery
+          OrderHistoryScreen(),   // Index 2: Orders
           ProfileScreen(),        // Index 3: Profile
         ],
       ),

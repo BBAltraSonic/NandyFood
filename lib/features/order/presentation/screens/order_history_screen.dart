@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import 'package:food_delivery_app/core/routing/route_paths.dart';
-import 'package:food_delivery_app/features/delivery/presentation/providers/delivery_orders_provider.dart';
+import 'package:food_delivery_app/features/order/presentation/providers/order_provider.dart';
 import 'package:food_delivery_app/shared/widgets/order_history_item_widget.dart';
 import 'package:food_delivery_app/shared/models/order.dart';
 
@@ -42,16 +42,15 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final ordersState = ref.watch(deliveryOrdersProvider);
-    final notifier = ref.read(deliveryOrdersProvider.notifier);
+    final ordersState = ref.watch(orderProvider);
 
     // Filter orders based on selection
-    final filteredOrders = _filterOrders(ordersState.historyOrders);
+    final filteredOrders = _filterOrders(ordersState.orders);
 
     // Sort orders based on selection
     final sortedOrders = _sortOrders(filteredOrders);
 
-    if (!ordersState.isLoadingHistory && sortedOrders.isEmpty) {
+    if (!ordersState.isLoading && sortedOrders.isEmpty) {
       return Scaffold(
         appBar: AppBar(title: const Text('Order History'), centerTitle: true),
         body: _buildEmptyState(context),
@@ -115,7 +114,7 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          await notifier.refreshHistoryOrders();
+          // await notifier.refreshHistoryOrders(); // temporarily disabled
         },
         child: Column(
           children: [
@@ -156,8 +155,8 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
                 onNotification: (notification) {
                   if (notification.metrics.pixels >=
                           notification.metrics.maxScrollExtent - 200 &&
-                      !ordersState.isLoadingHistory) {
-                    notifier.loadMoreHistory();
+                      !ordersState.isLoading) {
+                    // notifier.loadMoreHistory(); // temporarily disabled
                   }
                   return false;
                 },
@@ -166,11 +165,11 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
                   itemBuilder: (context, index) {
                     if (index < sortedOrders.length) {
                       final order = sortedOrders[index];
-                      return _buildOrderItem(context, order, notifier);
+                      return _buildOrderItem(context, order, null);
                     }
 
                     // Footer: loading spinner or Load More button
-                    if (ordersState.isLoadingHistory) {
+                    if (ordersState.isLoading) {
                       return const Padding(
                         padding: EdgeInsets.symmetric(vertical: 24),
                         child: Center(child: CircularProgressIndicator()),
@@ -181,7 +180,7 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       child: Center(
                         child: OutlinedButton(
-                          onPressed: () => notifier.loadMoreHistory(),
+                          onPressed: () {}, // temporarily disabled
                           child: const Text('Load more'),
                         ),
                       ),
@@ -439,21 +438,21 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
   }
 
   int _getFilterCount(OrderFilter filter) {
-    final ordersState = ref.read(deliveryOrdersProvider);
+    final ordersState = ref.read(orderProvider);
     switch (filter) {
       case OrderFilter.all:
-        return ordersState.historyOrders.length;
+        return ordersState.orders.length;
       case OrderFilter.active:
-        return ordersState.historyOrders.where((order) =>
-          ['placed', 'confirmed', 'preparing', 'ready', 'picked_up', 'on_the_way']
+        return ordersState.orders.where((order) =>
+          ['placed', 'confirmed', 'preparing', 'ready_for_pickup']
               .contains(order.status.name.toLowerCase())
         ).length;
       case OrderFilter.completed:
-        return ordersState.historyOrders.where((order) =>
-          order.status.name.toLowerCase() == 'delivered'
+        return ordersState.orders.where((order) =>
+          order.status.name.toLowerCase() == 'ready_for_pickup'
         ).length;
       case OrderFilter.cancelled:
-        return ordersState.historyOrders.where((order) =>
+        return ordersState.orders.where((order) =>
           order.status.name.toLowerCase() == 'cancelled'
         ).length;
     }

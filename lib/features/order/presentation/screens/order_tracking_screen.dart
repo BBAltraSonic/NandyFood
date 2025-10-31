@@ -3,9 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:food_delivery_app/shared/models/order.dart';
+import 'package:food_delivery_app/shared/models/order_conversation.dart';
+import 'package:food_delivery_app/shared/models/order_call.dart';
 import 'package:food_delivery_app/core/services/database_service.dart';
 import 'package:food_delivery_app/core/services/notification_service.dart';
+import 'package:food_delivery_app/core/services/order_chat_service.dart';
+import 'package:food_delivery_app/core/services/order_calling_service.dart';
 import 'package:food_delivery_app/shared/widgets/order_preparation_timeline_widget.dart';
+import 'package:food_delivery_app/shared/widgets/order_chat_widget.dart';
+import 'package:food_delivery_app/shared/widgets/order_call_widget.dart';
+import 'package:food_delivery_app/core/utils/app_logger.dart';
 
 class OrderTrackingScreen extends ConsumerStatefulWidget {
   final Order? order;
@@ -28,6 +35,14 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
   Timer? _preparationTimer;
   int _remainingMinutes = 0;
 
+  // Communication state
+  OrderConversation? _conversation;
+  bool _showChatModal = false;
+  bool _showCallModal = false;
+  OrderCall? _activeCall;
+  int _unreadMessageCount = 0;
+  StreamSubscription<CallEvent>? _callSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -41,6 +56,9 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
     if (orderId != null && orderId.isNotEmpty) {
       // Set up real-time order tracking
       _setupOrderSubscription(orderId);
+
+      // Initialize communication features
+      _initializeCommunication(orderId);
 
       // If only an ID was provided, fetch the full order details
       if (_order == null) {
@@ -159,11 +177,171 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
     }
   }
 
+  /// Initialize communication features for the order
+  Future<void> _initializeCommunication(String orderId) async {
+    try {
+      final chatService = ref.read(orderChatServiceProvider);
+      final callingService = ref.read(orderCallingServiceProvider);
+
+      // Initialize services
+      await chatService.initialize();
+      await callingService.initialize();
+
+      // Get or create conversation
+      _conversation = await chatService.getOrCreateConversation(orderId);
+
+      // Set up call event listener
+      _callSubscription = callingService.callEvents.listen((event) {
+        if (!mounted) return;
+        _handleCallEvent(event);
+      });
+
+      // Get unread message count
+      _updateUnreadCount();
+
+      AppLogger.info('Communication initialized for order: $orderId');
+    } catch (e) {
+      AppLogger.error('Failed to initialize communication: $e');
+    }
+  }
+
+  /// Handle call events
+  void _handleCallEvent(CallEvent event) {
+    setState(() {
+      switch (event.type) {
+        case CallEventType.incoming:
+          _activeCall = event.call;
+          _showCallModal = true;
+          break;
+        case CallEventType.connected:
+          _activeCall = event.call;
+          break;
+        case CallEventType.ended:
+        case CallEventType.missed:
+        case CallEventType.rejected:
+          _activeCall = null;
+          _showCallModal = false;
+          break;
+        default:
+          break;
+      }
+    });
+  }
+
+  /// Update unread message count
+  Future<void> _updateUnreadCount() async {
+    if (_conversation == null) return;
+
+    try {
+      final chatService = ref.read(orderChatServiceProvider);
+      final count = await chatService.getUnreadCount(_conversation!.id);
+      if (mounted) {
+        setState(() => _unreadMessageCount = count);
+      }
+    } catch (e) {
+      AppLogger.error('Failed to update unread count: $e');
+    }
+  }
+
+  /// Open chat modal
+  void _openChat() {
+    setState(() => _showChatModal = true);
+    // Reset unread count when opening chat
+    if (_unreadMessageCount > 0) {
+      setState(() => _unreadMessageCount = 0);
+    }
+  }
+
+  /// Close chat modal
+  void _closeChat() {
+    setState(() => _showChatModal = false);
+    _updateUnreadCount();
+  }
+
+  /// Initiate voice call
+  Future<void> _startVoiceCall() async {
+    if (_conversation == null) return;
+
+    try {
+      final callingService = ref.read(orderCallingServiceProvider);
+      final currentUser = _supabase.auth.currentUser;
+      if (currentUser == null) return;
+
+      // Determine the other participant (restaurant staff)
+      final receiverId = currentUser.id == _conversation!.customerId
+          ? _conversation!.restaurantId
+          : _conversation!.customerId;
+
+      final call = await callingService.initiateCall(
+        conversationId: _conversation!.id,
+        orderId: _order!.id,
+        receiverId: receiverId,
+        callType: CallType.voice,
+        isVideoCall: false,
+      );
+
+      setState(() {
+        _activeCall = call;
+        _showCallModal = true;
+      });
+    } catch (e) {
+      AppLogger.error('Failed to start voice call: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to start call: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Initiate video call
+  Future<void> _startVideoCall() async {
+    if (_conversation == null) return;
+
+    try {
+      final callingService = ref.read(orderCallingServiceProvider);
+      final currentUser = _supabase.auth.currentUser;
+      if (currentUser == null) return;
+
+      // Determine the other participant (restaurant staff)
+      final receiverId = currentUser.id == _conversation!.customerId
+          ? _conversation!.restaurantId
+          : _conversation!.customerId;
+
+      final call = await callingService.initiateCall(
+        conversationId: _conversation!.id,
+        orderId: _order!.id,
+        receiverId: receiverId,
+        callType: CallType.video,
+        isVideoCall: true,
+      );
+
+      setState(() {
+        _activeCall = call;
+        _showCallModal = true;
+      });
+    } catch (e) {
+      AppLogger.error('Failed to start video call: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to start video call: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   void dispose() {
     _orderSubscription?.cancel();
     _preparationTimer?.cancel();
     _orderChannel?.unsubscribe();
+    _callSubscription?.cancel();
     super.dispose();
   }
 
@@ -175,11 +353,22 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
         centerTitle: true,
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
-      body: _order == null
-          ? (_loadError != null
-              ? _buildLoadError(context)
-              : const Center(child: CircularProgressIndicator()))
-          : _buildOrderTrackingContent(context),
+      body: Stack(
+        children: [
+          // Main content
+          _order == null
+              ? (_loadError != null
+                  ? _buildLoadError(context)
+                  : const Center(child: CircularProgressIndicator()))
+              : _buildOrderTrackingContent(context),
+
+          // Communication modals
+          _buildCommunicationModals(),
+        ],
+      ),
+      // Communication buttons
+      floatingActionButton: _buildCommunicationButtons(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
     );
   }
 
@@ -346,9 +535,9 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -413,7 +602,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.purple.withOpacity(0.1),
+                  color: Colors.purple.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -450,7 +639,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
+                color: Colors.green.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -578,7 +767,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
             const Text('• Provide your order number'),
             const Text('• Collect your order'),
             const SizedBox(height: 16),
-            if (_order!.pickupInstructions.isNotEmpty)
+            if (_order!.pickupInstructions?.isNotEmpty == true)
               Text('Special instructions: ${_order!.pickupInstructions}'),
           ],
         ),
@@ -598,6 +787,111 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
         content: Text('You will be notified when your order is ready'),
         backgroundColor: Colors.green,
       ),
+    );
+  }
+
+  /// Build communication buttons
+  Widget _buildCommunicationButtons() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Chat button
+        FloatingActionButton(
+          heroTag: "chat",
+          onPressed: _openChat,
+          backgroundColor: Colors.blue,
+          child: Stack(
+            children: [
+              const Icon(Icons.chat, color: Colors.white),
+              if (_unreadMessageCount > 0)
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      _unreadMessageCount > 99 ? '99+' : '$_unreadMessageCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Voice call button
+        FloatingActionButton(
+          heroTag: "voice_call",
+          onPressed: _startVoiceCall,
+          backgroundColor: Colors.green,
+          mini: true,
+          child: const Icon(Icons.call, color: Colors.white),
+        ),
+        const SizedBox(height: 8),
+        // Video call button
+        FloatingActionButton(
+          heroTag: "video_call",
+          onPressed: _startVideoCall,
+          backgroundColor: Colors.purple,
+          mini: true,
+          child: const Icon(Icons.videocam, color: Colors.white),
+        ),
+      ],
+    );
+  }
+
+  /// Build communication modals
+  Widget _buildCommunicationModals() {
+    return Stack(
+      children: [
+        // Chat modal
+        if (_showChatModal && _conversation != null)
+          Positioned(
+            top: 100,
+            left: 16,
+            right: 16,
+            bottom: 100,
+            child: Material(
+              elevation: 8,
+              borderRadius: BorderRadius.circular(16),
+              child: OrderChatWidget(
+                orderId: _order!.id,
+                conversationId: _conversation!.id,
+                onClose: _closeChat,
+                height: MediaQuery.of(context).size.height * 0.6,
+              ),
+            ),
+          ),
+
+        // Call modal
+        if (_showCallModal && _activeCall != null)
+          Container(
+            color: Colors.black.withValues(alpha: 0.8),
+            child: OrderCallWidget(
+              call: _activeCall!,
+              isVideoCall: _activeCall!.isVideoCall,
+              onCallEnded: () {
+                setState(() {
+                  _showCallModal = false;
+                  _activeCall = null;
+                });
+              },
+            ),
+          ),
+      ],
     );
   }
 }

@@ -15,6 +15,9 @@ class AppTheme {
   static const Color cookingStatus = SemanticColors.warning;
   static const Color finishedStatus = SemanticColors.success;
 
+  // Primary color for easy access
+  static const Color primaryColor = BrandColors.primary;
+
   // Meal time colors (legacy)
   static const Color breakfastColor = MealTimeColors.breakfast;
   static const Color lunchColor = MealTimeColors.lunch;

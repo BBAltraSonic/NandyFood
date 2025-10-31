@@ -54,7 +54,7 @@ abstract class Failure {
   });
 
   @override
-  String toString() => 'Failure(code: ' + (code ?? 'unknown') + ', message: ' + message + ')';
+  String toString() => 'Failure(code: ${code ?? 'unknown'}, message: $message)';
 }
 
 /// Common failure specializations

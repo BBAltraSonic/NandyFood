@@ -3,6 +3,9 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:food_delivery_app/shared/models/order_conversation.dart';
+import 'package:food_delivery_app/shared/models/order_message.dart';
+import 'package:food_delivery_app/shared/models/order_call.dart';
 
 /// Provider for RealtimeService
 final realtimeServiceProvider = Provider<RealtimeService>((ref) {
@@ -311,6 +314,346 @@ class RealtimeService {
     debugPrint('Subscribed to presence: $channelId');
 
     return controller.stream;
+  }
+
+  /// Subscribe to order conversations for a specific order
+  Stream<OrderConversation> subscribeToOrderConversation(String orderId) {
+    final channelName = 'conversation:$orderId';
+
+    // Return existing stream if already subscribed
+    if (_controllers.containsKey(channelName)) {
+      // Cast the stream to the expected type
+      return _controllers[channelName]!.stream
+          .map((data) => OrderConversation.fromJson(data));
+    }
+
+    // Create new stream controller
+    final controller = StreamController<Map<String, dynamic>>.broadcast(
+      onCancel: () => _unsubscribe(channelName),
+    );
+    _controllers[channelName] = controller;
+
+    // Create and configure channel
+    final channel = _supabase.channel(channelName);
+
+    channel
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'order_conversations',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'order_id',
+            value: orderId,
+          ),
+          callback: (payload) {
+            debugPrint('Conversation update: ${payload.newRecord}');
+            if (!controller.isClosed) {
+              controller.add(payload.newRecord);
+            }
+          },
+        )
+        .subscribe();
+
+    _channels[channelName] = channel;
+
+    debugPrint('Subscribed to conversation for order: $orderId');
+
+    return controller.stream
+        .map((data) => OrderConversation.fromJson(data));
+  }
+
+  /// Subscribe to messages in a specific conversation
+  Stream<OrderMessage> subscribeToConversationMessages(String conversationId) {
+    final channelName = 'messages:$conversationId';
+
+    // Return existing stream if already subscribed
+    if (_controllers.containsKey(channelName)) {
+      return _controllers[channelName]!.stream
+          .map((data) => OrderMessage.fromJson(data));
+    }
+
+    // Create new stream controller
+    final controller = StreamController<Map<String, dynamic>>.broadcast(
+      onCancel: () => _unsubscribe(channelName),
+    );
+    _controllers[channelName] = controller;
+
+    // Create and configure channel
+    final channel = _supabase.channel(channelName);
+
+    channel
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'order_messages',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'conversation_id',
+            value: conversationId,
+          ),
+          callback: (payload) {
+            debugPrint('New message: ${payload.newRecord}');
+            if (!controller.isClosed) {
+              controller.add(payload.newRecord);
+            }
+          },
+        )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.update,
+          schema: 'public',
+          table: 'order_messages',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'conversation_id',
+            value: conversationId,
+          ),
+          callback: (payload) {
+            debugPrint('Message update: ${payload.newRecord}');
+            if (!controller.isClosed) {
+              controller.add(payload.newRecord);
+            }
+          },
+        )
+        .subscribe();
+
+    _channels[channelName] = channel;
+
+    debugPrint('Subscribed to messages for conversation: $conversationId');
+
+    return controller.stream
+        .map((data) => OrderMessage.fromJson(data));
+  }
+
+  /// Subscribe to calls for a specific user
+  Stream<OrderCall> subscribeToUserCalls(String userId) {
+    final channelName = 'user_calls:$userId';
+
+    // Return existing stream if already subscribed
+    if (_controllers.containsKey(channelName)) {
+      return _controllers[channelName]!.stream
+          .map((data) => OrderCall.fromJson(data));
+    }
+
+    // Create new stream controller
+    final controller = StreamController<Map<String, dynamic>>.broadcast(
+      onCancel: () => _unsubscribe(channelName),
+    );
+    _controllers[channelName] = controller;
+
+    // Create and configure channel
+    final channel = _supabase.channel(channelName);
+
+    // Listen for calls where user is either initiator or receiver
+    channel
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'order_calls',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'receiver_id',
+            value: userId,
+          ),
+          callback: (payload) {
+            debugPrint('Incoming call: ${payload.newRecord}');
+            if (!controller.isClosed) {
+              controller.add(payload.newRecord);
+            }
+          },
+        )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.update,
+          schema: 'public',
+          table: 'order_calls',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'receiver_id',
+            value: userId,
+          ),
+          callback: (payload) {
+            debugPrint('Call update: ${payload.newRecord}');
+            if (!controller.isClosed) {
+              controller.add(payload.newRecord);
+            }
+          },
+        )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'order_calls',
+          callback: (payload) {
+            final callData = payload.newRecord;
+            // Filter for calls initiated by this user
+            if (callData['initiator_id'] == userId) {
+              debugPrint('Outgoing call: $callData');
+              if (!controller.isClosed) {
+                controller.add(callData);
+              }
+            }
+          },
+        )
+        .subscribe();
+
+    _channels[channelName] = channel;
+
+    debugPrint('Subscribed to calls for user: $userId');
+
+    return controller.stream
+        .map((data) => OrderCall.fromJson(data));
+  }
+
+  /// Subscribe to calls for a specific conversation
+  Stream<OrderCall> subscribeToConversationCalls(String conversationId) {
+    final channelName = 'conversation_calls:$conversationId';
+
+    // Return existing stream if already subscribed
+    if (_controllers.containsKey(channelName)) {
+      return _controllers[channelName]!.stream
+          .map((data) => OrderCall.fromJson(data));
+    }
+
+    // Create new stream controller
+    final controller = StreamController<Map<String, dynamic>>.broadcast(
+      onCancel: () => _unsubscribe(channelName),
+    );
+    _controllers[channelName] = controller;
+
+    // Create and configure channel
+    final channel = _supabase.channel(channelName);
+
+    channel
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'order_calls',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'conversation_id',
+            value: conversationId,
+          ),
+          callback: (payload) {
+            debugPrint('Conversation call update: ${payload.newRecord}');
+            if (!controller.isClosed) {
+              controller.add(payload.newRecord);
+            }
+          },
+        )
+        .subscribe();
+
+    _channels[channelName] = channel;
+
+    debugPrint('Subscribed to calls for conversation: $conversationId');
+
+    return controller.stream
+        .map((data) => OrderCall.fromJson(data));
+  }
+
+  /// Subscribe to communication activity for a user
+  Stream<Map<String, dynamic>> subscribeToUserCommunicationActivity(String userId) {
+    final channelName = 'user_communication:$userId';
+
+    // Return existing stream if already subscribed
+    if (_controllers.containsKey(channelName)) {
+      return _controllers[channelName]!.stream;
+    }
+
+    // Create new stream controller
+    final controller = StreamController<Map<String, dynamic>>.broadcast(
+      onCancel: () => _unsubscribe(channelName),
+    );
+    _controllers[channelName] = controller;
+
+    // Create and configure channel
+    final channel = _supabase.channel(channelName);
+
+    // Listen to conversations where user is participant
+    channel
+        .onPostgresChanges(
+          event: PostgresChangeEvent.update,
+          schema: 'public',
+          table: 'order_conversations',
+          callback: (payload) {
+            final conversationData = payload.newRecord;
+            // Filter for conversations where this user is customer or restaurant staff
+            if (conversationData['customer_id'] == userId || conversationData['restaurant_id'] == userId) {
+              debugPrint('Conversation activity: $conversationData');
+              if (!controller.isClosed) {
+                controller.add({
+                  'type': 'conversation_update',
+                  'data': conversationData,
+                });
+              }
+            }
+          },
+        )
+        // Listen to new messages in conversations user participates in
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'order_messages',
+          callback: (payload) {
+            // Filter client-side for conversations user participates in
+            final messageData = payload.newRecord;
+            final conversationId = messageData['conversation_id'] as String?;
+
+            if (conversationId != null) {
+              _checkConversationParticipation(conversationId, userId).then((isParticipant) {
+                if (isParticipant && !controller.isClosed) {
+                  controller.add({
+                    'type': 'new_message',
+                    'data': messageData,
+                  });
+                }
+              });
+            }
+          },
+        )
+        // Listen to calls where user is participant
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'order_calls',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'receiver_id',
+            value: userId,
+          ),
+          callback: (payload) {
+            debugPrint('User call activity: ${payload.newRecord}');
+            if (!controller.isClosed) {
+              controller.add({
+                'type': 'incoming_call',
+                'data': payload.newRecord,
+              });
+            }
+          },
+        )
+        .subscribe();
+
+    _channels[channelName] = channel;
+
+    debugPrint('Subscribed to communication activity for user: $userId');
+
+    return controller.stream;
+  }
+
+  /// Check if user participates in a conversation
+  Future<bool> _checkConversationParticipation(String conversationId, String userId) async {
+    try {
+      final result = await _supabase
+          .from('order_conversations')
+          .select('customer_id, restaurant_id')
+          .eq('id', conversationId)
+          .maybeSingle();
+
+      if (result == null) return false;
+
+      return result['customer_id'] == userId || result['restaurant_id'] == userId;
+    } catch (e) {
+      debugPrint('Error checking conversation participation: $e');
+      return false;
+    }
   }
 
   /// Broadcast message to a channel

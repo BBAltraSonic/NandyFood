@@ -91,7 +91,7 @@ class OrderPreparationTimelineWidget extends StatelessWidget {
       PreparationStage(
         title: 'Preparing',
         subtitle: remainingMinutes > 0
-            ? 'Your order is being prepared (${remainingMinutes} min remaining)'
+            ? 'Your order is being prepared ($remainingMinutes min remaining)'
             : 'Your order is being prepared',
         icon: Icons.restaurant,
         time: order.preparingAt != null ? _formatTime(order.preparingAt!) : null,
@@ -177,13 +177,13 @@ class _TimelineItem extends StatelessWidget {
 
     if (isCompleted) {
       color = Colors.green;
-      backgroundColor = Colors.green.withOpacity(0.1);
+      backgroundColor = Colors.green.withValues(alpha: 0.1);
     } else if (isCurrent) {
       color = Colors.purple;
-      backgroundColor = Colors.purple.withOpacity(0.1);
+      backgroundColor = Colors.purple.withValues(alpha: 0.1);
     } else {
       color = Colors.grey;
-      backgroundColor = Colors.grey.withOpacity(0.1);
+      backgroundColor = Colors.grey.withValues(alpha: 0.1);
     }
 
     return Row(
@@ -203,7 +203,7 @@ class _TimelineItem extends StatelessWidget {
                   color: backgroundColor,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: color.withOpacity(0.3),
+                    color: color.withValues(alpha: 0.3),
                     width: 2,
                   ),
                 ),
@@ -293,7 +293,7 @@ class _TimelineConnector extends StatelessWidget {
         color: isCompleted
             ? Colors.green
             : isCurrent
-                ? Colors.purple.withOpacity(0.5)
+                ? Colors.purple.withValues(alpha: 0.5)
                 : Colors.grey.shade300,
       ),
     );

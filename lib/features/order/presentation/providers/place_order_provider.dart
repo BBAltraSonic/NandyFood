@@ -107,22 +107,19 @@ class PlaceOrderNotifier extends StateNotifier<PlaceOrderState> {
         id: generatedOrderId,
         userId: userId,
         restaurantId: restaurantId,
-        deliveryAddress: deliveryAddress,
+        pickupAddress: deliveryAddress,
         status: OrderStatus.placed,
         totalAmount: totalAmount,
         subtotal: subtotal,
-        deliveryFee: deliveryFee,
-        taxAmount: taxAmount,
-        tipAmount: tipAmount ?? cartState.tipAmount,
-        discountAmount: discountAmount,
+                taxAmount: taxAmount,
+                discountAmount: discountAmount,
         promoCode: promoCode?.toUpperCase() ?? cartState.promoCode,
         paymentMethod: paymentMethod ?? 'cash',
         paymentStatus: PaymentStatus.completed, // Cash payment is completed on delivery
         placedAt: DateTime.now(),
-        estimatedDeliveryAt: estimatedDeliveryTime,
-        createdAt: DateTime.now(),
+                createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
-        specialInstructions: specialInstructions,
+        notes: specialInstructions, // Using notes field instead of specialInstructions
       );
 
       // Create order using order provider

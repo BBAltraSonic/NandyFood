@@ -20,7 +20,15 @@ class RoleService {
           .eq('user_id', userId)
           .order('is_primary', ascending: false);
 
-      final roles = (response as List)
+  
+      final responseList = response as List;
+      if (responseList.isEmpty) {
+        AppLogger.function('RoleService.getUserRoles', 'EXIT',
+            result: '0 roles (empty list)');
+        return [];
+      }
+
+      final roles = responseList
           .map((json) => UserRole.fromJson(json as Map<String, dynamic>))
           .toList();
 
@@ -29,7 +37,8 @@ class RoleService {
       return roles;
     } catch (e, stack) {
       AppLogger.error('Failed to get user roles', error: e, stack: stack);
-      rethrow;
+      // Return empty list instead of rethrowing to prevent crashes
+      return [];
     }
   }
 
@@ -57,7 +66,8 @@ class RoleService {
       return role;
     } catch (e, stack) {
       AppLogger.error('Failed to get primary role', error: e, stack: stack);
-      rethrow;
+      // Return null instead of rethrowing to prevent crashes
+      return null;
     }
   }
 

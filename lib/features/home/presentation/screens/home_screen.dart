@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:food_delivery_app/features/restaurant/presentation/providers/restaurant_provider.dart';
 import 'package:food_delivery_app/features/restaurant/presentation/widgets/restaurant_card.dart';
 import 'package:food_delivery_app/features/home/presentation/widgets/home_map_view_widget.dart';
-import 'package:food_delivery_app/features/home/presentation/widgets/featured_restaurants_carousel.dart';
 import 'package:food_delivery_app/features/home/presentation/widgets/categories_horizontal_list.dart';
 import 'package:food_delivery_app/features/home/presentation/widgets/order_again_section.dart';
 import 'package:food_delivery_app/features/home/presentation/providers/map_view_provider.dart';
@@ -131,16 +130,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
             const SliverToBoxAdapter(child: SizedBox(height: 32)),
 
-            // Featured Restaurants Carousel (Enhanced Hero)
-            SliverToBoxAdapter(
-              child: FeaturedRestaurantsCarousel(
-                restaurants: _getFeaturedRestaurants(restaurantState.restaurants),
-                height: 240, // Increased height for more prominence
-              ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 32)),
-
+  
             // Promotional Banner (New)
             SliverToBoxAdapter(
               child: _buildPromotionalBanner(theme),
@@ -706,37 +696,4 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return 'Evening';
   }
 
-  List<Restaurant> _getFeaturedRestaurants(List<Restaurant> restaurants) {
-    try {
-      if (restaurants.isEmpty) {
-        return [];
-      }
-
-      return restaurants
-          .where((restaurant) {
-            try {
-              // Ensure restaurant is not null and has valid rating
-              if (restaurant == null) return false;
-
-              // Check rating is valid and meets threshold
-              final rating = restaurant.rating;
-              if (rating.isNaN || rating.isInfinite || rating < 0) {
-                return false;
-              }
-
-              return rating >= 4.5;
-            } catch (e) {
-              // Log error for debugging but don't crash
-              print('Error filtering restaurant: $e');
-              return false;
-            }
-          })
-          .take(5)
-          .toList();
-    } catch (e) {
-      // Return empty list if there's any error
-      print('Error in _getFeaturedRestaurants: $e');
-      return [];
-    }
   }
-}

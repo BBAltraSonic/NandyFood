@@ -159,7 +159,7 @@ class Order {
       case OrderStatus.preparing:
         final remaining = remainingPreparationMinutes;
         if (remaining > 0) {
-          return 'Preparing - ${remaining} min remaining';
+          return 'Preparing - $remaining min remaining';
         }
         return 'Preparing - Almost ready';
       case OrderStatus.ready_for_pickup:

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:food_delivery_app/shared/models/order.dart';
 import 'package:food_delivery_app/core/utils/accessibility_utils.dart';
 
@@ -123,19 +122,6 @@ class AccessibleOrderTrackingWidget extends StatelessWidget {
         ),
         isActive: order.status == OrderStatus.ready_for_pickup,
       ),
-      StepProgress(
-        title: 'Out for Delivery',
-        isCompleted: _isStepCompleted(
-          OrderStatus.out_for_delivery,
-          order.status,
-        ),
-        isActive: order.status == OrderStatus.out_for_delivery,
-      ),
-      StepProgress(
-        title: 'Delivered',
-        isCompleted: _isStepCompleted(OrderStatus.delivered, order.status),
-        isActive: order.status == OrderStatus.delivered,
-      ),
     ];
 
     return Column(
@@ -206,7 +192,7 @@ class AccessibleOrderTrackingWidget extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: colorScheme.surfaceVariant,
+            color: colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Column(
@@ -223,11 +209,11 @@ class AccessibleOrderTrackingWidget extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Delivery Address:'),
+                  const Text('Pickup Address:'),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      order.deliveryAddress['street'] ?? 'Not specified',
+                      order.pickupAddress['street'] ?? 'Not specified',
                       textAlign: TextAlign.right,
                     ),
                   ),
@@ -252,12 +238,6 @@ class AccessibleOrderTrackingWidget extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        if (onCallDriver != null)
-          Accessibility.accessibleButton(
-            child: const Text('Call Driver'),
-            onPressed: onCallDriver!,
-            semanticsLabel: 'Call driver',
-          ),
         if (onCancelOrder != null &&
             (order.status == OrderStatus.placed ||
                 order.status == OrderStatus.confirmed))
@@ -278,8 +258,6 @@ class AccessibleOrderTrackingWidget extends StatelessWidget {
       OrderStatus.confirmed,
       OrderStatus.preparing,
       OrderStatus.ready_for_pickup,
-      OrderStatus.out_for_delivery,
-      OrderStatus.delivered,
     ];
 
     final stepIndex = statusOrder.indexOf(stepStatus);
@@ -296,10 +274,6 @@ class AccessibleOrderTrackingWidget extends StatelessWidget {
       case OrderStatus.preparing:
       case OrderStatus.ready_for_pickup:
         return Colors.blue;
-      case OrderStatus.out_for_delivery:
-        return Colors.deepPurple;
-      case OrderStatus.delivered:
-        return Colors.green;
       case OrderStatus.cancelled:
         return Colors.red;
     }
@@ -315,10 +289,6 @@ class AccessibleOrderTrackingWidget extends StatelessWidget {
         return 'Preparing';
       case OrderStatus.ready_for_pickup:
         return 'Ready for Pickup';
-      case OrderStatus.out_for_delivery:
-        return 'On the Way';
-      case OrderStatus.delivered:
-        return 'Delivered';
       case OrderStatus.cancelled:
         return 'Cancelled';
     }

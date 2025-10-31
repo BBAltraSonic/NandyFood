@@ -94,10 +94,6 @@ class OrderHistoryItemWidget extends StatelessWidget {
         return 'Preparing';
       case OrderStatus.ready_for_pickup:
         return 'Ready for Pickup';
-      case OrderStatus.out_for_delivery:
-        return 'Out for Delivery';
-      case OrderStatus.delivered:
-        return 'Delivered';
       case OrderStatus.cancelled:
         return 'Cancelled';
     }
@@ -114,10 +110,6 @@ class OrderHistoryItemWidget extends StatelessWidget {
         return Colors.orange;
       case OrderStatus.ready_for_pickup:
         return Colors.amber;
-      case OrderStatus.out_for_delivery:
-        return Colors.deepPurple;
-      case OrderStatus.delivered:
-        return Colors.green;
       case OrderStatus.cancelled:
         return Colors.red;
     }

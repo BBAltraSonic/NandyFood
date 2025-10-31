@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:food_delivery_app/shared/models/order_item.dart';
 import 'package:food_delivery_app/core/utils/accessibility_utils.dart';
 

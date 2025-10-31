@@ -78,11 +78,11 @@ class OrderTrackingWidget extends StatelessWidget {
 
   /// Build status timeline
   Widget _buildStatusTimeline(OrderStatus status) {
-    final List<_StatusStep> steps = const [
+    final List<_StatusStep> steps = [
       _StatusStep('Order Placed', OrderStatus.placed),
+      _StatusStep('Confirmed', OrderStatus.confirmed),
       _StatusStep('Preparing', OrderStatus.preparing),
-      _StatusStep('Out for Delivery', OrderStatus.out_for_delivery),
-      _StatusStep('Delivered', OrderStatus.delivered),
+      _StatusStep('Ready for Pickup', OrderStatus.ready_for_pickup),
     ];
 
     return Column(
@@ -143,9 +143,9 @@ class OrderTrackingWidget extends StatelessWidget {
   bool _isStepCompleted(OrderStatus currentStatus, OrderStatus stepStatus) {
     final statusOrder = [
       OrderStatus.placed,
+      OrderStatus.confirmed,
       OrderStatus.preparing,
-      OrderStatus.out_for_delivery,
-      OrderStatus.delivered,
+      OrderStatus.ready_for_pickup,
       OrderStatus.cancelled,
     ];
 

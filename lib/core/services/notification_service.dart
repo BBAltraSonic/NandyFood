@@ -1,6 +1,8 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:food_delivery_app/core/routing/route_paths.dart';
 import 'package:food_delivery_app/core/utils/app_logger.dart';
+import 'package:food_delivery_app/shared/models/order_message.dart';
+import 'package:food_delivery_app/shared/models/order_call.dart';
 
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -490,6 +492,193 @@ class NotificationService {
     return [];
   }
 
+  // Show new message notification
+  Future<void> showNewMessageNotification({
+    required String orderId,
+    required String senderName,
+    required OrderMessage message,
+    String? conversationId,
+  }) async {
+    String title;
+    String body;
+    String notificationType;
+
+    switch (message.messageType) {
+      case MessageType.text:
+        title = 'New message from $senderName';
+        body = message.content.length > 50
+            ? '${message.content.substring(0, 50)}...'
+            : message.content;
+        notificationType = 'text_message';
+        break;
+      case MessageType.image:
+        title = 'New image from $senderName';
+        body = '📷 Image shared';
+        notificationType = 'image_message';
+        break;
+      case MessageType.voice:
+        title = 'New voice message from $senderName';
+        body = '🎙️ Voice message (${message.getFormattedVoiceDuration()})';
+        notificationType = 'voice_message';
+        break;
+      case MessageType.file:
+        title = 'New file from $senderName';
+        body = '📎 ${message.fileName ?? 'File shared'}';
+        notificationType = 'file_message';
+        break;
+      case MessageType.callStarted:
+        title = 'Call started';
+        body = '📞 Call with $senderName has started';
+        notificationType = 'call_started';
+        break;
+      case MessageType.callEnded:
+        title = 'Call ended';
+        body = '📞 Call with $senderName has ended';
+        notificationType = 'call_ended';
+        break;
+      default:
+        title = 'New message';
+        body = message.getDisplayText();
+        notificationType = 'message';
+        break;
+    }
+
+    await showNotification(
+      id: 'message_${message.id}'.hashCode,
+      title: title,
+      body: body,
+      payload: 'order_chat://$orderId${conversationId != null ? '?conversation=$conversationId' : ''}',
+    );
+
+    AppLogger.info('Message notification sent: $title');
+  }
+
+  // Show incoming call notification
+  Future<void> showIncomingCallNotification({
+    required String orderId,
+    required String callerName,
+    required OrderCall call,
+    String? conversationId,
+  }) async {
+    final title = 'Incoming ${call.isVideoCall ? 'Video' : 'Voice'} Call';
+    final body = '${call.isVideoCall ? '📹' : '📞'} $callerName is calling...';
+
+    // Use high priority notification for calls
+    AndroidNotificationDetails androidPlatformChannelSpecifics =
+        const AndroidNotificationDetails(
+      'incoming_calls',
+      'Incoming Calls',
+      channelDescription: 'Notifications for incoming calls',
+      importance: Importance.max,
+      priority: Priority.high,
+      ticker: 'Incoming call',
+      playSound: true,
+      enableVibration: true,
+      category: AndroidNotificationCategory.call,
+      fullScreenIntent: true,
+      ongoing: true,
+      autoCancel: false,
+    );
+
+    DarwinNotificationDetails iOSPlatformChannelSpecifics =
+        const DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+      categoryIdentifier: 'INCOMING_CALL',
+    );
+
+    NotificationDetails platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+      iOS: iOSPlatformChannelSpecifics,
+    );
+
+    await _notifications.show(
+      'call_${call.id}'.hashCode,
+      title,
+      body,
+      platformChannelSpecifics,
+      payload: 'incoming_call://$orderId?callId=${call.id}${conversationId != null ? '&conversation=$conversationId' : ''}',
+    );
+
+    AppLogger.info('Incoming call notification sent: $title');
+  }
+
+  // Show missed call notification
+  Future<void> showMissedCallNotification({
+    required String orderId,
+    required String callerName,
+    required OrderCall call,
+    String? conversationId,
+  }) async {
+    final title = 'Missed ${call.isVideoCall ? 'Video' : 'Voice'} Call';
+    final body = '${call.isVideoCall ? '📹' : '📞'} You missed a call from $callerName';
+
+    await showNotification(
+      id: 'missed_call_${call.id}'.hashCode,
+      title: title,
+      body: body,
+      payload: 'missed_call://$orderId?callId=${call.id}${conversationId != null ? '&conversation=$conversationId' : ''}',
+    );
+
+    AppLogger.info('Missed call notification sent: $title');
+  }
+
+  // Show call ended notification
+  Future<void> showCallEndedNotification({
+    required String orderId,
+    required String callerName,
+    required OrderCall call,
+    String? conversationId,
+  }) async {
+    final title = 'Call Ended';
+    final duration = call.getFormattedDuration();
+    final body = '${call.isVideoCall ? '📹' : '📞'} Call with $callerName ended ($duration)';
+
+    await showNotification(
+      id: 'call_ended_${call.id}'.hashCode,
+      title: title,
+      body: body,
+      payload: 'order_chat://$orderId${conversationId != null ? '?conversation=$conversationId' : ''}',
+    );
+
+    AppLogger.info('Call ended notification sent: $title');
+  }
+
+  // Show unread messages summary notification
+  Future<void> showUnreadMessagesSummaryNotification({
+    required String orderId,
+    required String restaurantName,
+    required int unreadCount,
+    String? conversationId,
+  }) async {
+    if (unreadCount <= 0) return;
+
+    final title = '$unreadCount unread message${unreadCount > 1 ? 's' : ''}';
+    final body = 'From $restaurantName - Tap to open chat';
+
+    await showNotification(
+      id: 'unread_summary_$orderId'.hashCode,
+      title: title,
+      body: body,
+      payload: 'order_chat://$orderId${conversationId != null ? '?conversation=$conversationId' : ''}',
+    );
+
+    AppLogger.info('Unread messages summary notification sent: $title');
+  }
+
+  // Cancel call notification
+  Future<void> cancelCallNotification(String callId) async {
+    await _notifications.cancel('call_$callId'.hashCode);
+    AppLogger.info('Call notification cancelled: $callId');
+  }
+
+  // Cancel message notification
+  Future<void> cancelMessageNotification(String messageId) async {
+    await _notifications.cancel('message_$messageId'.hashCode);
+    AppLogger.info('Message notification cancelled: $messageId');
+  }
+
   /// Create notification channels for different notification types
   Future<void> createNotificationChannels() async {
     final androidImplementation = _notifications
@@ -526,6 +715,41 @@ class NotificationService {
           description: 'Real-time order preparation updates',
           importance: Importance.high,
           enableVibration: true,
+        ),
+      );
+
+      // Chat messages channel
+      await androidImplementation.createNotificationChannel(
+        const AndroidNotificationChannel(
+          'chat_messages',
+          'Chat Messages',
+          description: 'Messages from restaurant staff and customers',
+          importance: Importance.high,
+          enableVibration: true,
+          showBadge: true,
+        ),
+      );
+
+      // Incoming calls channel
+      await androidImplementation.createNotificationChannel(
+        const AndroidNotificationChannel(
+          'incoming_calls',
+          'Incoming Calls',
+          description: 'Incoming voice and video calls',
+          importance: Importance.max,
+          enableVibration: true,
+          showBadge: true,
+        ),
+      );
+
+      // Communication updates channel
+      await androidImplementation.createNotificationChannel(
+        const AndroidNotificationChannel(
+          'communication_updates',
+          'Communication Updates',
+          description: 'Call status and communication notifications',
+          importance: Importance.defaultImportance,
+          enableVibration: false,
         ),
       );
     }
