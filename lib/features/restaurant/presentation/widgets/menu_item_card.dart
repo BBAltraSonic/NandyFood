@@ -140,7 +140,7 @@ class MenuItemCard extends ConsumerWidget {
                           padding: const EdgeInsets.all(8),
                           child: Icon(
                             isFavourite ? Icons.favorite : Icons.favorite_border,
-                            color: isFavourite ? Colors.black87.shade400 : Colors.grey.shade600,
+                            color: isFavourite ? Colors.black54 : Colors.grey[600],
                             size: 24,
                           ),
                         ),

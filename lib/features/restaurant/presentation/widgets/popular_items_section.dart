@@ -102,8 +102,8 @@ class _PopularItemCard extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Colors.black87.shade300,
-                    Colors.black87.shade600,
+                    Colors.grey[300]!,
+                    Colors.grey[600]!,
                   ],
                 ),
               ),

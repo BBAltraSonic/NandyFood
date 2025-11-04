@@ -9,6 +9,7 @@ class HomeMapViewWidget extends StatefulWidget {
   final Function(Restaurant)? onRestaurantTapped;
   final double? height;
   final bool showRestaurantPreview;
+  final bool showPickupMarkers;
 
   const HomeMapViewWidget({
     super.key,
@@ -17,6 +18,7 @@ class HomeMapViewWidget extends StatefulWidget {
     this.onRestaurantTapped,
     this.height,
     this.showRestaurantPreview = true,
+    this.showPickupMarkers = false,
   });
 
   @override
@@ -110,71 +112,141 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
       if (restaurant.latitude != 0 && restaurant.longitude != 0) {
         final isSelected = _selectedRestaurant?.id == restaurant.id;
 
-        markers.add(
-          Marker(
-            width: isSelected ? 60 : 50,
-            height: isSelected ? 60 : 50,
-            point: LatLng(restaurant.latitude, restaurant.longitude),
-            child: GestureDetector(
-              onTap: () => _onMarkerTapped(restaurant),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeOut,
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? Theme.of(context).colorScheme.primary
-                      : Colors.white,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.primary,
-                    width: isSelected ? 3 : 2,
+        // Different styling for pickup markers
+        if (widget.showPickupMarkers) {
+          markers.add(
+            Marker(
+              width: isSelected ? 70 : 60,
+              height: isSelected ? 70 : 60,
+              point: LatLng(restaurant.latitude, restaurant.longitude),
+              child: GestureDetector(
+                onTap: () => _onMarkerTapped(restaurant),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOut,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Theme.of(context).colorScheme.primary,
+                        Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white,
+                      width: isSelected ? 4 : 3,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.6),
+                        blurRadius: isSelected ? 12 : 8,
+                        offset: const Offset(0, 3),
+                        spreadRadius: isSelected ? 2 : 1,
+                      ),
+                    ],
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withValues(alpha: 0.4),
-                      blurRadius: isSelected ? 8 : 4,
-                      offset: const Offset(0, 2),
-                      spreadRadius: isSelected ? 2 : 0,
-                    ),
-                  ],
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Icon(
-                      Icons.restaurant,
-                      color: isSelected
-                          ? Colors.white
-                          : Theme.of(context).colorScheme.primary,
-                      size: isSelected ? 28 : 24,
-                    ),
-                    // Rating badge for highly rated restaurants
-                    if (restaurant.rating >= 4.5 && !isSelected)
-                      Positioned(
-                        top: 0,
-                        right: 0,
-                        child: Container(
-                          width: 16,
-                          height: 16,
-                          decoration: const BoxDecoration(
-                            color: Colors.black87,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.star,
-                            color: Colors.white,
-                            size: 10,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Icon(
+                        Icons.takeout_dining,
+                        color: Colors.white,
+                        size: isSelected ? 32 : 28,
+                      ),
+                      // Pickup badge
+                      if (!isSelected)
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            width: 18,
+                            height: 18,
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.shopping_bag,
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 10,
+                            ),
                           ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        );
+          );
+        } else {
+          markers.add(
+            Marker(
+              width: isSelected ? 60 : 50,
+              height: isSelected ? 60 : 50,
+              point: LatLng(restaurant.latitude, restaurant.longitude),
+              child: GestureDetector(
+                onTap: () => _onMarkerTapped(restaurant),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOut,
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: isSelected ? 3 : 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.4),
+                        blurRadius: isSelected ? 8 : 4,
+                        offset: const Offset(0, 2),
+                        spreadRadius: isSelected ? 2 : 0,
+                      ),
+                    ],
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Icon(
+                        Icons.restaurant,
+                        color: isSelected
+                            ? Colors.white
+                            : Theme.of(context).colorScheme.primary,
+                        size: isSelected ? 28 : 24,
+                      ),
+                      // Rating badge for highly rated restaurants
+                      if (restaurant.rating >= 4.5 && !isSelected)
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: Container(
+                            width: 16,
+                            height: 16,
+                            decoration: const BoxDecoration(
+                              color: Colors.black87,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.star,
+                              color: Colors.white,
+                              size: 10,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
       }
     }
 

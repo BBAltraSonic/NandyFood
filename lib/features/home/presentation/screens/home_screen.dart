@@ -26,6 +26,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   LatLng? _userLocation;
   bool _isLoadingLocation = true;
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _addressController = TextEditingController();
 
   @override
   void initState() {
@@ -34,6 +35,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // Use Future.microtask to delay provider modification until after build
     Future.microtask(_loadRestaurants);
     _scrollController.addListener(_onScroll);
+
+    // Initialize address with current location
+    _initializeAddressWithLocation();
   }
 
   void _onScroll() {
@@ -49,6 +53,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    _addressController.dispose();
     super.dispose();
   }
 
@@ -75,6 +80,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _loadRestaurants() async {
     await ref.read(restaurantProvider.notifier).loadRestaurants();
+  }
+
+  // Initialize address with current location
+  void _initializeAddressWithLocation() {
+    // Start with a default placeholder
+    _addressController.text = 'Enter your pickup address...';
+  }
+
+  // Update pickup address and save it
+  void _updatePickupAddress(String address) {
+    if (address.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a valid pickup address'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Save the address (you can implement local storage or state management here)
+    // For now, just show a success message
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Pickup address updated: $address'),
+        backgroundColor: BrandColors.primary,
+      ),
+    );
+
+    // You can also update the user location or other state variables here
+    setState(() {
+      // Update any state related to the pickup address
+    });
   }
 
   @override
@@ -113,24 +151,78 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: CustomScrollView(
           controller: _scrollController,
           slivers: [
-            // Enhanced Header with Hero Section
-            SliverToBoxAdapter(
-              child: _buildHeroSection(context, theme),
+            // Parallax Map Section (60% of screen)
+            SliverPersistentHeader(
+              pinned: false,
+              floating: false,
+              delegate: ParallaxMapDelegate(
+                maxHeight: MediaQuery.of(context).size.height * 0.6,
+                minHeight: 100,
+                child: Stack(
+                  children: [
+                    // Full viewport map
+                    Positioned.fill(
+                      child: HomeMapViewWidget(
+                        restaurants: restaurantState.restaurants.where((Restaurant r) => r.id.isNotEmpty).toList(),
+                        userLocation: _userLocation,
+                        height: double.infinity,
+                        showRestaurantPreview: false,
+                        showPickupMarkers: true,
+                      ),
+                    ),
+
+                    // Floating header with location and user controls
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: SafeArea(
+                        child: _buildFloatingHeader(context, theme),
+                      ),
+                    ),
+
+                    // Floating search bar overlapping from bottom of map
+                    Positioned(
+                      bottom: 20, // Position to overlap from bottom of map
+                      left: 24,
+                      right: 24,
+                      child: _buildFloatingSearchBar(context, theme),
+                    ),
+
+                    // Gradient fade at bottom for smooth transition with search bar
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        height: 120, // Increased height to cover search bar overlap area
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.transparent,
+                              NeutralColors.background.withValues(alpha: 0.6),
+                              NeutralColors.background,
+                            ],
+                            stops: const [0.0, 0.3, 0.7, 1.0],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
-
-            // Enhanced Search Bar
-            SliverToBoxAdapter(
-              child: _buildEnhancedSearchBar(context, theme),
-            ),
+            // Search Bar (moved to parallax map section)
 
             const SliverToBoxAdapter(child: SizedBox(height: 32)),
 
-  
-            // Promotional Banner (New)
+            // Promotional Banner (Updated for pickup focus)
             SliverToBoxAdapter(
-              child: _buildPromotionalBanner(theme),
+              child: _buildPickupPromotionalBanner(theme),
             ),
 
             const SliverToBoxAdapter(child: SizedBox(height: 32)),
@@ -147,9 +239,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
             const SliverToBoxAdapter(child: SizedBox(height: 32)),
 
-            // Popular Restaurants Section
+            // Nearby Pickup Spots Section (Updated from Popular Restaurants)
             SliverToBoxAdapter(
-              child: _buildPopularRestaurantsSection(theme, restaurantState),
+              child: _buildNearbyPickupSpotsSection(theme, restaurantState),
             ),
           ],
         ),
@@ -685,7 +777,390 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  
+  // New widget: Floating search bar for map overlay
+  Widget _buildFloatingSearchBar(BuildContext context, ThemeData theme) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.95),
+        borderRadius: BorderRadius.circular(BorderRadiusTokens.xxl),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: TextField(
+        decoration: InputDecoration(
+          hintText: 'Search restaurants, dishes, cuisines...',
+          hintStyle: TextStyle(
+            color: NeutralColors.textSecondary,
+            fontSize: 16,
+          ),
+          prefixIcon: Container(
+            margin: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: BrandColors.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.search_rounded,
+              color: BrandColors.primary,
+              size: 24,
+            ),
+          ),
+          suffixIcon: Container(
+            margin: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [BrandColors.secondary, BrandColors.secondaryLight],
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: IconButton(
+              icon: Icon(
+                Icons.list_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
+              onPressed: () {
+                ref.read(mapViewProvider.notifier).toggleMapView();
+              },
+            ),
+          ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 20,
+          ),
+        ),
+        onTap: () => context.push('/search'),
+        readOnly: true,
+      ),
+    );
+  }
+
+  // New widget: Floating header with address input and user controls
+  Widget _buildFloatingHeader(BuildContext context, ThemeData theme) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Address input field
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.95),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: ShadowTokens.shadowMd,
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.location_on_rounded,
+                    color: BrandColors.primary,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Pickup Address',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: BrandColors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        TextField(
+                          controller: _addressController,
+                          decoration: InputDecoration(
+                            hintText: 'Enter your pickup address...',
+                            hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                              color: NeutralColors.textSecondary,
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.zero,
+                            isDense: true,
+                          ),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          onSubmitted: (value) {
+                            _updatePickupAddress(value);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // User avatar
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [BrandColors.primary, BrandColors.primaryLight],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: ShadowTokens.primaryShadow,
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.person, color: Colors.white),
+              onPressed: () => context.push(RoutePaths.profile),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Updated widget: Pickup-focused promotional banner
+  Widget _buildPickupPromotionalBanner(ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Container(
+        height: 160,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              BrandColors.secondary,
+              BrandColors.secondary.withValues(alpha: 0.8),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(BorderRadiusTokens.xl),
+          boxShadow: [
+            BoxShadow(
+              color: BrandColors.secondary.withValues(alpha: 0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            // Background pattern
+            Positioned(
+              right: -20,
+              top: -20,
+              child: Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+            // Content
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Quick Pickup Special!',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Skip the queue - Order ahead',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            'ORDER NOW',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: BrandColors.secondary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Icon
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                    child: const Icon(
+                      Icons.access_time_rounded,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Updated widget: Nearby pickup spots section
+  Widget _buildNearbyPickupSpotsSection(ThemeData theme, RestaurantState restaurantState) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Nearby Pickup Spots',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  context.push('/restaurants');
+                },
+                child: Text(
+                  'View all',
+                  style: TextStyle(
+                    color: BrandColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        const SizedBox(height: 20),
+
+        // Restaurant List
+        if (restaurantState.isLoading)
+          const Padding(
+            padding: EdgeInsets.all(32),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else if (restaurantState.errorMessage != null)
+          Padding(
+            padding: const EdgeInsets.all(32),
+            child: Center(
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.error_outline_rounded,
+                    size: 64,
+                    color: theme.colorScheme.error,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    restaurantState.errorMessage!,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: theme.colorScheme.error,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _loadRestaurants,
+                    child: const Text('Try Again'),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else if (restaurantState.restaurants.isEmpty)
+          Padding(
+            padding: const EdgeInsets.all(32),
+            child: Center(
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.store_outlined,
+                    size: 64,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No pickup spots found',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Try adjusting your location or search criteria',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              children: restaurantState.restaurants.map((restaurant) {
+                // Additional null safety check
+                if (restaurant.id.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: RestaurantCard(
+                    restaurant: restaurant,
+                    onTap: () {
+                      if (restaurant.id.isNotEmpty) {
+                        context.push('/restaurant/${restaurant.id}');
+                      }
+                    },
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+      ],
+    );
+  }
+
+
   String _getTimeOfDay() {
     final hour = DateTime.now().hour;
     if (hour < 12) return 'Morning';
@@ -693,4 +1168,47 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return 'Evening';
   }
 
+}
+
+// ParallaxMapDelegate for the parallax scrolling effect
+class ParallaxMapDelegate extends SliverPersistentHeaderDelegate {
+  final double maxHeight;
+  final double minHeight;
+  final Widget child;
+
+  ParallaxMapDelegate({
+    required this.maxHeight,
+    required this.minHeight,
+    required this.child,
+  });
+
+  @override
+  double get minExtent => minHeight;
+
+  @override
+  double get maxExtent => maxHeight;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    final progress = shrinkOffset / (maxExtent - minHeight);
+    final scale = 1.0 + (progress * 0.5); // Zoom in slightly as scrolled
+
+    return Transform.scale(
+      scale: scale,
+      child: OverflowBox(
+        minHeight: maxHeight,
+        maxHeight: maxHeight,
+        child: child,
+      ),
+    );
   }
+
+  @override
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {
+    return oldDelegate != this;
+  }
+}

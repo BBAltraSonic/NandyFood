@@ -629,7 +629,7 @@ class _DishCustomizationModalState extends State<DishCustomizationModal> {
     if (_spiceLevel <= 2) return Colors.black87;
     if (_spiceLevel <= 3) return Colors.black87;
     if (_spiceLevel <= 4) return Colors.black87;
-    return Colors.black87.shade900;
+    return Colors.black;
   }
 
   /// Get spice level label

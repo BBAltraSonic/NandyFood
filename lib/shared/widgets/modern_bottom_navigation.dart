@@ -50,9 +50,9 @@ class ModernBottomNavigation extends StatelessWidget {
               _buildCartFAB(),
               
               _buildNavItem(
-                icon: Icons.local_shipping_outlined,
-                activeIcon: Icons.local_shipping_rounded,
-                label: 'Delivery',
+                icon: Icons.storefront_outlined,
+                activeIcon: Icons.storefront_rounded,
+                label: 'Pickup Orders',
                 index: 2,
                 isActive: currentIndex == 2,
                 onTap: () => onTap(2),
