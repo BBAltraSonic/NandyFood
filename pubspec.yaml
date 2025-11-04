@@ -54,7 +54,7 @@ dependencies:
   geocoding: ^4.0.0
 
   # Maps
-  flutter_map: ^8.2.2
+  google_maps_flutter: ^2.9.0
   latlong2: ^0.9.1
 
   # Notifications

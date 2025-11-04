@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart' as ll;
 import 'package:geolocator/geolocator.dart';
 import 'package:food_delivery_app/core/services/location_service.dart';
 import 'package:food_delivery_app/shared/models/restaurant.dart';
+import 'package:food_delivery_app/core/config/map_config.dart';
 
 class LocationMapWidget extends StatefulWidget {
   final List<Restaurant> restaurants;
@@ -24,16 +25,21 @@ class LocationMapWidget extends StatefulWidget {
 }
 
 class _LocationMapWidgetState extends State<LocationMapWidget> {
-  late MapController mapController;
+  GoogleMapController? mapController;
   Position? userPosition;
+  Set<Marker> _markers = {};
 
   @override
   void initState() {
     super.initState();
-    mapController = MapController();
 
     // Get user's current position
     _getUserLocation();
+  }
+
+  void _onMapCreated(GoogleMapController controller) {
+    mapController = controller;
+    _centerMapOnUser();
   }
 
   Future<void> _getUserLocation() async {
@@ -45,70 +51,55 @@ class _LocationMapWidgetState extends State<LocationMapWidget> {
         userPosition = position;
       });
 
+      // Build markers after getting user location
+      _buildMarkers();
+
       // Center the map on user's location
-      mapController.move(
-        LatLng(position.latitude, position.longitude),
-        13.0, // Zoom level
-      );
+      _centerMapOnUser();
     } catch (e) {
       print('Error getting user location: $e');
+      // Still build markers even if location fails
+      _buildMarkers();
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    // Create map markers for restaurants
-    List<Marker> markers = [];
+  Future<void> _centerMapOnUser() async {
+    if (mapController != null && userPosition != null) {
+      await mapController!.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: LatLng(userPosition!.latitude, userPosition!.longitude),
+            zoom: 13.0,
+          ),
+        ),
+      );
+    }
+  }
+
+  void _buildMarkers() {
+    final markers = <Marker>[];
 
     // Add user location marker if available
     if (userPosition != null) {
       markers.add(
-        Marker(
-          width: 80,
-          height: 80,
-          point: LatLng(userPosition!.latitude, userPosition!.longitude),
-          child: const Icon(Icons.person_pin, size: 30, color: Colors.black87),
+        MapConfig.createUserMarker(
+          position: LatLng(userPosition!.latitude, userPosition!.longitude),
         ),
       );
     }
 
     // Add restaurant markers
-    for (Restaurant restaurant in widget.restaurants) {
+    for (final restaurant in widget.restaurants) {
       try {
-        // Assuming restaurant address contains lat/lng coordinates
-        // This is a simplified approach - in real app, we'd geocode the address
-        if (restaurant.address['lat'] != null &&
-            restaurant.address['lng'] != null) {
-          double lat = restaurant.address['lat'];
-          double lng = restaurant.address['lng'];
-
+        // Use restaurant latitude/longitude from the model
+        if (restaurant.latitude != 0 && restaurant.longitude != 0) {
           markers.add(
-            Marker(
-              width: 60,
-              height: 60,
-              point: LatLng(lat, lng),
-              child: GestureDetector(
-                onTap: () {
-                  // Find the restaurant that corresponds to this marker
-                  final tappedRestaurant = widget.restaurants.firstWhere(
-                    (r) => r.address['lat'] == lat && r.address['lng'] == lng,
-                    orElse: () => widget.restaurants.first,
-                  );
-                  widget.onRestaurantTapped?.call(tappedRestaurant);
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.black87,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
-                  ),
-                  child: const Icon(
-                    Icons.restaurant,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
-              ),
+            MapConfig.createRestaurantMarker(
+              position: LatLng(restaurant.latitude, restaurant.longitude),
+              restaurantId: restaurant.id,
+              restaurantName: restaurant.name,
+              rating: restaurant.rating.toString(),
+              onTap: () => widget.onRestaurantTapped?.call(restaurant),
             ),
           );
         }
@@ -118,23 +109,44 @@ class _LocationMapWidgetState extends State<LocationMapWidget> {
       }
     }
 
-    return FlutterMap(
-      mapController: mapController,
-      options: MapOptions(
-        initialCenter: widget.userLat != null && widget.userLng != null
-            ? LatLng(widget.userLat!, widget.userLng!)
-            : LatLng(0, 0), // Default to 0,0 if no location is provided
-        initialZoom: 13.0,
-        minZoom: 3.0,
-        maxZoom: 18.0,
+    setState(() {
+      _markers = markers.toSet();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Initial camera position
+    LatLng initialPosition = const LatLng(40.7128, -74.0060); // Default to NYC
+
+    // Use provided user coordinates if available
+    if (widget.userLat != null && widget.userLng != null) {
+      initialPosition = LatLng(widget.userLat!, widget.userLng!);
+    }
+
+    // Use current location if available
+    if (userPosition != null) {
+      initialPosition = LatLng(userPosition!.latitude, userPosition!.longitude);
+    }
+
+    return GoogleMap(
+      initialCameraPosition: CameraPosition(
+        target: initialPosition,
+        zoom: 13.0,
       ),
-      children: [
-        TileLayer(
-          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-          userAgentPackageName: 'com.example.food_delivery_app',
-        ),
-        MarkerLayer(markers: markers),
-      ],
+      onMapCreated: _onMapCreated,
+      markers: _markers,
+      style: MapConfig.darkMapStyle,
+      compassEnabled: true,
+      mapToolbarEnabled: false,
+      zoomControlsEnabled: true,
+      myLocationEnabled: true,
+      myLocationButtonEnabled: true,
+      zoomGesturesEnabled: true,
+      scrollGesturesEnabled: true,
+      rotateGesturesEnabled: true,
+      tiltGesturesEnabled: true,
+      minMaxZoomPreference: const MinMaxZoomPreference(3.0, 18.0),
     );
   }
 }

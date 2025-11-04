@@ -1,8 +1,9 @@
 
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart' as ll;
+import 'package:food_delivery_app/core/config/map_config.dart';
 
 /// Live tracking map widget
 class LiveTrackingMap extends StatefulWidget {
@@ -27,32 +28,40 @@ class LiveTrackingMap extends StatefulWidget {
 
 class _LiveTrackingMapState extends State<LiveTrackingMap>
     with SingleTickerProviderStateMixin {
-  late final MapController _mapController;
+  GoogleMapController? _mapController;
   late AnimationController _animationController;
   late Animation<double> _latAnimation;
   late Animation<double> _lngAnimation;
 
-
   LatLng? _currentAnimatedLocation;
   bool _isInitialized = false;
+  Set<Marker> _markers = {};
+  Set<Polyline> _polylines = {};
 
   @override
   void initState() {
     super.initState();
-    _mapController = MapController();
     _animationController = AnimationController(
       vsync: this,
       duration: widget.animationDuration,
     );
 
-
     _currentAnimatedLocation = widget.driverLocation;
+
+    // Build initial markers and polylines
+    _buildMarkers();
+    _buildPolylines();
 
     // Initial map position
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fitBounds();
       _isInitialized = true;
     });
+  }
+
+  void _onMapCreated(GoogleMapController controller) {
+    _mapController = controller;
+    _fitBounds();
   }
 
   @override
@@ -79,6 +88,14 @@ class _LiveTrackingMapState extends State<LiveTrackingMap>
           );
         }
       }
+    }
+
+    // Update markers and polylines if locations changed
+    if (oldWidget.driverLocation != widget.driverLocation ||
+        oldWidget.destinationLocation != widget.destinationLocation ||
+        oldWidget.driverHeading != widget.driverHeading) {
+      _buildMarkers();
+      _buildPolylines();
     }
 
     // Update map bounds if destination changed
@@ -132,20 +149,81 @@ class _LiveTrackingMapState extends State<LiveTrackingMap>
     return R * c;
   }
 
-  void _fitBounds() {
-    if (!_isInitialized) return;
+  Future<void> _fitBounds() async {
+    if (!_isInitialized || _mapController == null) return;
 
-    final bounds = LatLngBounds(
+    final bounds = MapConfig.createBoundsFromPoints([
       widget.driverLocation,
       widget.destinationLocation,
-    );
+    ]);
 
-    _mapController.fitCamera(
-      CameraFit.bounds(
-        bounds: bounds,
-        padding: const EdgeInsets.all(100),
+    await _mapController!.animateCamera(
+      CameraUpdate.newLatLngBounds(bounds, 100.0),
+    );
+  }
+
+  void _buildMarkers() {
+    final markers = <Marker>[];
+
+    // Destination marker
+    markers.add(
+      Marker(
+        markerId: const MarkerId('destination'),
+        position: widget.destinationLocation,
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+        infoWindow: const InfoWindow(title: 'Delivery Destination'),
+        visible: true,
+        zIndexInt: 2,
       ),
     );
+
+    // Driver marker (animated)
+    if (_currentAnimatedLocation != null) {
+      markers.add(
+        Marker(
+          markerId: const MarkerId('driver'),
+          position: _currentAnimatedLocation!,
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+          infoWindow: const InfoWindow(title: 'Delivery Driver'),
+          visible: true,
+          rotation: widget.driverHeading ?? 0.0,
+          flat: true,
+          zIndexInt: 3,
+        ),
+      );
+    }
+
+    setState(() {
+      _markers = markers.toSet();
+    });
+  }
+
+  void _buildPolylines() {
+    final polylines = <Polyline>[];
+
+    // Route polyline
+    if (widget.showRoute && _currentAnimatedLocation != null) {
+      polylines.add(
+        Polyline(
+          polylineId: const PolylineId('route'),
+          points: [
+            _currentAnimatedLocation!,
+            widget.destinationLocation,
+          ],
+          color: const Color(0xFF000000), // Black to match theme
+          width: 6,
+          patterns: [
+            PatternItem.dash(20),
+            PatternItem.gap(10),
+          ],
+          visible: true,
+        ),
+      );
+    }
+
+    setState(() {
+      _polylines = polylines.toSet();
+    });
   }
 
   @override
@@ -154,124 +232,26 @@ class _LiveTrackingMapState extends State<LiveTrackingMap>
       borderRadius: BorderRadius.circular(12),
       child: SizedBox(
         height: 300,
-        child: FlutterMap(
-          mapController: _mapController,
-          options: MapOptions(
-            initialCenter: widget.driverLocation,
-            initialZoom: 14,
-            minZoom: 10,
-            maxZoom: 18,
-            interactionOptions: const InteractionOptions(
-              flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
-            ),
+        child: GoogleMap(
+          initialCameraPosition: CameraPosition(
+            target: widget.driverLocation,
+            zoom: 14,
           ),
-          children: [
-            // Map tiles
-            TileLayer(
-              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              userAgentPackageName: 'com.example.food_delivery_app',
-              tileProvider: NetworkTileProvider(),
-              keepBuffer: 2,
-            ),
-
-            // Route polyline
-            if (widget.showRoute && _currentAnimatedLocation != null)
-              PolylineLayer(
-                polylines: [
-                  Polyline(
-                    points: [
-                      _currentAnimatedLocation!,
-                      widget.destinationLocation,
-                    ],
-                    strokeWidth: 4,
-                    color: Theme.of(context).primaryColor.withValues(alpha: 0.6),
-                    borderStrokeWidth: 2,
-                    borderColor: Colors.white,
-                    isDotted: true,
-                  ),
-                ],
-              ),
-
-            // Markers
-            MarkerLayer(
-              markers: [
-                // Destination marker
-                Marker(
-                  point: widget.destinationLocation,
-                  width: 40,
-                  height: 40,
-                  child: _buildDestinationMarker(),
-                ),
-
-                // Driver marker (animated)
-                if (_currentAnimatedLocation != null)
-                  Marker(
-                    point: _currentAnimatedLocation!,
-                    width: 50,
-                    height: 50,
-                    child: _buildDriverMarker(),
-                  ),
-              ],
-            ),
-
-            // Attribution
-            RichAttributionWidget(
-              attributions: [
-                TextSourceAttribution(
-                  'OpenStreetMap contributors',
-                  onTap: () {}, // You can add a link to OSM if needed
-                ),
-              ],
-            ),
-          ],
+          onMapCreated: _onMapCreated,
+          markers: _markers,
+          polylines: _polylines,
+          style: MapConfig.darkMapStyle,
+          compassEnabled: true,
+          mapToolbarEnabled: false,
+          zoomControlsEnabled: false,
+          myLocationEnabled: false,
+          myLocationButtonEnabled: false,
+          zoomGesturesEnabled: true,
+          scrollGesturesEnabled: true,
+          rotateGesturesEnabled: false, // Disabled for live tracking
+          tiltGesturesEnabled: false,  // Disabled for live tracking
+          minMaxZoomPreference: const MinMaxZoomPreference(10.0, 18.0),
         ),
-      ),
-    );
-  }
-
-  Widget _buildDriverMarker() {
-    return Transform.rotate(
-      angle: widget.driverHeading != null
-          ? (widget.driverHeading! * 3.14159 / 180) // Convert to radians
-          : 0,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.black87,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black87.withValues(alpha: 0.5),
-              blurRadius: 10,
-              spreadRadius: 2,
-            ),
-          ],
-        ),
-        child: const Icon(
-          Icons.delivery_dining,
-          color: Colors.white,
-          size: 28,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDestinationMarker() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.black87,
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black87.withValues(alpha: 0.5),
-            blurRadius: 8,
-            spreadRadius: 2,
-          ),
-        ],
-      ),
-      child: const Icon(
-        Icons.location_on,
-        color: Colors.white,
-        size: 30,
       ),
     );
   }
@@ -279,7 +259,6 @@ class _LiveTrackingMapState extends State<LiveTrackingMap>
   @override
   void dispose() {
     _animationController.dispose();
-    _mapController.dispose();
     super.dispose();
   }
 }

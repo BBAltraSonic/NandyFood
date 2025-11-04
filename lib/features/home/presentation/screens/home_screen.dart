@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:food_delivery_app/core/routing/route_paths.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,7 +14,6 @@ import 'package:food_delivery_app/core/services/location_service.dart';
 import 'package:food_delivery_app/core/providers/auth_provider.dart';
 import 'package:food_delivery_app/shared/theme/design_tokens.dart';
 import 'package:food_delivery_app/shared/models/restaurant.dart';
-import 'package:latlong2/latlong.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});

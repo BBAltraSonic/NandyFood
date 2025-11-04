@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart' as ll;
 import 'package:food_delivery_app/shared/models/restaurant.dart';
+import 'package:food_delivery_app/core/config/map_config.dart';
 
 class HomeMapViewWidget extends StatefulWidget {
   final List<Restaurant> restaurants;
@@ -27,16 +28,16 @@ class HomeMapViewWidget extends StatefulWidget {
 
 class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
     with SingleTickerProviderStateMixin {
-  late MapController _mapController;
+  GoogleMapController? _mapController;
   Restaurant? _selectedRestaurant;
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
   double _currentZoom = 13.0;
+  Set<Marker> _markers = {};
 
   @override
   void initState() {
     super.initState();
-    _mapController = MapController();
 
     // Initialize animation controller for preview card
     _animationController = AnimationController(
@@ -49,14 +50,41 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
       curve: Curves.easeOutBack,
     );
 
+    // Build initial markers
+    _buildMarkers();
+
+    // Center map on user after widget is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _centerMapOnUser();
+    });
+  }
+
+  @override
+  void didUpdateWidget(HomeMapViewWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Rebuild markers if restaurant list changes
+    if (oldWidget.restaurants != widget.restaurants ||
+        oldWidget.userLocation != widget.userLocation ||
+        oldWidget.showPickupMarkers != widget.showPickupMarkers) {
+      _buildMarkers();
+    }
+  }
+
+  void _onMapCreated(GoogleMapController controller) {
+    _mapController = controller;
     _centerMapOnUser();
   }
 
-  void _centerMapOnUser() {
-    if (widget.userLocation != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _mapController.move(widget.userLocation!, 13.0);
-      });
+  Future<void> _centerMapOnUser() async {
+    if (_mapController != null && widget.userLocation != null) {
+      await _mapController!.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: widget.userLocation!,
+            zoom: _currentZoom,
+          ),
+        ),
+      );
     }
   }
 
@@ -70,11 +98,15 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
     _animationController.forward();
 
     // Smoothly move map to center on restaurant with slight offset for preview card
-    if (restaurant.latitude != 0 && restaurant.longitude != 0) {
+    if (_mapController != null && restaurant.latitude != 0 && restaurant.longitude != 0) {
       final targetZoom = _currentZoom < 14 ? 15.0 : _currentZoom;
-      _mapController.move(
-        LatLng(restaurant.latitude, restaurant.longitude),
-        targetZoom,
+      _mapController!.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: LatLng(restaurant.latitude, restaurant.longitude),
+            zoom: targetZoom,
+          ),
+        ),
       );
     }
   }
@@ -86,164 +118,76 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
     _animationController.reverse();
   }
 
-  void _onZoomIn() {
-    if (_currentZoom < 18.0) {
+  Future<void> _onZoomIn() async {
+    if (_currentZoom < 18.0 && _mapController != null) {
       setState(() {
         _currentZoom += 1;
       });
-      _mapController.move(_mapController.camera.center, _currentZoom);
+      await _mapController!.animateCamera(
+        CameraUpdate.zoomTo(_currentZoom),
+      );
     }
   }
 
-  void _onZoomOut() {
-    if (_currentZoom > 10.0) {
+  Future<void> _onZoomOut() async {
+    if (_currentZoom > 10.0 && _mapController != null) {
       setState(() {
         _currentZoom -= 1;
       });
-      _mapController.move(_mapController.camera.center, _currentZoom);
+      await _mapController!.animateCamera(
+        CameraUpdate.zoomTo(_currentZoom),
+      );
     }
   }
 
-  List<Marker> _buildMarkers() {
+  void _buildMarkers() {
     final markers = <Marker>[];
 
-    // Add restaurant markers with custom styling
+    // Add restaurant markers using MapConfig
     for (final restaurant in widget.restaurants) {
       if (restaurant.latitude != 0 && restaurant.longitude != 0) {
         final isSelected = _selectedRestaurant?.id == restaurant.id;
 
-        // Different styling for pickup markers
-        if (widget.showPickupMarkers) {
-          markers.add(
-            Marker(
-              width: isSelected ? 70 : 60,
-              height: isSelected ? 70 : 60,
-              point: LatLng(restaurant.latitude, restaurant.longitude),
-              child: GestureDetector(
-                onTap: () => _onMarkerTapped(restaurant),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeOut,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Theme.of(context).colorScheme.primary,
-                        Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white,
-                      width: isSelected ? 4 : 3,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.6),
-                        blurRadius: isSelected ? 12 : 8,
-                        offset: const Offset(0, 3),
-                        spreadRadius: isSelected ? 2 : 1,
-                      ),
-                    ],
-                  ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Icon(
-                        Icons.takeout_dining,
-                        color: Colors.white,
-                        size: isSelected ? 32 : 28,
-                      ),
-                      // Pickup badge
-                      if (!isSelected)
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: Container(
-                            width: 18,
-                            height: 18,
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.shopping_bag,
-                              color: Theme.of(context).colorScheme.primary,
-                              size: 10,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
+        // Use different colors for selected restaurants
+        final markerColor = widget.showPickupMarkers
+            ? BitmapDescriptor.hueYellow
+            : isSelected
+                ? BitmapDescriptor.hueAzure
+                : BitmapDescriptor.hueRed;
+
+        markers.add(
+          Marker(
+            markerId: MarkerId('restaurant_${restaurant.id}'),
+            position: LatLng(restaurant.latitude, restaurant.longitude),
+            icon: BitmapDescriptor.defaultMarkerWithHue(markerColor),
+            infoWindow: InfoWindow(
+              title: restaurant.name,
+              snippet: widget.showPickupMarkers
+                  ? 'Pickup Available • ${restaurant.cuisineType}'
+                  : 'Delivery Available • ${restaurant.cuisineType}',
             ),
-          );
-        } else {
+            onTap: () => _onMarkerTapped(restaurant),
+            visible: true,
+            zIndexInt: isSelected ? 3 : 2,
+          ),
+        );
+
+        // Add rating indicator for highly rated restaurants
+        if (restaurant.rating >= 4.5 && !isSelected) {
           markers.add(
             Marker(
-              width: isSelected ? 60 : 50,
-              height: isSelected ? 60 : 50,
-              point: LatLng(restaurant.latitude, restaurant.longitude),
-              child: GestureDetector(
-                onTap: () => _onMarkerTapped(restaurant),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeOut,
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? Theme.of(context).colorScheme.primary
-                        : Colors.white,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.primary,
-                      width: isSelected ? 3 : 2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: 0.4),
-                        blurRadius: isSelected ? 8 : 4,
-                        offset: const Offset(0, 2),
-                        spreadRadius: isSelected ? 2 : 0,
-                      ),
-                    ],
-                  ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Icon(
-                        Icons.restaurant,
-                        color: isSelected
-                            ? Colors.white
-                            : Theme.of(context).colorScheme.primary,
-                        size: isSelected ? 28 : 24,
-                      ),
-                      // Rating badge for highly rated restaurants
-                      if (restaurant.rating >= 4.5 && !isSelected)
-                        Positioned(
-                          top: 0,
-                          right: 0,
-                          child: Container(
-                            width: 16,
-                            height: 16,
-                            decoration: const BoxDecoration(
-                              color: Colors.black87,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.star,
-                              color: Colors.white,
-                              size: 10,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
+              markerId: MarkerId('rating_${restaurant.id}'),
+              position: LatLng(
+                restaurant.latitude + 0.0005, // Slight offset for visibility
+                restaurant.longitude + 0.0005,
               ),
+              icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+              infoWindow: InfoWindow(
+                title: '⭐ ${restaurant.rating.toStringAsFixed(1)}',
+                snippet: 'Highly Rated',
+              ),
+              visible: true,
+              zIndexInt: 1,
             ),
           );
         }
@@ -253,23 +197,13 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
     // Add user location marker
     if (widget.userLocation != null) {
       markers.add(
-        Marker(
-          width: 60,
-          height: 60,
-          point: widget.userLocation!,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.black87.withValues(alpha: 0.3),
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.black87, width: 3),
-            ),
-            child: const Icon(Icons.person_pin, color: Colors.black87, size: 30),
-          ),
-        ),
+        MapConfig.createUserMarker(position: widget.userLocation!),
       );
     }
 
-    return markers;
+    setState(() {
+      _markers = markers.toSet();
+    });
   }
 
   @override
@@ -278,33 +212,41 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
 
     final mapWidget = Stack(
       children: [
-        // Map
-        FlutterMap(
-          mapController: _mapController,
-          options: MapOptions(
-            initialCenter:
-                widget.userLocation ?? const LatLng(40.7128, -74.0060),
-            initialZoom: _currentZoom,
-            minZoom: 10.0,
-            maxZoom: 18.0,
-            onPositionChanged: (position, hasGesture) {
-              if (hasGesture) {
-                setState(() {
-                  _currentZoom = position.zoom;
-                });
-              }
-            },
+        // Google Map with dark mode style
+        GoogleMap(
+          initialCameraPosition: MapConfig.getDefaultCameraPosition(
+            center: widget.userLocation ?? const LatLng(40.7128, -74.0060),
+            zoom: _currentZoom,
           ),
-          children: [
-            TileLayer(
-              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              userAgentPackageName: 'com.example.food_delivery_app',
-            ),
-            MarkerLayer(markers: _buildMarkers()),
-          ],
+          onMapCreated: _onMapCreated,
+          markers: _markers,
+          style: MapConfig.darkMapStyle,
+          compassEnabled: true,
+          mapToolbarEnabled: false,
+          zoomControlsEnabled: false, // Using custom controls
+          myLocationEnabled: true,
+          myLocationButtonEnabled: false, // Using custom recenter button
+          zoomGesturesEnabled: true,
+          scrollGesturesEnabled: true,
+          rotateGesturesEnabled: true,
+          tiltGesturesEnabled: true,
+          minMaxZoomPreference: const MinMaxZoomPreference(10.0, 18.0),
+          onCameraMove: (CameraPosition position) {
+            if (_currentZoom != position.zoom) {
+              setState(() {
+                _currentZoom = position.zoom;
+              });
+            }
+          },
+          onTap: (LatLng position) {
+            // Close preview card when tapping on map
+            if (_selectedRestaurant != null) {
+              _closePreviewCard();
+            }
+          },
         ),
 
-        // Map controls cluster (right side)
+        // Map controls cluster (right side) - Black theme
         Positioned(
           top: 16,
           right: 16,
@@ -313,11 +255,12 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
               // Zoom in button
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Colors.black,
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
+                      color: Colors.black.withValues(alpha: 0.4),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -330,9 +273,9 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
                     borderRadius: BorderRadius.circular(12),
                     child: Padding(
                       padding: const EdgeInsets.all(12),
-                      child: Icon(
+                      child: const Icon(
                         Icons.add,
-                        color: theme.colorScheme.primary,
+                        color: Colors.white,
                         size: 24,
                       ),
                     ),
@@ -343,11 +286,12 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
               // Zoom out button
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Colors.black,
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
+                      color: Colors.black.withValues(alpha: 0.4),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -360,9 +304,9 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
                     borderRadius: BorderRadius.circular(12),
                     child: Padding(
                       padding: const EdgeInsets.all(12),
-                      child: Icon(
+                      child: const Icon(
                         Icons.remove,
-                        color: theme.colorScheme.primary,
+                        color: Colors.white,
                         size: 24,
                       ),
                     ),
@@ -373,18 +317,19 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
           ),
         ),
 
-        // Recenter button (bottom right)
+        // Recenter button (bottom right) - Black theme
         Positioned(
           bottom: _selectedRestaurant != null ? 100 : 16,
           right: 16,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Colors.black,
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
               boxShadow: [
                 BoxShadow(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                  color: Colors.black.withValues(alpha: 0.4),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -395,11 +340,11 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
               child: InkWell(
                 onTap: _centerMapOnUser,
                 borderRadius: BorderRadius.circular(16),
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
+                child: const Padding(
+                  padding: EdgeInsets.all(14),
                   child: Icon(
                     Icons.my_location,
-                    color: theme.colorScheme.primary,
+                    color: Colors.white,
                     size: 24,
                   ),
                 ),
@@ -621,7 +566,6 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
 
   @override
   void dispose() {
-    _mapController.dispose();
     _animationController.dispose();
     super.dispose();
   }
