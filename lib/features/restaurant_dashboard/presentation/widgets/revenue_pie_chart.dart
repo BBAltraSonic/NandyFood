@@ -37,7 +37,7 @@ class RevenuePieChart extends StatelessWidget {
                 PieChartData(
                   sections: [
                     PieChartSectionData(
-                      color: Colors.green,
+                      color: Colors.black87,
                       value: netRevenue,
                       title: 'Net Revenue\nR${netRevenue.toStringAsFixed(2)}',
                       radius: 50,
@@ -48,7 +48,7 @@ class RevenuePieChart extends StatelessWidget {
                       ),
                     ),
                     PieChartSectionData(
-                      color: Colors.red,
+                      color: Colors.black87,
                       value: platformFees,
                       title: 'Platform Fees\nR${platformFees.toStringAsFixed(2)}',
                       radius: 50,
@@ -59,7 +59,7 @@ class RevenuePieChart extends StatelessWidget {
                       ),
                     ),
                     PieChartSectionData(
-                      color: Colors.orange,
+                      color: Colors.black87,
                       value: deliveryFees,
                       title: 'Delivery Fees\nR${deliveryFees.toStringAsFixed(2)}',
                       radius: 50,
@@ -86,11 +86,11 @@ class RevenuePieChart extends StatelessWidget {
   Widget _buildLegend() {
     return Column(
       children: [
-        _buildLegendItem('Net Revenue', Colors.green, grossRevenue - platformFees - deliveryFees),
+        _buildLegendItem('Net Revenue', Colors.black87, grossRevenue - platformFees - deliveryFees),
         const SizedBox(height: 8),
-        _buildLegendItem('Platform Fees', Colors.red, platformFees),
+        _buildLegendItem('Platform Fees', Colors.black87, platformFees),
         const SizedBox(height: 8),
-        _buildLegendItem('Delivery Fees', Colors.orange, deliveryFees),
+        _buildLegendItem('Delivery Fees', Colors.black87, deliveryFees),
       ],
     );
   }

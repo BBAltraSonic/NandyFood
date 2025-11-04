@@ -96,7 +96,7 @@ class RoleSelectorWidget extends ConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to switch role: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.black87,
           ),
         );
       }
@@ -186,23 +186,23 @@ class _RoleItem extends StatelessWidget {
     switch (roleType) {
       case UserRoleType.consumer:
         iconData = Icons.shopping_bag_rounded;
-        color = Colors.blue;
+        color = Colors.black54;
         break;
       case UserRoleType.restaurantOwner:
         iconData = Icons.store_rounded;
-        color = Colors.orange;
+        color = Colors.black54;
         break;
       case UserRoleType.restaurantStaff:
         iconData = Icons.badge_rounded;
-        color = Colors.purple;
+        color = Colors.black54;
         break;
       case UserRoleType.admin:
         iconData = Icons.admin_panel_settings_rounded;
-        color = Colors.red;
+        color = Colors.black87;
         break;
       case UserRoleType.deliveryDriver:
         iconData = Icons.delivery_dining_rounded;
-        color = Colors.green;
+        color = Colors.black54;
         break;
     }
 

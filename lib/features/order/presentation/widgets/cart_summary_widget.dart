@@ -142,7 +142,7 @@ class CartSummaryWidget extends StatelessWidget {
             fontSize: isTotal ? 16 : 14,
             fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
             color: isDiscount
-                ? Colors.green
+                ? Colors.black87
                 : (isTotal ? Colors.black : Colors.grey.shade700),
           ),
         ),
@@ -152,7 +152,7 @@ class CartSummaryWidget extends StatelessWidget {
             fontSize: isTotal ? 16 : 14,
             fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
             color: isDiscount
-                ? Colors.green
+                ? Colors.black87
                 : (isTotal ? Colors.black : Colors.grey.shade700),
           ),
         ),

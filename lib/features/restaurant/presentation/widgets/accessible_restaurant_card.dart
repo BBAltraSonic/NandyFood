@@ -84,7 +84,7 @@ class AccessibleRestaurantCard extends StatelessWidget {
                       // Rating and distance
                       Row(
                         children: [
-                          const Icon(Icons.star, color: Colors.amber, size: 16),
+                          const Icon(Icons.star, color: Colors.black87, size: 16),
                           const SizedBox(width: 4),
                           Text(
                             restaurant.rating.toString(),
@@ -153,15 +153,15 @@ class AccessibleRestaurantCard extends StatelessWidget {
   Color _getDietaryBadgeColor(String option) {
     switch (option.toLowerCase()) {
       case 'vegetarian':
-        return Colors.green;
+        return Colors.black87;
       case 'vegan':
-        return Colors.green.shade800;
+        return Colors.black87.shade800;
       case 'gluten-free':
-        return Colors.blue;
+        return Colors.black87;
       case 'dairy-free':
-        return Colors.purple;
+        return Colors.black87;
       case 'nut-free':
-        return Colors.orange;
+        return Colors.black87;
       default:
         return Colors.grey;
     }

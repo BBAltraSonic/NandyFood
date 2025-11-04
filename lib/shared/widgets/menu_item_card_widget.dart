@@ -77,7 +77,7 @@ class MenuItemCardWidget extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Colors.deepOrange,
+                            color: Colors.black87,
                           ),
                         ),
                         if (menuItem.dietaryRestrictions?.isNotEmpty == true)
@@ -92,14 +92,14 @@ class MenuItemCardWidget extends StatelessWidget {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.deepOrange.withValues(alpha: 0.1),
+                                  color: Colors.black87.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
                                   restriction.substring(0, 1).toUpperCase(),
                                   style: const TextStyle(
                                     fontSize: 10,
-                                    color: Colors.deepOrange,
+                                    color: Colors.black87,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),

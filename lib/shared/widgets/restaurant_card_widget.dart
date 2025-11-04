@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:food_delivery_app/shared/models/restaurant.dart';
 
 class RestaurantCardWidget extends StatelessWidget {
@@ -6,6 +7,27 @@ class RestaurantCardWidget extends StatelessWidget {
   final VoidCallback? onTap;
 
   const RestaurantCardWidget({super.key, required this.restaurant, this.onTap});
+
+  // Pre-computed styles for better performance
+  static const _restaurantNameStyle = TextStyle(
+    fontSize: 18,
+    fontWeight: FontWeight.bold,
+  );
+
+  static const _cuisineStyle = TextStyle(
+    fontSize: 14,
+    color: Colors.grey,
+  );
+
+  static const _ratingStyle = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
+  );
+
+  static const _deliveryInfoStyle = TextStyle(
+    fontSize: 14,
+    color: Colors.grey,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +43,7 @@ class RestaurantCardWidget extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Restaurant image placeholder
+              // Restaurant image with caching
               Container(
                 width: 80,
                 height: 80,
@@ -29,10 +51,28 @@ class RestaurantCardWidget extends StatelessWidget {
                   color: Colors.grey.shade300,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
-                  Icons.restaurant,
-                  color: Colors.grey.shade600,
-                  size: 40,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: restaurant.coverImageUrl?.isNotEmpty == true
+                      ? CachedNetworkImage(
+                          imageUrl: restaurant.coverImageUrl!,
+                          width: 80,
+                          height: 80,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => const Center(
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          errorWidget: (context, url, error) => Icon(
+                            Icons.restaurant,
+                            color: Colors.grey.shade600,
+                            size: 40,
+                          ),
+                        )
+                      : Icon(
+                          Icons.restaurant,
+                          color: Colors.grey.shade600,
+                          size: 40,
+                        ),
                 ),
               ),
               const SizedBox(width: 16),
@@ -44,10 +84,9 @@ class RestaurantCardWidget extends StatelessWidget {
                     // Restaurant name
                     Text(
                       restaurant.name,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: _restaurantNameStyle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     // Cuisine type and rating
@@ -55,20 +94,16 @@ class RestaurantCardWidget extends StatelessWidget {
                       children: [
                         Text(
                           restaurant.cuisineType,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey,
-                          ),
+                          style: _cuisineStyle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(width: 8),
-                        const Icon(Icons.star, color: Colors.amber, size: 16),
+                        const Icon(Icons.star, color: Colors.black54, size: 16),
                         const SizedBox(width: 4),
                         Text(
                           restaurant.rating.toStringAsFixed(1),
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
+                          style: _ratingStyle,
                         ),
                       ],
                     ),
@@ -78,16 +113,13 @@ class RestaurantCardWidget extends StatelessWidget {
                       children: [
                         const Icon(
                           Icons.delivery_dining,
-                          color: Colors.deepOrange,
+                          color: Colors.black87,
                           size: 16,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           '${restaurant.estimatedDeliveryTime} min',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey,
-                          ),
+                          style: _deliveryInfoStyle,
                         ),
                         const SizedBox(width: 16),
                         const Icon(
@@ -98,10 +130,7 @@ class RestaurantCardWidget extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           '${restaurant.deliveryRadius.toStringAsFixed(1)} km',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey,
-                          ),
+                          style: _deliveryInfoStyle,
                         ),
                       ],
                     ),

@@ -126,7 +126,7 @@ class _OfflineBannerState extends ConsumerState<OfflineBanner>
     final theme = Theme.of(context);
     
     return Material(
-      color: Colors.orange.shade700,
+      color: Colors.black87,
       elevation: 4,
       child: SafeArea(
         bottom: false,
@@ -173,7 +173,7 @@ class _OfflineBannerState extends ConsumerState<OfflineBanner>
     final theme = Theme.of(context);
     
     return Material(
-      color: Colors.green.shade600,
+      color: Colors.black87,
       elevation: 4,
       child: SafeArea(
         bottom: false,

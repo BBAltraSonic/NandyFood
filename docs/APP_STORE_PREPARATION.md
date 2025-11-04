@@ -37,11 +37,11 @@
 
 **App Title**
 - Maximum: 50 characters
-- Suggested: "NandyFood - Food Delivery"
+- Suggested: "NandyFood - Food Ordering & Pickup"
 
 **Short Description**
 - Maximum: 80 characters
-- "Order delicious food from local restaurants. Fast delivery guaranteed!"
+- "Order delicious food from local restaurants. Ready for pickup when you are!"
 
 **Full Description**
 - Maximum: 4000 characters
@@ -90,12 +90,12 @@
 
 **Subtitle**
 - Maximum: 30 characters
-- "Fast Food Delivery"
+- "Food Ordering & Pickup"
 
 **Promotional Text**
 - Maximum: 170 characters
 - Editable without app update
-- "Get your favorite meals delivered fast! New users get 20% off first order."
+- "Order from local restaurants for pickup! New users get 20% off first order."
 
 **Description**
 - Maximum: 4000 characters
@@ -103,7 +103,7 @@
 
 **Keywords**
 - Maximum: 100 characters (comma-separated)
-- "food,delivery,restaurant,order,pizza,burger,fast,meals,takeaway"
+- "food,order,restaurant,pickup,takeaway,pizza,burger,fast,meals,local"
 
 **Category**
 - Primary: Food & Drink
@@ -125,36 +125,37 @@
 ### Full Description (Both Stores)
 
 ```
-🍕 NandyFood - Your Favorite Food, Delivered Fast!
+🍕 NandyFood - Your Favorite Food, Ready for Pickup!
 
-Craving delicious food? NandyFood connects you with the best local restaurants and delivers your favorite meals right to your door.
+Craving delicious food? NandyFood connects you with the best local restaurants and notifies you when your order is ready for pickup.
 
 ✨ WHY CHOOSE NANDYFOOD?
 
-🚀 Fast Delivery
-Get your food delivered in 30 minutes or less! Track your order in real-time and know exactly when it will arrive.
+🚀 Fast Preparation
+Skip the waiting! Order ahead and get notified when your food is ready for pickup. No delivery delays!
 
 🍔 Wide Selection
-Discover hundreds of restaurants offering cuisine from around the world - pizza, burgers, sushi, Indian, Chinese, and more!
+Discover hundreds of local restaurants offering cuisine from around the world - pizza, burgers, sushi, Indian, Chinese, and more!
 
 💳 Easy Payment
-Multiple payment options including credit/debit cards, digital wallets, and cash on delivery.
+Multiple payment options including credit/debit cards, digital wallets, and cash on pickup.
 
 ⭐ Exclusive Deals
 Save money with daily deals, first-order discounts, and loyalty rewards!
 
-📍 Real-Time Tracking
-Track your delivery driver in real-time on the map. Get notifications at every step.
+📍 Real-Time Preparation Tracking
+Track your order preparation in real-time. Get notifications when your order is ready for pickup.
 
 🌟 FEATURES
 
-• Browse restaurants by cuisine, rating, or delivery time
+• Browse restaurants by cuisine, rating, or preparation time
 • Advanced filters for dietary restrictions (vegan, halal, gluten-free)
 • Save favorite restaurants and orders for quick reordering
-• Schedule orders for later
+• Schedule orders for later pickup
 • Rate and review restaurants
 • Customer support via chat, email, or phone
 • Secure payment processing
+• Real-time order preparation tracking
 • Order history and receipts
 
 🎁 NEW USER OFFER
@@ -164,10 +165,10 @@ Get 20% off your first order! Use code: WELCOME20
 
 1. Browse restaurants and menus
 2. Add items to your cart
-3. Enter delivery address
+3. Choose pickup time (now or later)
 4. Choose payment method
-5. Place order and track delivery
-6. Enjoy your meal!
+5. Place order and track preparation
+6. Pickup your order when ready!
 
 🏆 TRUSTED BY THOUSANDS
 Join thousands of happy customers who order with NandyFood every day!
@@ -250,12 +251,12 @@ Legal: By using NandyFood, you agree to our Terms of Service and Privacy Policy.
 3. **Cart & Checkout**
    - Easy checkout process
    - Multiple payment options
-   - Delivery time selection
+   - Pickup time selection
 
 4. **Order Tracking**
-   - Real-time map tracking
+   - Real-time preparation tracking
    - Order status updates
-   - Driver information
+   - Pickup notifications
 
 5. **Profile & Rewards**
    - Order history
@@ -284,18 +285,18 @@ Legal: By using NandyFood, you agree to our Terms of Service and Privacy Policy.
 ### Google Play (Search Optimization)
 
 **Primary Keywords:**
-- food delivery
-- restaurant delivery
+- food ordering
+- restaurant pickup
 - order food online
 - takeaway
-- food ordering app
+- food pickup app
 
 **Long-Tail Keywords:**
-- fast food delivery near me
+- food pickup near me
 - order pizza online
-- restaurant delivery app
-- food delivery south africa
-- best food delivery app
+- restaurant pickup app
+- food ordering south africa
+- best food pickup app
 
 ### Apple App Store
 

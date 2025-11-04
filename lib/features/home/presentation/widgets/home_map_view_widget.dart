@@ -159,7 +159,7 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
                           width: 16,
                           height: 16,
                           decoration: const BoxDecoration(
-                            color: Colors.amber,
+                            color: Colors.black87,
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -187,11 +187,11 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
           point: widget.userLocation!,
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.blue.withValues(alpha: 0.3),
+              color: Colors.black87.withValues(alpha: 0.3),
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.blue, width: 3),
+              border: Border.all(color: Colors.black87, width: 3),
             ),
-            child: const Icon(Icons.person_pin, color: Colors.blue, size: 30),
+            child: const Icon(Icons.person_pin, color: Colors.black87, size: 30),
           ),
         ),
       );
@@ -456,7 +456,7 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.amber.withValues(alpha: 0.2),
+                                color: Colors.black87.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Row(
@@ -464,7 +464,7 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
                                 children: [
                                   const Icon(
                                     Icons.star,
-                                    color: Colors.amber,
+                                    color: Colors.black87,
                                     size: 14,
                                   ),
                                   const SizedBox(width: 2),

@@ -123,7 +123,7 @@ class _OrderChatWidgetState extends ConsumerState<OrderChatWidget> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to send message: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.black87,
           ),
         );
       }
@@ -157,7 +157,7 @@ class _OrderChatWidgetState extends ConsumerState<OrderChatWidget> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to send image: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.black87,
           ),
         );
       }
@@ -196,7 +196,7 @@ class _OrderChatWidgetState extends ConsumerState<OrderChatWidget> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to start recording: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.black87,
           ),
         );
       }
@@ -238,7 +238,7 @@ class _OrderChatWidgetState extends ConsumerState<OrderChatWidget> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to send voice message: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.black87,
           ),
         );
       }
@@ -670,10 +670,10 @@ class _OrderChatWidgetState extends ConsumerState<OrderChatWidget> {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Colors.red.shade50,
+        color: Colors.grey.shade100,
         border: Border(
           top: BorderSide(
-            color: Colors.red.shade300,
+            color: Colors.grey.shade100,
             width: 1,
           ),
         ),
@@ -681,7 +681,7 @@ class _OrderChatWidgetState extends ConsumerState<OrderChatWidget> {
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.black87,
             radius: 20.r,
             child: Icon(
               Icons.mic,
@@ -699,14 +699,14 @@ class _OrderChatWidgetState extends ConsumerState<OrderChatWidget> {
                   style: TextStyle(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.bold,
-                    color: Colors.red.shade700,
+                    color: Colors.grey.shade100,
                   ),
                 ),
                 Text(
                   'Release to send',
                   style: TextStyle(
                     fontSize: 12.sp,
-                    color: Colors.red.shade500,
+                    color: Colors.grey.shade100,
                   ),
                 ),
               ],
@@ -716,7 +716,7 @@ class _OrderChatWidgetState extends ConsumerState<OrderChatWidget> {
             width: 40.w,
             height: 40.w,
             decoration: BoxDecoration(
-              color: Colors.red.shade100,
+              color: Colors.grey.shade100,
               borderRadius: BorderRadius.circular(20.r),
             ),
             child: Center(
@@ -724,7 +724,7 @@ class _OrderChatWidgetState extends ConsumerState<OrderChatWidget> {
                 width: 16.w,
                 height: 16.w,
                 decoration: BoxDecoration(
-                  color: Colors.red,
+                  color: Colors.black87,
                   borderRadius: BorderRadius.circular(2.r),
                 ),
               ),

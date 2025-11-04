@@ -75,8 +75,15 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
 
   late final RoleService _roleService;
   StreamSubscription<String>? _fcmTokenSub;
-
+  Timer? _authDebounceTimer;
   String? _subscribedRestaurantTopic;
+
+  @override
+  void dispose() {
+    _cancelFcmTokenRefreshListener();
+    _authDebounceTimer?.cancel();
+    super.dispose();
+  }
 
 
   void _initializeAuthListener() {
@@ -90,26 +97,30 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
 
       final auth = DatabaseService().client.auth;
 
-      // Listen to auth state changes
-      auth.onAuthStateChange.listen((data) async {
-        final session = data.session;
-        final user = session?.user;
+      // Listen to auth state changes with debouncing
+      auth.onAuthStateChange.listen((data) {
+        // Debounce rapid auth state changes to prevent unnecessary rebuilds
+        _authDebounceTimer?.cancel();
+        _authDebounceTimer = Timer(const Duration(milliseconds: 300), () async {
+          final session = data.session;
+          final user = session?.user;
 
-        if (user != null) {
-          // User is signed in - load roles
-          await _loadUserRoles(user);
-          // Upsert FCM token and listen for refreshes
-          await _upsertDeviceTokenIfAvailable();
-          await _ensureFcmTokenRefreshListener();
-          // Subscribe to restaurant topic if applicable
-          await _subscribeToRestaurantTopicIfApplicable();
-        } else {
-          // User is signed out: clean up listener and remove device token
-          await _cancelFcmTokenRefreshListener();
-          await _deleteDeviceTokenIfAvailable();
-          await _unsubscribeFromRestaurantTopic();
-          state = AuthState(user: null, isAuthenticated: false);
-        }
+          if (user != null) {
+            // User is signed in - load roles
+            await _loadUserRoles(user);
+            // Upsert FCM token and listen for refreshes
+            await _upsertDeviceTokenIfAvailable();
+            await _ensureFcmTokenRefreshListener();
+            // Subscribe to restaurant topic if applicable
+            await _subscribeToRestaurantTopicIfApplicable();
+          } else {
+            // User is signed out: clean up listener and remove device token
+            await _cancelFcmTokenRefreshListener();
+            await _deleteDeviceTokenIfAvailable();
+            await _unsubscribeFromRestaurantTopic();
+            state = AuthState(user: null, isAuthenticated: false);
+          }
+        });
       });
     } catch (e) {
       print('Error initializing auth listener: $e');

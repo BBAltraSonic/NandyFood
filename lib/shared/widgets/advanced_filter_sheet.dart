@@ -386,7 +386,7 @@ class _AdvancedFilterSheetState extends State<AdvancedFilterSheet> {
             break;
           case 'gluten-free':
             icon = Icons.grain;
-            color = Colors.blue;
+            color = Colors.black54;
             break;
           case 'dairy-free':
             icon = Icons.no_food;
@@ -394,15 +394,15 @@ class _AdvancedFilterSheetState extends State<AdvancedFilterSheet> {
             break;
           case 'nut-free':
             icon = Icons.egg;
-            color = Colors.amber;
+            color = Colors.black54;
             break;
           case 'halal':
             icon = Icons.nights_stay_rounded;
-            color = Colors.green;
+            color = Colors.black54;
             break;
           case 'kosher':
             icon = Icons.star_rounded;
-            color = Colors.blue.shade800;
+            color = Colors.black54.shade800;
             break;
           default:
             icon = Icons.info;
@@ -603,10 +603,10 @@ class _AdvancedFilterSheetState extends State<AdvancedFilterSheet> {
         Expanded(
           child: SliderTheme(
             data: SliderTheme.of(context).copyWith(
-              activeTrackColor: Colors.blue,
-              inactiveTrackColor: Colors.blue.withValues(alpha: 0.3),
-              thumbColor: Colors.blue,
-              overlayColor: Colors.blue.withValues(alpha: 0.2),
+              activeTrackColor: Colors.black54,
+              inactiveTrackColor: Colors.black54.withValues(alpha: 0.3),
+              thumbColor: Colors.black54,
+              overlayColor: Colors.black54.withValues(alpha: 0.2),
             ),
             child: Slider(
               value: _maxDistance,
@@ -627,14 +627,14 @@ class _AdvancedFilterSheetState extends State<AdvancedFilterSheet> {
           width: 80,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.blue.withValues(alpha: 0.1),
+            color: Colors.black54.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
             '${_maxDistance.toInt()} km',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.blue,
+              color: Colors.black54,
               fontWeight: FontWeight.w600,
             ),
           ),

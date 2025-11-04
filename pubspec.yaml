@@ -99,6 +99,10 @@ dependencies:
   # Charts and Analytics
   fl_chart: ^0.65.0
 
+  # Report Generation
+  pdf: ^3.11.1
+  file_saver: ^0.2.12
+
   # Communication & Chat
   flutter_chat_ui: ^1.6.0           # Lightweight chat UI for order-specific conversations
   emoji_picker_flutter: ^4.3.0     # Enhanced messaging with emoji support (compatible with Firebase)

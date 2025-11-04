@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:food_delivery_app/core/services/payment_service.dart';
+import 'package:food_delivery_app/core/services/payment_service.dart' as payment_service;
+import 'package:food_delivery_app/core/services/payfast_service.dart';
 import 'package:food_delivery_app/features/order/presentation/providers/cart_provider.dart';
 import 'package:food_delivery_app/features/order/presentation/providers/order_provider.dart';
 import 'package:food_delivery_app/features/order/presentation/providers/place_order_provider.dart';
@@ -10,16 +11,26 @@ import 'package:food_delivery_app/shared/widgets/loading_indicator.dart';
 import 'package:food_delivery_app/shared/widgets/payment_method_selector_widget.dart';
 import 'package:food_delivery_app/core/config/business_config.dart';
 import 'package:food_delivery_app/features/order/presentation/providers/payment_provider.dart';
+import 'package:food_delivery_app/features/order/presentation/providers/payment_config_provider.dart';
 import 'package:food_delivery_app/features/order/presentation/screens/payfast_payment_screen.dart';
 import 'package:uuid/uuid.dart';
 import 'package:food_delivery_app/core/providers/auth_provider.dart';
+import 'package:food_delivery_app/core/utils/app_logger.dart';
 import 'package:food_delivery_app/shared/theme/design_tokens.dart';
 
-class CheckoutScreen extends ConsumerWidget {
+class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CheckoutScreen> createState() => _CheckoutScreenState();
+}
+
+class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
+  String _paymentMethod = 'cash'; // Default payment method
+
+  @override
+  Widget build(BuildContext context) {
+    final ref = this.ref;
     final cartState = ref.watch(cartProvider);
     final orderNotifier = ref.read(orderProvider.notifier);
     final paymentMethodsNotifier = ref.read(paymentMethodsProvider.notifier);
@@ -414,11 +425,7 @@ class CheckoutScreen extends ConsumerWidget {
           const SizedBox(height: 20),
 
           // Payment methods list
-          PaymentMethodSelectorWidget(
-            onPaymentMethodSelected: (method) {
-              // Handle payment method selection
-            },
-          ),
+          _buildPaymentMethodsList(context),
 
           const SizedBox(height: 16),
 
@@ -466,6 +473,45 @@ class CheckoutScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildPaymentMethodsList(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Payment Method',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ListTile(
+          title: const Text('Cash on Pickup'),
+          leading: Radio<String>(
+            value: 'cash',
+            groupValue: _paymentMethod,
+            onChanged: (value) {
+              setState(() {
+                _paymentMethod = value!;
+              });
+            },
+          ),
+        ),
+        ListTile(
+          title: const Text('PayFast'),
+          leading: Radio<String>(
+            value: 'payfast',
+            groupValue: _paymentMethod,
+            onChanged: (value) {
+              setState(() {
+                _paymentMethod = value!;
+              });
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -694,28 +740,149 @@ class CheckoutScreen extends ConsumerWidget {
       return;
     }
 
-    try {
-      // Place order logic here
-      // This would typically call your order service
+    // Validate payment method is selected
+    if (_paymentMethod.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Order placed successfully!'),
-          backgroundColor: BrandColors.secondary,
+          content: Text('Please select a payment method'),
+          backgroundColor: Colors.orange,
           behavior: SnackBarBehavior.floating,
         ),
       );
+      return;
+    }
 
-      // Navigate to order success or payment screen
-      // context.push('/order/success');
-
-    } catch (e) {
+    // Validate restaurant is selected
+    if (cartState.restaurantId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to place order: $e'),
+        const SnackBar(
+          content: Text('Restaurant information missing'),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
         ),
       );
+      return;
+    }
+
+    try {
+      // Generate order ID
+      final orderId = const Uuid().v4();
+
+      // Handle payment based on selected method
+      final paymentMethod = _paymentMethod;
+
+      if (paymentMethod == 'payfast') {
+        // Navigate to PayFast payment screen
+        final paymentService = PayFastService();
+        final paymentData = await paymentService.initializePayment(
+          orderId: orderId,
+          userId: authState.user!.id,
+          amount: cartState.totalAmount,
+          itemName: 'NandyFood Order',
+          customerEmail: authState.user?.email,
+          customerFirstName: authState.user?.userMetadata?['full_name']?.toString().split(' ').first,
+          customerLastName: authState.user?.userMetadata?['full_name']?.toString().split(' ').last,
+        );
+
+        if (context.mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PayFastPaymentScreen(
+                paymentData: paymentData,
+                orderId: orderId,
+                amount: cartState.totalAmount,
+              ),
+            ),
+          );
+        }
+      } else {
+        // Handle cash payment or saved card
+        final paymentService = payment_service.PaymentService();
+
+        final paymentMethodType = paymentMethod == 'cash'
+            ? payment_service.PaymentMethodType.cash
+            : payment_service.PaymentMethodType.card;
+
+        final paymentSuccess = await paymentService.processPayment(
+          context: context,
+          amount: cartState.totalAmount,
+          orderId: orderId,
+          method: paymentMethodType,
+        );
+
+        if (paymentSuccess) {
+          // Place the order after successful payment
+          await _placeOrderAfterPayment(context, ref, orderId, cartState);
+        }
+      }
+
+    } catch (e, stack) {
+      AppLogger.error('Failed to place order', error: e, stack: stack);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to place order: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _placeOrderAfterPayment(
+    BuildContext context,
+    WidgetRef ref,
+    String orderId,
+    CartState cartState,
+  ) async {
+    try {
+      final authState = ref.read(authStateProvider);
+
+      // Place order using cart data
+      await ref.read(placeOrderProvider.notifier).placeOrder(
+        orderId: orderId,
+        userId: authState.user!.id,
+        restaurantId: cartState.restaurantId!,
+        deliveryAddress: cartState.selectedAddress?.toJson() ?? {'type': 'pickup'},
+        paymentMethod: _paymentMethod == 'cash' ? 'cash' : 'card',
+        tipAmount: cartState.tipAmount,
+        promoCode: cartState.promoCode,
+        specialInstructions: cartState.deliveryNotes,
+      );
+
+      if (context.mounted) {
+        // Navigate to order tracking
+        context.push('/order/track/$orderId');
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Order placed successfully!'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      AppLogger.error('Failed to place order after payment', error: e);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Payment successful but failed to place order: $e'),
+            backgroundColor: Colors.orange,
+            behavior: SnackBarBehavior.floating,
+            action: SnackBarAction(
+              label: 'Support',
+              onPressed: () {
+                // Navigate to support or contact info
+              },
+            ),
+          ),
+        );
+      }
     }
   }
 }

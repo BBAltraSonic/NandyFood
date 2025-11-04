@@ -345,27 +345,27 @@ class LogViewerWidget extends StatelessWidget {
           _StatChip(
             label: 'Total',
             value: stats['totalLogs'],
-            color: Colors.blue,
+            color: Colors.black54,
           ),
           _StatChip(
             label: 'Info',
             value: byLevel['info'] ?? 0,
-            color: Colors.blue,
+            color: Colors.black54,
           ),
           _StatChip(
             label: 'Success',
             value: byLevel['success'] ?? 0,
-            color: Colors.green,
+            color: Colors.black54,
           ),
           _StatChip(
             label: 'Warnings',
             value: byLevel['warning'] ?? 0,
-            color: Colors.orange,
+            color: Colors.black87,
           ),
           _StatChip(
             label: 'Errors',
             value: byLevel['error'] ?? 0,
-            color: Colors.red,
+            color: Colors.black87,
           ),
         ],
       ),
@@ -378,19 +378,19 @@ class LogViewerWidget extends StatelessWidget {
 
     switch (log.level) {
       case LogLevel.info:
-        color = Colors.blue;
+        color = Colors.black54;
         icon = Icons.info;
         break;
       case LogLevel.success:
-        color = Colors.green;
+        color = Colors.black54;
         icon = Icons.check_circle;
         break;
       case LogLevel.warning:
-        color = Colors.orange;
+        color = Colors.black87;
         icon = Icons.warning;
         break;
       case LogLevel.error:
-        color = Colors.red;
+        color = Colors.black87;
         icon = Icons.error;
         break;
       case LogLevel.debug:
@@ -453,13 +453,13 @@ class LogViewerWidget extends StatelessWidget {
                     'Stack Trace:',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Colors.red,
+                      color: Colors.black87,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.all(8),
-                    color: Colors.red[50],
+                    color: Colors.black87[50],
                     child: Text(
                       log.stackTrace.toString(),
                       style: const TextStyle(

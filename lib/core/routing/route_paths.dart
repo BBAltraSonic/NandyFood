@@ -31,8 +31,16 @@ class RoutePaths {
   static const String restaurantOrders = '/restaurant/orders';
   static const String restaurantMenu = '/restaurant/menu';
   static const String restaurantAnalytics = '/restaurant/analytics';
-
   static const String restaurantSettings = '/restaurant/settings';
+
+  // Admin
+  static const String adminDashboard = '/admin/dashboard';
+  static const String adminUsers = '/admin/users';
+  static const String adminRestaurants = '/admin/restaurants';
+  static const String adminOrders = '/admin/orders';
+  static const String adminAnalytics = '/admin/analytics';
+  static const String adminSettings = '/admin/settings';
+  static const String adminSupport = '/admin/support';
 
   // Promotions
   static const String promotions = '/promotions';

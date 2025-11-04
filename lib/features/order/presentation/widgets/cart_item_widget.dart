@@ -76,7 +76,7 @@ class CartItemWidget extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.deepOrange,
+                      color: Colors.black87,
                     ),
                   ),
                 ],
@@ -105,7 +105,7 @@ class CartItemWidget extends StatelessWidget {
             const SizedBox(width: 8),
             // Remove button
             IconButton(
-              icon: const Icon(Icons.delete, color: Colors.red),
+              icon: const Icon(Icons.delete, color: Colors.black87),
               onPressed: onRemove,
             ),
           ],

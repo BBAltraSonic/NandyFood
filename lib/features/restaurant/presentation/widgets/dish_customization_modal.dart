@@ -314,7 +314,7 @@ class _DishCustomizationModalState extends State<DishCustomizationModal> {
                 ? ChoiceChip(
                     selected: selected.contains(option.id),
                     label: Text(_formatOptionLabel(option)),
-                    selectedColor: Colors.deepOrange,
+                    selectedColor: Colors.black87,
                     labelStyle: TextStyle(
                       color: selected.contains(option.id)
                           ? Colors.white
@@ -329,7 +329,7 @@ class _DishCustomizationModalState extends State<DishCustomizationModal> {
                 : FilterChip(
                     selected: selected.contains(option.id),
                     label: Text(_formatOptionLabel(option)),
-                    selectedColor: Colors.deepOrange,
+                    selectedColor: Colors.black87,
                     labelStyle: TextStyle(
                       color: selected.contains(option.id)
                           ? Colors.white
@@ -395,7 +395,7 @@ class _DishCustomizationModalState extends State<DishCustomizationModal> {
           style: const TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: Colors.deepOrange,
+            color: Colors.black87,
           ),
         ),
       ],
@@ -432,10 +432,10 @@ class _DishCustomizationModalState extends State<DishCustomizationModal> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
-                      color: isSelected ? Colors.deepOrange : Colors.white,
+                      color: isSelected ? Colors.black87 : Colors.white,
                       border: Border.all(
                         color: isSelected
-                            ? Colors.deepOrange
+                            ? Colors.black87
                             : Colors.grey.shade300,
                         width: 2,
                       ),
@@ -505,10 +505,10 @@ class _DishCustomizationModalState extends State<DishCustomizationModal> {
                   vertical: 10,
                 ),
                 decoration: BoxDecoration(
-                  color: isSelected ? Colors.deepOrange : Colors.white,
+                  color: isSelected ? Colors.black87 : Colors.white,
                   border: Border.all(
                     color: isSelected
-                        ? Colors.deepOrange
+                        ? Colors.black87
                         : Colors.grey.shade300,
                     width: 2,
                   ),
@@ -625,11 +625,11 @@ class _DishCustomizationModalState extends State<DishCustomizationModal> {
 
   /// Get spice level color based on current level
   Color _getSpiceLevelColor() {
-    if (_spiceLevel <= 1) return Colors.green;
-    if (_spiceLevel <= 2) return Colors.orange;
-    if (_spiceLevel <= 3) return Colors.deepOrange;
-    if (_spiceLevel <= 4) return Colors.red;
-    return Colors.red.shade900;
+    if (_spiceLevel <= 1) return Colors.black87;
+    if (_spiceLevel <= 2) return Colors.black87;
+    if (_spiceLevel <= 3) return Colors.black87;
+    if (_spiceLevel <= 4) return Colors.black87;
+    return Colors.black87.shade900;
   }
 
   /// Get spice level label
@@ -668,7 +668,7 @@ class _DishCustomizationModalState extends State<DishCustomizationModal> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.deepOrange, width: 2),
+              borderSide: const BorderSide(color: Colors.black87, width: 2),
             ),
             contentPadding: const EdgeInsets.all(12),
           ),
@@ -703,7 +703,7 @@ class _DishCustomizationModalState extends State<DishCustomizationModal> {
                       }
                     : null,
                 icon: const Icon(Icons.remove),
-                color: Colors.deepOrange,
+                color: Colors.black87,
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -724,7 +724,7 @@ class _DishCustomizationModalState extends State<DishCustomizationModal> {
                       }
                     : null,
                 icon: const Icon(Icons.add),
-                color: Colors.deepOrange,
+                color: Colors.black87,
               ),
             ],
           ),
@@ -751,7 +751,7 @@ class _DishCustomizationModalState extends State<DishCustomizationModal> {
         child: ElevatedButton(
           onPressed: _addToCart,
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.deepOrange,
+            backgroundColor: Colors.black87,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: RoundedRectangleBorder(
@@ -798,7 +798,7 @@ class _DishCustomizationModalState extends State<DishCustomizationModal> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('${widget.menuItem.name} added to cart'),
-        backgroundColor: Colors.green,
+        backgroundColor: Colors.black87,
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 2),
       ),

@@ -37,7 +37,7 @@ class DriverInfoCard extends StatelessWidget {
               children: [
                 const Icon(
                   Icons.delivery_dining,
-                  color: Colors.green,
+                  color: Colors.black87,
                   size: 24,
                 ),
                 const SizedBox(width: 8),
@@ -101,7 +101,7 @@ class DriverInfoCard extends StatelessWidget {
       height: 64,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.green, width: 2),
+        border: Border.all(color: Colors.black87, width: 2),
       ),
       child: ClipOval(
         child: driverPhoto != null
@@ -128,7 +128,7 @@ class DriverInfoCard extends StatelessWidget {
   Widget _buildRating() {
     return Row(
       children: [
-        const Icon(Icons.star, color: Colors.amber, size: 16),
+        const Icon(Icons.star, color: Colors.black87, size: 16),
         const SizedBox(width: 4),
         Text(
           driverRating!.toStringAsFixed(1),
@@ -171,7 +171,7 @@ class DriverInfoCard extends StatelessWidget {
         Icon(
           Icons.location_on,
           size: 16,
-          color: distance < 0.5 ? Colors.green : Colors.orange,
+          color: distance < 0.5 ? Colors.black87 : Colors.black87,
         ),
         const SizedBox(width: 4),
         Text(
@@ -179,7 +179,7 @@ class DriverInfoCard extends StatelessWidget {
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w500,
-            color: distance < 0.5 ? Colors.green : Colors.orange,
+            color: distance < 0.5 ? Colors.black87 : Colors.black87,
           ),
         ),
       ],
@@ -205,7 +205,7 @@ class DriverInfoCard extends StatelessWidget {
     return ElevatedButton(
       onPressed: driverPhone != null ? () => _makePhoneCall(context) : null,
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.green,
+        backgroundColor: Colors.black87,
         foregroundColor: Colors.white,
         shape: const CircleBorder(),
         padding: const EdgeInsets.all(12),
@@ -218,7 +218,7 @@ class DriverInfoCard extends StatelessWidget {
     return ElevatedButton(
       onPressed: driverPhone != null ? () => _sendMessage(context) : null,
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.black87,
         foregroundColor: Colors.white,
         shape: const CircleBorder(),
         padding: const EdgeInsets.all(12),
@@ -273,7 +273,7 @@ class DriverInfoCard extends StatelessWidget {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.black87,
         behavior: SnackBarBehavior.floating,
       ),
     );

@@ -140,7 +140,7 @@ class MenuItemCard extends ConsumerWidget {
                           padding: const EdgeInsets.all(8),
                           child: Icon(
                             isFavourite ? Icons.favorite : Icons.favorite_border,
-                            color: isFavourite ? Colors.red.shade400 : Colors.grey.shade600,
+                            color: isFavourite ? Colors.black87.shade400 : Colors.grey.shade600,
                             size: 24,
                           ),
                         ),
@@ -332,7 +332,7 @@ class MenuItemCard extends ConsumerWidget {
         badgeText = 'Vegan';
         break;
       case 'gluten-free':
-        badgeColor = Colors.blue;
+        badgeColor = Colors.black87;
         badgeIcon = Icons.grain;
         badgeText = 'GF';
         break;
@@ -342,7 +342,7 @@ class MenuItemCard extends ConsumerWidget {
         badgeText = 'DF';
         break;
       case 'nut-free':
-        badgeColor = Colors.amber;
+        badgeColor = Colors.black87;
         badgeIcon = Icons.egg;
         badgeText = 'NF';
         break;

@@ -142,13 +142,13 @@ class PeakHoursChart extends StatelessWidget {
     final ratio = orders / maxOrders;
 
     if (ratio > 0.8) {
-      return Colors.red;
+      return Colors.black87;
     } else if (ratio > 0.6) {
-      return Colors.orange;
+      return Colors.black87;
     } else if (ratio > 0.4) {
-      return Colors.yellow;
+      return Colors.black87;
     } else {
-      return Colors.green;
+      return Colors.black87;
     }
   }
 
@@ -170,19 +170,19 @@ class PeakHoursChart extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.blue.shade50,
+        color: Colors.black87.shade50,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.blue.shade200),
+        border: Border.all(color: Colors.black87.shade200),
       ),
       child: Row(
         children: [
-          Icon(Icons.insights, color: Colors.blue.shade700),
+          Icon(Icons.insights, color: Colors.black87.shade700),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               'Peak hour is ${peakHour.toString().padLeft(2, '0')}:00 with $peakOrders orders ($peakPercentage% of daily total)',
               style: TextStyle(
-                color: Colors.blue.shade700,
+                color: Colors.black87.shade700,
                 fontWeight: FontWeight.w500,
               ),
             ),

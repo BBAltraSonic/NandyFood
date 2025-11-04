@@ -95,12 +95,12 @@ class SalesChart extends StatelessWidget {
                     LineChartBarData(
                       spots: spots,
                       isCurved: true,
-                      color: lineColor ?? Colors.blue,
+                      color: lineColor ?? Colors.black87,
                       barWidth: 3,
                       dotData: const FlDotData(show: true),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: (lineColor ?? Colors.blue).withValues(alpha: 0.1),
+                        color: (lineColor ?? Colors.black87).withValues(alpha: 0.1),
                       ),
                     ),
                   ],
@@ -177,7 +177,7 @@ class RevenuePieChart extends StatelessWidget {
                     PieChartSectionData(
                       value: netRevenue,
                       title: 'Net\nR${netRevenue.toStringAsFixed(0)}',
-                      color: Colors.green,
+                      color: Colors.black87,
                       radius: 100,
                       titleStyle: const TextStyle(
                         fontSize: 12,
@@ -188,7 +188,7 @@ class RevenuePieChart extends StatelessWidget {
                     PieChartSectionData(
                       value: platformFees,
                       title: 'Fees\nR${platformFees.toStringAsFixed(0)}',
-                      color: Colors.orange,
+                      color: Colors.black87,
                       radius: 100,
                       titleStyle: const TextStyle(
                         fontSize: 12,
@@ -206,8 +206,8 @@ class RevenuePieChart extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildLegendItem('Net Revenue', Colors.green, netRevenue),
-                _buildLegendItem('Platform Fees', Colors.orange, platformFees),
+                _buildLegendItem('Net Revenue', Colors.black87, netRevenue),
+                _buildLegendItem('Platform Fees', Colors.black87, platformFees),
               ],
             ),
           ],
@@ -322,7 +322,7 @@ class PeakHoursChart extends StatelessWidget {
                       barRods: [
                         BarChartRodData(
                           toY: data.orderCount.toDouble(),
-                          color: Colors.blue,
+                          color: Colors.black87,
                           width: 16,
                           borderRadius: BorderRadius.circular(4),
                         ),

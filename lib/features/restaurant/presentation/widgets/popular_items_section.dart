@@ -28,7 +28,7 @@ class PopularItemsSection extends StatelessWidget {
             children: [
               const Icon(
                 Icons.local_fire_department,
-                color: Colors.deepOrange,
+                color: Colors.black87,
                 size: 24,
               ),
               const SizedBox(width: 8),
@@ -102,8 +102,8 @@ class _PopularItemCard extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Colors.deepOrange.shade300,
-                    Colors.deepOrange.shade600,
+                    Colors.black87.shade300,
+                    Colors.black87.shade600,
                   ],
                 ),
               ),
@@ -150,11 +150,11 @@ class _PopularItemCard extends StatelessWidget {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.deepOrange,
+                  color: Colors.black87,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.deepOrange.withValues(alpha: 0.5),
+                      color: Colors.black87.withValues(alpha: 0.5),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -229,7 +229,7 @@ class _PopularItemCard extends StatelessWidget {
                         label: const Text('Add'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
-                          foregroundColor: Colors.deepOrange,
+                          foregroundColor: Colors.black87,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 16,
                             vertical: 8,

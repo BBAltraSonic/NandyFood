@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:food_delivery_app/core/services/role_service.dart';
+import 'package:food_delivery_app/core/services/staff_service.dart';
 import 'package:food_delivery_app/shared/models/user_role.dart';
 
 /// Role state class
@@ -162,4 +163,14 @@ final canAccessRestaurantDashboardProvider = Provider<bool>((ref) {
 final hasMultipleRolesProvider = Provider<bool>((ref) {
   final roleState = ref.watch(roleProvider);
   return roleState.hasMultipleRoles;
+});
+
+/// Role service provider
+final roleServiceProvider = Provider<RoleService>((ref) {
+  return RoleService();
+});
+
+/// Staff service provider
+final staffServiceProvider = Provider<StaffService>((ref) {
+  return StaffService();
 });

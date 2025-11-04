@@ -1,9 +1,13 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:food_delivery_app/core/utils/performance_monitor.dart';
 import 'package:food_delivery_app/firebase_options.dart';
 import 'package:food_delivery_app/core/services/database_service.dart';
 import 'package:food_delivery_app/core/services/notification_service.dart';
@@ -34,6 +38,17 @@ import 'package:food_delivery_app/features/restaurant_dashboard/presentation/scr
 // import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/delivery_settings_screen.dart'; // File removed
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/operating_hours_screen.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_registration_screen.dart';
+import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_staff_management_screen.dart';
+
+// Admin screens
+import 'package:food_delivery_app/features/admin/presentation/screens/admin_dashboard_screen.dart';
+import 'package:food_delivery_app/features/admin/presentation/screens/admin_users_screen.dart';
+import 'package:food_delivery_app/features/admin/presentation/screens/admin_restaurants_screen.dart';
+import 'package:food_delivery_app/features/admin/presentation/screens/admin_orders_screen.dart';
+import 'package:food_delivery_app/features/admin/presentation/screens/admin_analytics_screen.dart';
+import 'package:food_delivery_app/features/admin/presentation/screens/admin_settings_screen.dart';
+import 'package:food_delivery_app/features/admin/presentation/screens/admin_support_screen.dart';
+import 'package:food_delivery_app/core/config/app_startup.dart';
 
 
 import 'package:food_delivery_app/features/restaurant/presentation/screens/restaurant_detail_screen.dart';
@@ -98,6 +113,8 @@ String? derivePayloadFromMessage(RemoteMessage message) {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Performance monitoring disabled for now to prevent startup overhead
+
   // Load environment variables first - this is fast and essential
   try {
     await dotenv.load(fileName: '.env');
@@ -123,26 +140,21 @@ void main() async {
 }
 
 Future<void> _initializeRemainingServices() async {
-  // Initialize Firebase
+  // Initialize services sequentially to prevent main thread blocking
   try {
+    // Initialize Firebase first
     await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
     print('✅ Firebase initialized');
-  } catch (e) {
-    print('Error initializing Firebase: $e');
-    return;
-  }
 
-  // Initialize services concurrently to reduce total time
-  final futures = <Future>[];
+    // Then initialize Firebase messaging
+    await _setupFirebaseMessaging();
 
-  // Firebase messaging setup
-  futures.add(_setupFirebaseMessaging());
+    // Initialize cache service (includes Hive boxes)
+    await AppStartup.initializeCriticalServices();
 
-  // Notification service initialization
-  futures.add(_initializeNotificationService());
+    // Finally initialize notification service
+    await _initializeNotificationService();
 
-  try {
-    await Future.wait(futures);
     print('✅ All services initialized');
   } catch (e) {
     print('Error initializing services: $e');
@@ -194,6 +206,9 @@ class _FoodDeliveryAppState extends ConsumerState<FoodDeliveryApp> {
     super.initState();
     _router = _createRouter();
 
+    // Initialize performance monitoring
+    _initializePerformanceMonitoring();
+
     // Handle initial FCM deep link if present
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (pendingInitialNotificationPayload != null) {
@@ -231,6 +246,26 @@ class _FoodDeliveryAppState extends ConsumerState<FoodDeliveryApp> {
       navigateForPayload(payload);
     });
 
+  }
+
+  void _initializePerformanceMonitoring() {
+    // Optimize image cache with moderate sizes to prevent memory issues
+    PaintingBinding.instance.imageCache.maximumSize = 200;
+    PaintingBinding.instance.imageCache.maximumSizeBytes = 100 * 1024 * 1024; // 100MB
+
+    // Minimal performance monitoring to prevent main thread blocking
+    if (!const bool.fromEnvironment('dart.vm.product')) {
+      // Only check memory every 2 minutes to reduce overhead
+      Timer.periodic(const Duration(minutes: 2), (timer) {
+        final memoryUsage = ProcessInfo.currentRss ~/ (1024 * 1024);
+        final imageCount = PaintingBinding.instance.imageCache.liveImageCount;
+
+        // Only log if memory usage is concerning
+        if (memoryUsage > 200) {
+          print('⚠️ High memory usage: ${memoryUsage}MB, Images: $imageCount');
+        }
+      });
+    }
   }
 
   GoRouter _createRouter() {
@@ -298,6 +333,48 @@ class _FoodDeliveryAppState extends ConsumerState<FoodDeliveryApp> {
           path: RoutePaths.restaurantSettings,
           builder: (context, state) => const RestaurantSettingsScreen(),
           redirect: (context, state) => RouteGuards.requireRestaurantRole(state),
+        ),
+        GoRoute(
+          path: '/restaurant/staff',
+          builder: (context, state) => const RestaurantStaffManagementScreen(),
+          redirect: (context, state) => RouteGuards.requireRestaurantRole(state),
+        ),
+
+        // Admin routes
+        GoRoute(
+          path: RoutePaths.adminDashboard,
+          builder: (context, state) => const AdminDashboardScreen(),
+          redirect: (context, state) => RouteGuards.requireAdminRole(state),
+        ),
+        GoRoute(
+          path: RoutePaths.adminUsers,
+          builder: (context, state) => const AdminUsersScreen(),
+          redirect: (context, state) => RouteGuards.requireAdminRole(state),
+        ),
+        GoRoute(
+          path: RoutePaths.adminRestaurants,
+          builder: (context, state) => const AdminRestaurantsScreen(),
+          redirect: (context, state) => RouteGuards.requireAdminRole(state),
+        ),
+        GoRoute(
+          path: RoutePaths.adminOrders,
+          builder: (context, state) => const AdminOrdersScreen(),
+          redirect: (context, state) => RouteGuards.requireAdminRole(state),
+        ),
+        GoRoute(
+          path: RoutePaths.adminAnalytics,
+          builder: (context, state) => const AdminAnalyticsScreen(),
+          redirect: (context, state) => RouteGuards.requireAdminRole(state),
+        ),
+        GoRoute(
+          path: RoutePaths.adminSettings,
+          builder: (context, state) => const AdminSettingsScreen(),
+          redirect: (context, state) => RouteGuards.requireAdminRole(state),
+        ),
+        GoRoute(
+          path: RoutePaths.adminSupport,
+          builder: (context, state) => const AdminSupportScreen(),
+          redirect: (context, state) => RouteGuards.requireAdminRole(state),
         ),
 
         GoRoute(

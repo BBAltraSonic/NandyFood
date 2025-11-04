@@ -36,7 +36,7 @@ class RestaurantAnalyticsSessionWrapper extends ConsumerWidget {
               const Icon(
                 Icons.error_outline,
                 size: 64,
-                color: Colors.red,
+                color: Colors.black87,
               ),
               const SizedBox(height: 16),
               Text(
@@ -132,7 +132,7 @@ class RestaurantAnalyticsSessionWrapper extends ConsumerWidget {
               const Icon(
                 Icons.lock_outline,
                 size: 64,
-                color: Colors.orange,
+                color: Colors.black87,
               ),
               const SizedBox(height: 16),
               Text(

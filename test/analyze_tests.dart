@@ -1,14 +1,13 @@
 #!/usr/bin/env dart
 
-import 'dart:io';
-import 'dart:convert';
-
 /// Test Analysis Tool
 ///
 /// Analyzes test results, generates reports, and provides insights
 /// about test coverage and quality metrics
 library;
 
+import 'dart:io';
+import 'dart:convert';
 import 'test_config.dart';
 
 class TestAnalyzer {

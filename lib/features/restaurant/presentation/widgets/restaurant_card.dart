@@ -286,7 +286,7 @@ class RestaurantCard extends ConsumerWidget {
             padding: const EdgeInsets.all(10),
             child: Icon(
               isFavourite ? Icons.favorite : Icons.favorite_border,
-              color: isFavourite ? Colors.red.shade400 : Colors.grey.shade600,
+              color: isFavourite ? Colors.grey.shade400 : Colors.grey.shade600,
               size: 22,
             ),
           ),

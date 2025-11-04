@@ -20,7 +20,7 @@ class PaymentService {
 
   /// Process cash payment
   /// For cash payments, we simply confirm the order and mark payment as "pending"
-  /// Payment will be collected on delivery
+  /// Payment will be collected on pickup
   Future<bool> processPayment({
     required BuildContext context,
     required double amount,
@@ -39,8 +39,8 @@ class PaymentService {
 
     try {
       if (method == PaymentMethodType.cash) {
-        // Cash on delivery - no actual payment processing needed
-        AppLogger.info('Processing cash on delivery payment');
+        // Cash on pickup - no actual payment processing needed
+        AppLogger.info('Processing cash on pickup payment');
 
         // Simulate a small delay for UX
         await Future.delayed(const Duration(milliseconds: 500));
@@ -55,13 +55,13 @@ class PaymentService {
 
         AppLogger.success(
           'Cash payment confirmed',
-          details: 'Payment will be collected on delivery',
+          details: 'Payment will be collected on pickup',
         );
 
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Order confirmed! Pay cash on delivery.'),
+              content: Text('Order confirmed! Pay cash when you pick up your order.'),
               backgroundColor: Colors.green,
               duration: Duration(seconds: 3),
             ),
@@ -82,7 +82,7 @@ class PaymentService {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text(
-                'Card payment coming soon! Please use cash on delivery.',
+                'Card payment coming soon! Please use cash on pickup.',
               ),
               backgroundColor: Colors.orange,
               duration: Duration(seconds: 3),
@@ -148,7 +148,7 @@ class PaymentService {
     }
   }
 
-  /// Confirm cash payment (called when driver confirms payment received)
+  /// Confirm cash payment (called when customer confirms payment on pickup)
   Future<bool> confirmCashPayment(String orderId) async {
     AppLogger.function(
       'PaymentService.confirmCashPayment',
@@ -189,8 +189,8 @@ class PaymentService {
     return [
       {
         'type': PaymentMethodType.cash,
-        'name': 'Cash on Delivery',
-        'description': 'Pay with cash when your order arrives',
+        'name': 'Cash on Pickup',
+        'description': 'Pay with cash when you collect your order',
         'icon': Icons.money,
         'enabled': true,
       },
@@ -208,7 +208,7 @@ class PaymentService {
   String getPaymentMethodName(PaymentMethodType type) {
     switch (type) {
       case PaymentMethodType.cash:
-        return 'Cash on Delivery';
+        return 'Cash on Pickup';
       case PaymentMethodType.card:
         return 'Credit/Debit Card';
     }

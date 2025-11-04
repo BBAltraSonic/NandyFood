@@ -38,7 +38,7 @@ class OrderTrackingWidget extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.deepOrange,
+                    color: Colors.black87,
                   ),
                 ),
               ],
@@ -63,8 +63,8 @@ class OrderTrackingWidget extends StatelessWidget {
                   OutlinedButton(
                     onPressed: onCancelOrder,
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.red,
-                      side: const BorderSide(color: Colors.red),
+                      foregroundColor: Colors.black87,
+                      side: const BorderSide(color: Colors.black87),
                     ),
                     child: const Text('Cancel Order'),
                   ),
@@ -102,8 +102,8 @@ class OrderTrackingWidget extends StatelessWidget {
                   height: 30,
                   decoration: BoxDecoration(
                     color: isCompleted
-                        ? Colors.deepOrange
-                        : (isCurrent ? Colors.orange : Colors.grey.shade300),
+                        ? Colors.black87
+                        : (isCurrent ? Colors.black87 : Colors.grey.shade300),
                     shape: BoxShape.circle,
                   ),
                   child: isCompleted
@@ -117,7 +117,7 @@ class OrderTrackingWidget extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
-                    color: isCurrent ? Colors.deepOrange : Colors.black,
+                    color: isCurrent ? Colors.black87 : Colors.black,
                   ),
                 ),
               ],
@@ -128,7 +128,7 @@ class OrderTrackingWidget extends StatelessWidget {
                 height: 30,
                 padding: const EdgeInsets.only(left: 15),
                 child: VerticalDivider(
-                  color: isCompleted ? Colors.deepOrange : Colors.grey.shade300,
+                  color: isCompleted ? Colors.black87 : Colors.grey.shade300,
                   width: 2,
                   thickness: 2,
                 ),

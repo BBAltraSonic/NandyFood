@@ -21,9 +21,9 @@ class EmailVerificationBanner extends ConsumerWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.orange.shade50,
+        color: Colors.black87.shade50,
         border: Border(
-          bottom: BorderSide(color: Colors.orange.shade200),
+          bottom: BorderSide(color: Colors.black87.shade200),
         ),
       ),
       child: SafeArea(
@@ -32,7 +32,7 @@ class EmailVerificationBanner extends ConsumerWidget {
           children: [
             Icon(
               Icons.warning_amber_rounded,
-              color: Colors.orange.shade700,
+              color: Colors.black87.shade700,
               size: 20,
             ),
             const SizedBox(width: 12),
@@ -40,7 +40,7 @@ class EmailVerificationBanner extends ConsumerWidget {
               child: Text(
                 'Please verify your email address',
                 style: TextStyle(
-                  color: Colors.orange.shade900,
+                  color: Colors.black87.shade900,
                   fontWeight: FontWeight.w500,
                   fontSize: 13,
                 ),
@@ -49,7 +49,7 @@ class EmailVerificationBanner extends ConsumerWidget {
             TextButton(
               onPressed: () => context.go('/auth/verify-email'),
               style: TextButton.styleFrom(
-                foregroundColor: Colors.orange.shade700,
+                foregroundColor: Colors.black87.shade700,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               ),
               child: const Text(

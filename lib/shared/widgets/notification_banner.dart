@@ -20,23 +20,23 @@ class NotificationBanner extends StatelessWidget {
 
     switch (type) {
       case NotificationType.success:
-        backgroundColor = Colors.green.shade100;
-        textColor = Colors.green.shade800;
+        backgroundColor = Colors.grey.shade100;
+        textColor = Colors.grey.shade100;
         icon = Icons.check_circle;
         break;
       case NotificationType.warning:
-        backgroundColor = Colors.orange.shade100;
-        textColor = Colors.orange.shade800;
+        backgroundColor = Colors.grey.shade100;
+        textColor = Colors.grey.shade100;
         icon = Icons.warning;
         break;
       case NotificationType.error:
-        backgroundColor = Colors.red.shade100;
-        textColor = Colors.red.shade800;
+        backgroundColor = Colors.grey.shade100;
+        textColor = Colors.grey.shade100;
         icon = Icons.error;
         break;
       case NotificationType.info:
-        backgroundColor = Colors.blue.shade100;
-        textColor = Colors.blue.shade800;
+        backgroundColor = Colors.grey.shade100;
+        textColor = Colors.grey.shade100;
         icon = Icons.info;
         break;
     }

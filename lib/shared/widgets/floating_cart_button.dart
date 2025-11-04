@@ -255,7 +255,7 @@ class _CartPreviewOverlay extends StatelessWidget {
                         Icons.discount_outlined,
                         'Savings',
                         '-\$${cartState.discountAmount.toStringAsFixed(2)}',
-                        valueColor: Colors.green,
+                        valueColor: Colors.black54,
                       ),
                     ],
                     const SizedBox(height: 12),

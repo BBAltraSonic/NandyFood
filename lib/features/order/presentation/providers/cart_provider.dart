@@ -187,20 +187,16 @@ class CartNotifier extends StateNotifier<CartState> {
     }
   }
 
-  /// Update item quantity
+  /// Update item quantity - Optimized for performance
   Future<void> updateItemQuantity(String itemId, int quantity) async {
-    state = state.copyWith(isLoading: true);
+    if (quantity <= 0) {
+      // Remove item if quantity is 0 or less
+      await removeItem(itemId);
+      return;
+    }
 
     try {
-      // Simulate network delay
-      await Future.delayed(const Duration(milliseconds: 100));
-
-      if (quantity <= 0) {
-        // Remove item if quantity is 0 or less
-        await removeItem(itemId);
-        return;
-      }
-
+      // Optimized: Update only the specific item without loading state or artificial delay
       final updatedItems = state.items.map((item) {
         if (item.id == itemId) {
           return item.copyWith(quantity: quantity);
@@ -208,12 +204,11 @@ class CartNotifier extends StateNotifier<CartState> {
         return item;
       }).toList();
 
-      final newState = state.copyWith(items: updatedItems, isLoading: false);
-
-      // Recalculate totals
-      state = _calculateTotals(newState);
+      // Selective state update - only update items, then calculate totals
+      state = state.copyWith(items: updatedItems);
+      state = _calculateTotals(state);
     } catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+      state = state.copyWith(errorMessage: e.toString());
     }
   }
 

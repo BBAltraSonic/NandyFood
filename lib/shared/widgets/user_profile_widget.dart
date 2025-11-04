@@ -28,12 +28,12 @@ class UserProfileWidget extends StatelessWidget {
                 // Profile picture
                 CircleAvatar(
                   radius: 30,
-                  backgroundColor: Colors.deepOrange.withValues(alpha: 0.1),
+                  backgroundColor: Colors.black87.withValues(alpha: 0.1),
                   backgroundImage: userProfile.avatarUrl != null
                       ? NetworkImage(userProfile.avatarUrl!)
                       : null,
                   child: userProfile.avatarUrl == null
-                      ? const Icon(Icons.person, color: Colors.deepOrange, size: 30)
+                      ? const Icon(Icons.person, color: Colors.black87, size: 30)
                       : null,
                 ),
                 const SizedBox(width: 16),
@@ -111,7 +111,7 @@ class UserProfileWidget extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: Colors.deepOrange, size: 20),
+        Icon(icon, color: Colors.black87, size: 20),
         const SizedBox(width: 12),
         Expanded(
           child: Column(

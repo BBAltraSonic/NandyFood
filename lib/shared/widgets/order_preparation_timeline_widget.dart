@@ -176,11 +176,11 @@ class _TimelineItem extends StatelessWidget {
     Color backgroundColor;
 
     if (isCompleted) {
-      color = Colors.green;
-      backgroundColor = Colors.green.withValues(alpha: 0.1);
+      color = Colors.black54;
+      backgroundColor = Colors.black54.withValues(alpha: 0.1);
     } else if (isCurrent) {
-      color = Colors.purple;
-      backgroundColor = Colors.purple.withValues(alpha: 0.1);
+      color = Colors.black54;
+      backgroundColor = Colors.black54.withValues(alpha: 0.1);
     } else {
       color = Colors.grey;
       backgroundColor = Colors.grey.withValues(alpha: 0.1);
@@ -291,9 +291,9 @@ class _TimelineConnector extends StatelessWidget {
         width: 2,
         height: 20,
         color: isCompleted
-            ? Colors.green
+            ? Colors.black54
             : isCurrent
-                ? Colors.purple.withValues(alpha: 0.5)
+                ? Colors.black54.withValues(alpha: 0.5)
                 : Colors.grey.shade300,
       ),
     );

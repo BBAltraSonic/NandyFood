@@ -31,9 +31,9 @@ class PaymentSecurityBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.green.shade50,
+        color: Colors.grey.shade200,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.green.shade200),
+        border: Border.all(color: Colors.grey.shade200),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -42,12 +42,12 @@ class PaymentSecurityBadge extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.lock, color: Colors.green.shade700, size: 20),
+              Icon(Icons.lock, color: Colors.grey.shade200, size: 20),
               const SizedBox(width: 8),
               Text(
                 'Secured by PayFast',
                 style: theme.textTheme.titleSmall?.copyWith(
-                  color: Colors.green.shade700,
+                  color: Colors.grey.shade200,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -65,7 +65,7 @@ class PaymentSecurityBadge extends StatelessWidget {
                   child: Text(
                     'PayFast',
                     style: theme.textTheme.labelMedium?.copyWith(
-                      color: Colors.green.shade700,
+                      color: Colors.grey.shade200,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -110,19 +110,19 @@ class PaymentSecurityBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.green.shade50,
+        color: Colors.grey.shade200,
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: Colors.green.shade200),
+        border: Border.all(color: Colors.grey.shade200),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.lock, color: Colors.green.shade700, size: 16),
+          Icon(Icons.lock, color: Colors.grey.shade200, size: 16),
           const SizedBox(width: 6),
           Text(
             'Secured by PayFast',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: Colors.green.shade700,
+              color: Colors.grey.shade200,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -135,13 +135,13 @@ class PaymentSecurityBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
-        color: Colors.green.shade50,
+        color: Colors.grey.shade200,
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.green.shade200),
+        border: Border.all(color: Colors.grey.shade200),
       ),
       child: Icon(
         Icons.lock,
-        color: Colors.green.shade700,
+        color: Colors.grey.shade200,
         size: 16,
       ),
     );
@@ -158,7 +158,7 @@ class PaymentSecurityBadge extends StatelessWidget {
       children: [
         Icon(
           icon,
-          color: Colors.green.shade700,
+          color: Colors.grey.shade200,
           size: 20,
         ),
         const SizedBox(height: 4),
@@ -166,7 +166,7 @@ class PaymentSecurityBadge extends StatelessWidget {
           label,
           textAlign: TextAlign.center,
           style: theme.textTheme.labelSmall?.copyWith(
-            color: Colors.green.shade700,
+            color: Colors.grey.shade200,
             height: 1.2,
           ),
         ),

@@ -33,7 +33,7 @@ class RatingWidget extends StatelessWidget {
                   : (index < rating.ceil()
                         ? Icons.star_half
                         : Icons.star_border),
-              color: color ?? Colors.amber,
+              color: color ?? Colors.black54,
               size: size,
             );
           }),
@@ -45,7 +45,7 @@ class RatingWidget extends StatelessWidget {
           style: TextStyle(
             fontSize: size,
             fontWeight: FontWeight.w500,
-            color: color ?? Colors.amber,
+            color: color ?? Colors.black54,
           ),
         ),
         if (showReviewCount && reviewCount > 0) ...[

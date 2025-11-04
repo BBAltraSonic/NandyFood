@@ -87,16 +87,16 @@ class PaymentMethodCard extends StatelessWidget {
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.green.shade50,
+                                  color: Colors.black87.shade50,
                                   borderRadius: BorderRadius.circular(4),
                                   border: Border.all(
-                                    color: Colors.green.shade200,
+                                    color: Colors.black87.shade200,
                                   ),
                                 ),
                                 child: Text(
                                   'RECOMMENDED',
                                   style: theme.textTheme.labelSmall?.copyWith(
-                                    color: Colors.green.shade700,
+                                    color: Colors.black87.shade700,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -124,14 +124,14 @@ class PaymentMethodCard extends StatelessWidget {
                                 Icon(
                                   Icons.info_outline,
                                   size: 16,
-                                  color: Colors.orange.shade700,
+                                  color: Colors.black87.shade700,
                                 ),
                                 const SizedBox(width: 4),
                                 Expanded(
                                   child: Text(
                                     method.disabledReason!,
                                     style: theme.textTheme.bodySmall?.copyWith(
-                                      color: Colors.orange.shade700,
+                                      color: Colors.black87.shade700,
                                       fontStyle: FontStyle.italic,
                                     ),
                                   ),

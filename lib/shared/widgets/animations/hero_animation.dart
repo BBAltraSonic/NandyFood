@@ -120,8 +120,8 @@ class RestaurantHero extends StatelessWidget {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        Colors.orange.shade400,
-                        Colors.orange.shade600,
+                        Colors.black87,
+                        Colors.black87,
                       ],
                     ),
                   ),
@@ -146,8 +146,8 @@ class RestaurantHero extends StatelessWidget {
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              Colors.orange.shade400,
-                              Colors.orange.shade600,
+                              Colors.black87,
+                              Colors.black87,
                             ],
                           ),
                         ),
@@ -263,8 +263,8 @@ class MenuItemHero extends StatelessWidget {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        Colors.deepOrange.shade300,
-                        Colors.deepOrange.shade500,
+                        Colors.black87,
+                        Colors.black87,
                       ],
                     ),
                   ),
@@ -289,8 +289,8 @@ class MenuItemHero extends StatelessWidget {
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              Colors.deepOrange.shade300,
-                              Colors.deepOrange.shade500,
+                              Colors.black87,
+                              Colors.black87,
                             ],
                           ),
                         ),

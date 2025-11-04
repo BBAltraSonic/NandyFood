@@ -203,7 +203,7 @@ class _OrderAgainCard extends StatelessWidget {
                           const Icon(
                             Icons.star_rounded,
                             size: 14,
-                            color: Colors.amber,
+                            color: Colors.black87,
                           ),
                           const SizedBox(width: 4),
                           Text(

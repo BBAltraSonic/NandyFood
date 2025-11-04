@@ -10,20 +10,20 @@ import 'package:flutter/material.dart';
 // ==============================
 
 class BrandColors {
-  // Primary brand colors - Grandfood inspired vibrant orange-red
-  static const Color primary = Color(0xFFFF6B35);      // Vibrant Orange-Red
-  static const Color primaryLight = Color(0xFFFF8A65);  // Light Orange
-  static const Color primaryDark = Color(0xFFE64A19);   // Dark Orange
+  // Primary brand colors - Black and white theme
+  static const Color primary = Color(0xFF000000);      // Pure Black
+  static const Color primaryLight = Color(0xFF424242);  // Dark Gray
+  static const Color primaryDark = Color(0xFF000000);   // Pure Black
 
-  // Secondary brand colors - fresh natural green
-  static const Color secondary = Color(0xFF4CAF50);     // Fresh Green
-  static const Color secondaryLight = Color(0xFF66BB6A); // Light Green
-  static const Color secondaryDark = Color(0xFF388E3C);  // Dark Green
+  // Secondary brand colors - White and gray tones
+  static const Color secondary = Color(0xFFFFFFFF);     // Pure White
+  static const Color secondaryLight = Color(0xFFF5F5F5); // Light Gray
+  static const Color secondaryDark = Color(0xFF9E9E9E);  // Medium Gray
 
-  // Accent colors - bright and energetic
-  static const Color accent = Color(0xFFFFC107);        // Bright Yellow
-  static const Color accentLight = Color(0xFFFFD54F);   // Light Yellow
-  static const Color accentDark = Color(0xFFFFA000);    // Dark Yellow
+  // Accent colors - Grayscale tones
+  static const Color accent = Color(0xFF757575);        // Medium Gray
+  static const Color accentLight = Color(0xFFBDBDBD);   // Light Gray
+  static const Color accentDark = Color(0xFF424242);    // Dark Gray
 }
 
 // ==============================
@@ -60,30 +60,30 @@ class NeutralColors {
 // ==============================
 
 class SemanticColors {
-  // Status colors
-  static const Color success = Color(0xFF4CAF50);        // Success Green
-  static const Color successLight = Color(0xFF81C784);   // Light Success
-  static const Color successDark = Color(0xFF388E3C);    // Dark Success
+  // Status colors - Monochrome theme
+  static const Color success = Color(0xFF424242);        // Dark Gray (was green)
+  static const Color successLight = Color(0xFF757575);   // Medium Gray
+  static const Color successDark = Color(0xFF212121);    // Very Dark Gray
 
-  static const Color warning = Color(0xFFFF9800);        // Warning Orange
-  static const Color warningLight = Color(0xFFFFB74D);   // Light Warning
-  static const Color warningDark = Color(0xFFF57C00);    // Dark Warning
+  static const Color warning = Color(0xFF616161);        // Medium Dark Gray (was orange)
+  static const Color warningLight = Color(0xFF9E9E9E);   // Medium Gray
+  static const Color warningDark = Color(0xFF424242);    // Dark Gray
 
-  static const Color error = Color(0xFFE53935);          // Error Red
-  static const Color errorLight = Color(0xFFEF5350);     // Light Error
-  static const Color errorDark = Color(0xFFD32F2F);      // Dark Error
+  static const Color error = Color(0xFF000000);          // Black (was red)
+  static const Color errorLight = Color(0xFF424242);     // Dark Gray
+  static const Color errorDark = Color(0xFF000000);      // Black
 
-  static const Color info = Color(0xFF2196F3);           // Info Blue
-  static const Color infoLight = Color(0xFF64B5F6);      // Light Info
-  static const Color infoDark = Color(0xFF1976D2);       // Dark Info
+  static const Color info = Color(0xFF757575);           // Medium Gray (was blue)
+  static const Color infoLight = Color(0xFFBDBDBD);      // Light Gray
+  static const Color infoDark = Color(0xFF616161);       // Medium Dark Gray
 
-  // Order status colors
-  static const Color orderPlaced = Color(0xFF2196F3);    // Blue
-  static const Color orderConfirmed = Color(0xFF9C27B0); // Purple
-  static const Color orderPreparing = Color(0xFFFF9800); // Orange
-  static const Color orderReady = Color(0xFF4CAF50);     // Green
-  static const Color orderDelivered = Color(0xFF8BC34A); // Light Green
-  static const Color orderCancelled = Color(0xFFE53935); // Red
+  // Order status colors - Monochrome theme
+  static const Color orderPlaced = Color(0xFF757575);    // Medium Gray
+  static const Color orderConfirmed = Color(0xFF424242); // Dark Gray
+  static const Color orderPreparing = Color(0xFF616161); // Medium Dark Gray
+  static const Color orderReady = Color(0xFF000000);     // Black
+  static const Color orderDelivered = Color(0xFF424242); // Dark Gray
+  static const Color orderCancelled = Color(0xFF000000); // Black
 }
 
 // ==============================
@@ -91,13 +91,13 @@ class SemanticColors {
 // ==============================
 
 class MealTimeColors {
-  static const Color breakfast = Color(0xFFFFB74D);      // Warm Yellow
-  static const Color brunch = Color(0xFFFF8A65);         // Light Orange
-  static const Color lunch = Color(0xFF4CAF50);          // Fresh Green
-  static const Color afternoonTea = Color(0xFF7986CB);   // Indigo
-  static const Color dinner = Color(0xFF5C6BC0);         // Blue-Indigo
-  static const Color supper = Color(0xFFFF7043);         // Deep Orange
-  static const Color lateNight = Color(0xFF5E35B1);      // Deep Purple
+  static const Color breakfast = Color(0xFFBDBDBD);      // Light Gray
+  static const Color brunch = Color(0xFF9E9E9E);         // Medium Gray
+  static const Color lunch = Color(0xFF757575);          // Medium Dark Gray
+  static const Color afternoonTea = Color(0xFF616161);   // Dark Gray
+  static const Color dinner = Color(0xFF424242);         // Very Dark Gray
+  static const Color supper = Color(0xFF212121);         // Near Black
+  static const Color lateNight = Color(0xFF000000);      // Pure Black
 }
 
 // ==============================
@@ -261,10 +261,10 @@ class ShadowTokens {
     ),
   ];
 
-  // Colored shadows - Enhanced with brand colors
+  // Colored shadows - Black and white theme
   static List<BoxShadow> primaryShadow = [
     BoxShadow(
-      color: BrandColors.primary.withValues(alpha: 0.15),
+      color: BrandColors.primary.withValues(alpha: 0.2), // Black with opacity
       offset: const Offset(0, 4),
       blurRadius: 16,
       spreadRadius: 0,
@@ -273,7 +273,7 @@ class ShadowTokens {
 
   static List<BoxShadow> secondaryShadow = [
     BoxShadow(
-      color: BrandColors.secondary.withValues(alpha: 0.15),
+      color: NeutralColors.gray400.withValues(alpha: 0.3), // Gray shadow
       offset: const Offset(0, 4),
       blurRadius: 16,
       spreadRadius: 0,

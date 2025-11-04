@@ -263,7 +263,7 @@ class ThemeShowcaseWidget extends StatelessWidget {
             labelText: 'Error State',
             hintText: 'This field has an error',
             errorText: 'Please enter a valid value',
-            prefixIcon: const Icon(Icons.error, color: Colors.red),
+            prefixIcon: const Icon(Icons.error, color: Colors.black87),
           ),
         ),
       ],
@@ -410,8 +410,8 @@ class ThemeShowcaseWidget extends StatelessWidget {
         ),
         Chip(
           label: const Text('New'),
-          backgroundColor: Colors.blue.withValues(alpha: 0.1),
-          labelStyle: const TextStyle(color: Colors.blue),
+          backgroundColor: Colors.black54.withValues(alpha: 0.1),
+          labelStyle: const TextStyle(color: Colors.black54),
         ),
         Chip(
           label: const Text('Healthy'),

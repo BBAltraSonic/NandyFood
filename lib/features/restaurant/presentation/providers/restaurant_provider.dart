@@ -286,32 +286,38 @@ class RestaurantNotifier extends StateNotifier<RestaurantState> {
   }
 
   // Load all menu items for all restaurants to enable dietary filtering across restaurants
+  // Optimized to use a single query with JOIN instead of N+1 queries
   Future<void> loadAllMenuItemsForDietaryFiltering() async {
     if (state.restaurants.isEmpty) {
       // If restaurants haven't been loaded yet, load them first
       await loadRestaurants();
     }
 
-    // Load menu items for all restaurants
-    List<MenuItem> allMenuItems = [];
-    for (final restaurant in state.restaurants) {
-      try {
-        final dbService = DatabaseService();
-        final menuItemData = await dbService.getMenuItems(restaurant.id);
-        final menuItems = menuItemData
-            .map((data) => MenuItem.fromJson(data))
-            .toList();
-        allMenuItems.addAll(menuItems);
-      } catch (e) {
-        // Continue with other restaurants even if one fails
-        continue;
-      }
+    if (state.restaurants.isEmpty) return;
+
+    try {
+      final dbService = DatabaseService();
+      // Use a single query to get all menu items for all restaurants
+      final restaurantIds = state.restaurants.map((r) => r.id).toList();
+      final allMenuItemData = await dbService.client
+          .from('menu_items')
+          .select('*, restaurants(*)')
+          .inFilter('restaurant_id', restaurantIds)
+          .order('restaurant_id');
+
+      final allMenuItems = allMenuItemData
+          .map((data) => MenuItem.fromJson(data))
+          .toList();
+
+      state = state.copyWith(menuItems: allMenuItems);
+
+      // Apply the filters after loading all menu items
+      _applyRestaurantFilters();
+    } catch (e) {
+      print('Error loading menu items for dietary filtering: $e');
+      // Fallback to empty menu items if query fails
+      state = state.copyWith(menuItems: []);
     }
-
-    state = state.copyWith(menuItems: allMenuItems);
-
-    // Apply the filters after loading all menu items
-    _applyRestaurantFilters();
   }
 
   // Clear error message

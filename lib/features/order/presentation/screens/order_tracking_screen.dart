@@ -13,6 +13,8 @@ import 'package:food_delivery_app/shared/widgets/order_preparation_timeline_widg
 import 'package:food_delivery_app/shared/widgets/order_chat_widget.dart';
 import 'package:food_delivery_app/shared/widgets/order_call_widget.dart';
 import 'package:food_delivery_app/core/utils/app_logger.dart';
+import 'package:food_delivery_app/features/support/presentation/screens/create_ticket_screen.dart';
+import 'package:food_delivery_app/shared/models/support_ticket.dart';
 
 class OrderTrackingScreen extends ConsumerStatefulWidget {
   final Order? order;
@@ -697,6 +699,31 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
               label: const Text('Notify me when ready'),
             ),
           ),
+        const SizedBox(height: 8),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => CreateTicketScreen(
+                    initialSubject: 'Issue with order #${_order!.id.substring(0, 8).toUpperCase()}',
+                    initialDescription: 'I need help with my order from ${_order!.restaurantName}',
+                    initialCategory: SupportTicketCategory.orderIssues,
+                    orderId: _order!.id,
+                    restaurantId: _order!.restaurantId,
+                  ),
+                ),
+              );
+            },
+            icon: const Icon(Icons.support_agent),
+            label: const Text('Get Support'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.orange,
+              side: const BorderSide(color: Colors.orange),
+            ),
+          ),
+        ),
       ],
     );
   }

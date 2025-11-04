@@ -67,7 +67,7 @@ class _LocationMapWidgetState extends State<LocationMapWidget> {
           width: 80,
           height: 80,
           point: LatLng(userPosition!.latitude, userPosition!.longitude),
-          child: const Icon(Icons.person_pin, size: 30, color: Colors.blue),
+          child: const Icon(Icons.person_pin, size: 30, color: Colors.black87),
         ),
       );
     }
@@ -98,7 +98,7 @@ class _LocationMapWidgetState extends State<LocationMapWidget> {
                 },
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.deepOrange,
+                    color: Colors.black87,
                     shape: BoxShape.circle,
                     border: Border.all(color: Colors.white, width: 2),
                   ),

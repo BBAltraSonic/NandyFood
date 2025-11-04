@@ -129,7 +129,7 @@ class AccessibleCartItemWidget extends StatelessWidget {
 
                 // Remove button
                 IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
+                  icon: const Icon(Icons.delete, color: Colors.black87),
                   onPressed: onRemove,
                   tooltip: 'Remove item',
                 ),

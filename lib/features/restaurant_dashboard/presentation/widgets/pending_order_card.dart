@@ -105,8 +105,8 @@ class PendingOrderCard extends StatelessWidget {
                           icon: const Icon(Icons.close, size: 18),
                           label: const Text('Reject'),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.red,
-                            side: const BorderSide(color: Colors.red),
+                            foregroundColor: Colors.black87,
+                            side: const BorderSide(color: Colors.black87),
                           ),
                         ),
                       ),
@@ -133,17 +133,17 @@ class PendingOrderCard extends StatelessWidget {
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'pending':
-        return Colors.orange;
+        return Colors.black87;
       case 'confirmed':
       case 'preparing':
-        return Colors.blue;
+        return Colors.black87;
       case 'ready':
-        return Colors.purple;
+        return Colors.black87;
       case 'completed':
-        return Colors.green;
+        return Colors.black87;
       case 'cancelled':
       case 'rejected':
-        return Colors.red;
+        return Colors.black87;
       default:
         return Colors.grey;
     }

@@ -38,7 +38,7 @@ class OrderHistoryItemWidget extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.deepOrange,
+                      color: Colors.black87,
                     ),
                   ),
                 ],
@@ -92,15 +92,15 @@ class OrderHistoryItemWidget extends StatelessWidget {
   Color _getStatusColor(OrderStatus status) {
     switch (status) {
       case OrderStatus.placed:
-        return Colors.blue;
+        return Colors.black87;
       case OrderStatus.confirmed:
-        return Colors.orange;
+        return Colors.black87;
       case OrderStatus.preparing:
-        return Colors.purple;
+        return Colors.black87;
       case OrderStatus.ready_for_pickup:
-        return Colors.green;
+        return Colors.black87;
       case OrderStatus.cancelled:
-        return Colors.red;
+        return Colors.black87;
     }
   }
 

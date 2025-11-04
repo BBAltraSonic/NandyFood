@@ -5,6 +5,7 @@ import 'package:food_delivery_app/core/providers/auth_provider.dart';
 import 'package:food_delivery_app/core/services/database_service.dart';
 import 'package:food_delivery_app/shared/models/user_profile.dart';
 import 'package:food_delivery_app/core/utils/app_logger.dart';
+import 'package:food_delivery_app/features/support/presentation/screens/customer_support_screen.dart';
 
 // Provider to fetch user profile from database
 final userProfileProvider = FutureProvider.family<UserProfile?, String>((ref, userId) async {
@@ -176,6 +177,31 @@ class ProfileScreen extends ConsumerWidget {
             _buildPreferencesSection(ref, userProfile),
             onTap: () {
               // Navigate to preferences screen
+            },
+          ),
+
+          const SizedBox(height: 10),
+          _buildProfileSection(
+            context,
+            'Customer Support',
+            Icons.support_agent,
+            const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Get help and support', style: TextStyle(fontSize: 16)),
+                SizedBox(height: 4),
+                Text(
+                  'Contact our support team for assistance',
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+              ],
+            ),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const CustomerSupportScreen(),
+                ),
+              );
             },
           ),
 

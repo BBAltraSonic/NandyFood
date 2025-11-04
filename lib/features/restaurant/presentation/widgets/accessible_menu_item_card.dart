@@ -108,15 +108,15 @@ class AccessibleMenuItemCard extends StatelessWidget {
 
                                 switch (restriction.toLowerCase()) {
                                   case 'vegetarian':
-                                    badgeColor = Colors.green;
+                                    badgeColor = Colors.black87;
                                     badgeText = 'Veg';
                                     break;
                                   case 'vegan':
-                                    badgeColor = Colors.green.shade700;
+                                    badgeColor = Colors.black87.shade700;
                                     badgeText = 'Vegan';
                                     break;
                                   case 'gluten-free':
-                                    badgeColor = Colors.blue;
+                                    badgeColor = Colors.black87;
                                     badgeText = 'GF';
                                     break;
                                   default:

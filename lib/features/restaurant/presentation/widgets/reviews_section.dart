@@ -115,8 +115,8 @@ class _ReviewsSectionState extends ConsumerState<ReviewsSection> {
                 icon: const Icon(Icons.rate_review),
                 label: const Text('See All Reviews'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.deepOrange,
-                  side: const BorderSide(color: Colors.deepOrange),
+                  foregroundColor: Colors.black87,
+                  side: const BorderSide(color: Colors.black87),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
                     vertical: 12,

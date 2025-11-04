@@ -1,14 +1,13 @@
 #!/usr/bin/env dart
 
-import 'dart:io';
-import 'dart:convert';
-
 /// Payment System Verification Tool
 ///
 /// This script verifies the payment system integration and generates a comprehensive
 /// report about the current state of payment capabilities.
 library;
 
+import 'dart:io';
+import 'dart:convert';
 import 'package:food_delivery_app/core/config/payment_config.dart';
 import 'package:food_delivery_app/core/services/payment_service.dart';
 import 'package:food_delivery_app/core/services/payfast_service.dart';

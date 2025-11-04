@@ -7,8 +7,11 @@ import 'package:food_delivery_app/features/home/presentation/screens/home_screen
 import 'package:food_delivery_app/features/favourites/presentation/screens/favourites_screen.dart';
 import 'package:food_delivery_app/features/order/presentation/screens/order_history_screen.dart';
 import 'package:food_delivery_app/features/profile/presentation/screens/profile_screen.dart';
+import 'package:food_delivery_app/features/support/presentation/screens/customer_support_screen.dart';
 import 'package:food_delivery_app/shared/widgets/modern_bottom_navigation.dart';
 import 'package:food_delivery_app/features/order/presentation/providers/cart_provider.dart';
+import 'package:food_delivery_app/shared/widgets/role_switcher_widget.dart';
+import 'package:food_delivery_app/features/support/presentation/widgets/support_chat_widget.dart';
 
 class MainNavigationScreen extends ConsumerStatefulWidget {
   final int initialIndex;
@@ -63,15 +66,38 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
     final cartItemCount = cartState.items.length;
 
     return Scaffold(
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: _onPageChanged,
-        physics: const NeverScrollableScrollPhysics(), // Disable swipe
-        children: const [
-          HomeScreen(),           // Index 0: Home
-          FavouritesScreen(),     // Index 1: Favourites
-          OrderHistoryScreen(),   // Index 2: Orders
-          ProfileScreen(),        // Index 3: Profile
+      body: Stack(
+        children: [
+          Column(
+            children: [
+              // Role Switcher Header
+              Container(
+                color: Colors.white,
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: RoleSwitcherWidget(
+                    isCompact: true,
+                  ),
+                ),
+              ),
+              // Main Content
+              Expanded(
+                child: PageView(
+                  controller: _pageController,
+                  onPageChanged: _onPageChanged,
+                  physics: const NeverScrollableScrollPhysics(), // Disable swipe
+                  children: const [
+                    HomeScreen(),           // Index 0: Home
+                    FavouritesScreen(),     // Index 1: Favourites
+                    OrderHistoryScreen(),   // Index 2: Orders
+                    ProfileScreen(),        // Index 3: Profile
+                  ],
+                ),
+              ),
+            ],
+          ),
+          // Floating Support Chat Widget
+          const SupportChatWidget(),
         ],
       ),
       bottomNavigationBar: ModernBottomNavigation(

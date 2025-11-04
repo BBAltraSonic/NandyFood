@@ -41,7 +41,7 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please select a cancellation reason'),
-          backgroundColor: Colors.orange,
+          backgroundColor: Colors.black87,
         ),
       );
       return;
@@ -60,7 +60,7 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Order cancelled successfully'),
-            backgroundColor: Colors.green,
+            backgroundColor: Colors.black87,
           ),
         );
       }
@@ -69,7 +69,7 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to cancel order: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.black87,
           ),
         );
       }
@@ -105,7 +105,7 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
             Text(
               'Please let us know why you\'re cancelling:',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
+                color: Colors.grey.shade600,
               ),
             ),
             const SizedBox(height: 16),
@@ -155,19 +155,19 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.blue[50],
+                color: Colors.black87[50],
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.info_outline, size: 20, color: Colors.blue[700]),
+                  Icon(Icons.info_outline, size: 20, color: Colors.black87[700]),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'If the restaurant has already started preparing your order, you may be charged a cancellation fee.',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: Colors.blue[900],
+                        color: Colors.black87[900],
                       ),
                     ),
                   ),

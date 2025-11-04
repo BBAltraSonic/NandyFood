@@ -44,7 +44,7 @@ class _OperatingHoursWidgetState extends State<OperatingHoursWidget> {
                     width: 12,
                     height: 12,
                     decoration: BoxDecoration(
-                      color: isOpen ? Colors.green : Colors.red,
+                      color: isOpen ? Colors.black87 : Colors.black87,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -61,7 +61,7 @@ class _OperatingHoursWidgetState extends State<OperatingHoursWidget> {
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: isOpen ? Colors.green : Colors.red,
+                                color: isOpen ? Colors.black87 : Colors.black87,
                               ),
                             ),
                           ],
@@ -130,7 +130,7 @@ class _OperatingHoursWidgetState extends State<OperatingHoursWidget> {
                               fontWeight:
                                   isToday ? FontWeight.bold : FontWeight.normal,
                               color: isToday
-                                  ? Colors.deepOrange
+                                  ? Colors.black87
                                   : Colors.grey.shade700,
                             ),
                           ),
@@ -141,7 +141,7 @@ class _OperatingHoursWidgetState extends State<OperatingHoursWidget> {
                               fontWeight:
                                   isToday ? FontWeight.bold : FontWeight.normal,
                               color: isToday
-                                  ? Colors.deepOrange
+                                  ? Colors.black87
                                   : Colors.grey.shade600,
                             ),
                           ),

@@ -98,7 +98,7 @@ class _CouponInputWidgetState extends State<CouponInputWidget> {
                       suffixIcon: hasAppliedCode
                           ? Icon(
                               Icons.check_circle,
-                              color: Colors.green[600],
+                              color: Colors.black87[600],
                             )
                           : null,
                     ),
@@ -113,8 +113,8 @@ class _CouponInputWidgetState extends State<CouponInputWidget> {
                       _focusNode.requestFocus();
                     },
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.red,
-                      side: const BorderSide(color: Colors.red),
+                      foregroundColor: Colors.black87,
+                      side: const BorderSide(color: Colors.black87),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 20,
                         vertical: 12,

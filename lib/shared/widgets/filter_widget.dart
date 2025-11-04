@@ -49,11 +49,11 @@ class _FilterWidgetState extends State<FilterWidget> {
               onSelected: (selected) {
                 _toggleOption(option);
               },
-              selectedColor: Colors.deepOrange.withValues(alpha: 0.2),
+              selectedColor: Colors.black54.withValues(alpha: 0.2),
               backgroundColor: Colors.grey.shade100,
               labelStyle: TextStyle(
                 color: option.isSelected
-                    ? Colors.deepOrange
+                    ? Colors.black54
                     : Colors.grey.shade700,
                 fontWeight: option.isSelected
                     ? FontWeight.bold
@@ -63,7 +63,7 @@ class _FilterWidgetState extends State<FilterWidget> {
                 borderRadius: BorderRadius.circular(20),
                 side: BorderSide(
                   color: option.isSelected
-                      ? Colors.deepOrange
+                      ? Colors.black54
                       : Colors.grey.shade300,
                 ),
               ),

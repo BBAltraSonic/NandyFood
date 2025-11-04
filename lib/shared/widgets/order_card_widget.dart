@@ -179,8 +179,8 @@ class OrderCardWidget extends StatelessWidget {
 
     switch (status.toLowerCase()) {
       case 'pending':
-        backgroundColor = Colors.orange.withValues(alpha: 0.15);
-        textColor = Colors.orange.shade700;
+        backgroundColor = Colors.grey.shade200;
+        textColor = Colors.black87;
         displayStatus = 'Pending';
         break;
       case 'confirmed':
@@ -195,13 +195,13 @@ class OrderCardWidget extends StatelessWidget {
         displayStatus = 'Ready';
         break;
       case 'completed':
-        backgroundColor = Colors.green.withValues(alpha: 0.15);
-        textColor = Colors.green.shade700;
+        backgroundColor = Colors.grey.shade200;
+        textColor = Colors.black87;
         displayStatus = 'Finished';
         break;
       case 'cancelled':
-        backgroundColor = Colors.red.withValues(alpha: 0.15);
-        textColor = Colors.red.shade700;
+        backgroundColor = Colors.grey.shade200;
+        textColor = Colors.black87;
         displayStatus = 'Cancelled';
         break;
       default:

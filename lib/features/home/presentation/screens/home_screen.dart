@@ -10,7 +10,6 @@ import 'package:food_delivery_app/features/home/presentation/widgets/categories_
 import 'package:food_delivery_app/features/home/presentation/widgets/order_again_section.dart';
 import 'package:food_delivery_app/features/home/presentation/providers/map_view_provider.dart';
 import 'package:food_delivery_app/core/services/location_service.dart';
-import 'package:food_delivery_app/shared/widgets/floating_cart_button.dart';
 import 'package:food_delivery_app/core/providers/auth_provider.dart';
 import 'package:food_delivery_app/shared/theme/design_tokens.dart';
 import 'package:food_delivery_app/shared/models/restaurant.dart';
@@ -94,8 +93,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 : _buildListView(context, theme, restaurantState),
           ),
         ),
-        // Floating Cart Button
-        const FloatingCartButton(),
       ],
     );
   }
@@ -166,7 +163,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         // Full-screen map
         Positioned.fill(
           child: HomeMapViewWidget(
-            restaurants: restaurantState.restaurants.where((r) => r.id.isNotEmpty).toList(),
+            restaurants: restaurantState.restaurants.where((Restaurant r) => r.id.isNotEmpty).toList(),
             userLocation: _userLocation,
             height: double.infinity,
             showRestaurantPreview: true,

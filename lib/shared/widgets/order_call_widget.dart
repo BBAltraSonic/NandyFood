@@ -432,16 +432,16 @@ class _OrderCallWidgetState extends ConsumerState<OrderCallWidget>
     Color qualityColor;
     switch (_connectionQuality) {
       case 'excellent':
-        qualityColor = Colors.green;
+        qualityColor = Colors.black54;
         break;
       case 'good':
         qualityColor = Colors.lightGreen;
         break;
       case 'fair':
-        qualityColor = Colors.orange;
+        qualityColor = Colors.black54;
         break;
       case 'poor':
-        qualityColor = Colors.red;
+        qualityColor = Colors.black87;
         break;
       default:
         qualityColor = Colors.grey;
@@ -498,12 +498,12 @@ class _OrderCallWidgetState extends ConsumerState<OrderCallWidget>
       children: [
         _buildCallButton(
           icon: Icons.call_end,
-          color: Colors.red,
+          color: Colors.black87,
           onPressed: _rejectCall,
         ),
         _buildCallButton(
           icon: Icons.call,
-          color: Colors.green,
+          color: Colors.black54,
           onPressed: _acceptCall,
         ),
       ],
@@ -516,7 +516,7 @@ class _OrderCallWidgetState extends ConsumerState<OrderCallWidget>
       children: [
         _buildCallButton(
           icon: Icons.call_end,
-          color: Colors.red,
+          color: Colors.black87,
           onPressed: _endCall,
         ),
       ],
@@ -540,7 +540,7 @@ class _OrderCallWidgetState extends ConsumerState<OrderCallWidget>
           ),
         _buildCallButton(
           icon: Icons.call_end,
-          color: Colors.red,
+          color: Colors.black87,
           onPressed: _endCall,
         ),
       ],

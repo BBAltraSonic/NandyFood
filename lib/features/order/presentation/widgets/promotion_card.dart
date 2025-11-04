@@ -65,7 +65,7 @@ class PromotionCard extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.orange[100],
+                        color: Colors.grey.shade200,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -74,14 +74,14 @@ class PromotionCard extends StatelessWidget {
                           Icon(
                             Icons.access_time,
                             size: 14,
-                            color: Colors.orange[700],
+                            color: Colors.black87,
                           ),
                           const SizedBox(width: 4),
                           Text(
                             promotion.timeRemainingText,
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.orange[700],
+                              color: Colors.black87,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -105,7 +105,7 @@ class PromotionCard extends StatelessWidget {
                 promotion.description,
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.grey[600],
+                  color: Colors.grey.shade600,
                 ),
               ),
               const SizedBox(height: 12),
@@ -120,10 +120,10 @@ class PromotionCard extends StatelessWidget {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.grey[100],
+                        color: Colors.grey.shade100,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: Colors.grey[300]!,
+                          color: Colors.grey.shade300,
                           style: BorderStyle.solid,
                           width: 1,
                         ),
@@ -154,7 +154,7 @@ class PromotionCard extends StatelessWidget {
                             child: Icon(
                               Icons.copy,
                               size: 18,
-                              color: Colors.grey[600],
+                              color: Colors.grey.shade600,
                             ),
                           ),
                         ],
@@ -181,13 +181,13 @@ class PromotionCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(Icons.info_outline, size: 14, color: Colors.grey[600]),
+                    Icon(Icons.info_outline, size: 14, color: Colors.grey.shade600),
                     const SizedBox(width: 4),
                     Text(
                       'Min order: R${promotion.minOrderAmount!.toStringAsFixed(2)}',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey[600],
+                        color: Colors.grey.shade600,
                       ),
                     ),
                   ],
@@ -197,13 +197,13 @@ class PromotionCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Icon(Icons.star_outline, size: 14, color: Colors.grey[600]),
+                    Icon(Icons.star_outline, size: 14, color: Colors.grey.shade600),
                     const SizedBox(width: 4),
                     Text(
                       'First order only',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey[600],
+                        color: Colors.grey.shade600,
                       ),
                     ),
                   ],

@@ -42,7 +42,7 @@ class _RatingStarsState extends State<RatingStars> {
 
   @override
   Widget build(BuildContext context) {
-    final activeColor = widget.activeColor ?? Colors.amber;
+    final activeColor = widget.activeColor ?? Colors.black54;
     final inactiveColor = widget.inactiveColor ?? Colors.grey[300];
 
     return Row(
@@ -94,7 +94,7 @@ class RatingDisplay extends StatelessWidget {
         Icon(
           Icons.star,
           size: size,
-          color: Colors.amber,
+          color: Colors.black54,
         ),
         if (showNumber) ...[
           const SizedBox(width: 4),

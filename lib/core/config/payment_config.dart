@@ -4,7 +4,7 @@ import 'package:food_delivery_app/core/utils/app_logger.dart';
 
 /// Payment method types available in the app
 enum PaymentMethod {
-  cashOnDelivery,
+  cashOnPickup,
   payfast,
   card,
   digitalWallet,
@@ -15,7 +15,7 @@ class PaymentConfig {
   static bool _isInitialized = false;
 
   // Payment method enablement flags
-  static bool _cashOnDeliveryEnabled = true;
+  static bool _cashOnPickupEnabled = true;
   static bool _payfastEnabled = false;
   static bool _cardPaymentEnabled = false;
   static bool _digitalWalletEnabled = false;
@@ -41,7 +41,7 @@ class PaymentConfig {
 
     try {
       // Load payment method flags from environment
-      _cashOnDeliveryEnabled = _getBoolEnv('ENABLE_CASH_ON_DELIVERY', defaultValue: true);
+      _cashOnPickupEnabled = _getBoolEnv('ENABLE_CASH_ON_PICKUP', defaultValue: true);
       _payfastEnabled = _getBoolEnv('ENABLE_PAYFAST', defaultValue: false);
       _cardPaymentEnabled = _getBoolEnv('ENABLE_CARD_PAYMENT', defaultValue: false);
       _digitalWalletEnabled = _getBoolEnv('ENABLE_DIGITAL_WALLET', defaultValue: false);
@@ -68,7 +68,7 @@ class PaymentConfig {
     } catch (e, stack) {
       AppLogger.error('Failed to initialize payment configuration', error: e, stack: stack);
       // Fallback to cash-only mode on error
-      _cashOnDeliveryEnabled = true;
+      _cashOnPickupEnabled = true;
       _payfastEnabled = false;
       _cardPaymentEnabled = false;
       _digitalWalletEnabled = false;
@@ -103,7 +103,7 @@ class PaymentConfig {
   /// Log payment configuration (without sensitive data)
   static void _logPaymentConfig() {
     final config = {
-      'cash_on_delivery': _cashOnDeliveryEnabled,
+      'cash_on_pickup': _cashOnPickupEnabled,
       'payfast': _payfastEnabled,
       'payfast_sandbox': _payfastEnabled ? _payfastSandboxMode : null,
       'card_payment': _cardPaymentEnabled,
@@ -118,8 +118,8 @@ class PaymentConfig {
 
   // ==================== GETTERS ====================
 
-  /// Check if cash on delivery is enabled
-  static bool get isCashOnDeliveryEnabled => _cashOnDeliveryEnabled;
+  /// Check if cash on pickup is enabled
+  static bool get isCashOnPickupEnabled => _cashOnPickupEnabled;
 
   /// Check if PayFast is enabled
   static bool get isPayfastEnabled => _payfastEnabled;
@@ -152,7 +152,7 @@ class PaymentConfig {
   static List<PaymentMethod> getEnabledPaymentMethods() {
     final methods = <PaymentMethod>[];
 
-    if (_cashOnDeliveryEnabled) methods.add(PaymentMethod.cashOnDelivery);
+    if (_cashOnPickupEnabled) methods.add(PaymentMethod.cashOnPickup);
     if (_payfastEnabled) methods.add(PaymentMethod.payfast);
     if (_cardPaymentEnabled) methods.add(PaymentMethod.card);
     if (_digitalWalletEnabled) methods.add(PaymentMethod.digitalWallet);
@@ -162,13 +162,13 @@ class PaymentConfig {
 
   /// Get default payment method
   static PaymentMethod getDefaultPaymentMethod() {
-    if (_cashOnDeliveryEnabled) return PaymentMethod.cashOnDelivery;
+    if (_cashOnPickupEnabled) return PaymentMethod.cashOnPickup;
     if (_payfastEnabled) return PaymentMethod.payfast;
     if (_cardPaymentEnabled) return PaymentMethod.card;
     if (_digitalWalletEnabled) return PaymentMethod.digitalWallet;
 
-    // Fallback to cash on delivery
-    return PaymentMethod.cashOnDelivery;
+    // Fallback to cash on pickup
+    return PaymentMethod.cashOnPickup;
   }
 
   // ==================== VALIDATION ====================
@@ -176,8 +176,8 @@ class PaymentConfig {
   /// Check if a payment method is enabled
   static bool isPaymentMethodEnabled(PaymentMethod method) {
     switch (method) {
-      case PaymentMethod.cashOnDelivery:
-        return _cashOnDeliveryEnabled;
+      case PaymentMethod.cashOnPickup:
+        return _cashOnPickupEnabled;
       case PaymentMethod.payfast:
         return _payfastEnabled;
       case PaymentMethod.card:
@@ -195,8 +195,8 @@ class PaymentConfig {
       return false;
     }
 
-    // Check maximum cash amount for COD
-    if (method == PaymentMethod.cashOnDelivery && amount > _maxCashAmount) {
+    // Check maximum cash amount for cash pickup
+    if (method == PaymentMethod.cashOnPickup && amount > _maxCashAmount) {
       AppLogger.warning('Cash payment exceeds maximum: \$$amount > \$$_maxCashAmount');
       return false;
     }
@@ -207,8 +207,8 @@ class PaymentConfig {
   /// Get payment method display name
   static String getPaymentMethodName(PaymentMethod method) {
     switch (method) {
-      case PaymentMethod.cashOnDelivery:
-        return 'Cash on Delivery';
+      case PaymentMethod.cashOnPickup:
+        return 'Cash on Pickup';
       case PaymentMethod.payfast:
         return 'PayFast';
       case PaymentMethod.card:
@@ -221,8 +221,8 @@ class PaymentConfig {
   /// Get payment method description
   static String getPaymentMethodDescription(PaymentMethod method) {
     switch (method) {
-      case PaymentMethod.cashOnDelivery:
-        return 'Pay with cash when your order is delivered';
+      case PaymentMethod.cashOnPickup:
+        return 'Pay with cash when you collect your order';
       case PaymentMethod.payfast:
         return 'Secure online payment via PayFast';
       case PaymentMethod.card:
@@ -235,7 +235,7 @@ class PaymentConfig {
   /// Get payment method icon name
   static String getPaymentMethodIcon(PaymentMethod method) {
     switch (method) {
-      case PaymentMethod.cashOnDelivery:
+      case PaymentMethod.cashOnPickup:
         return 'payments'; // Material Icons name
       case PaymentMethod.payfast:
         return 'account_balance';
@@ -254,8 +254,8 @@ class PaymentConfig {
       'is_initialized': _isInitialized,
       'enabled_methods': getEnabledPaymentMethods().map((m) => m.name).toList(),
       'default_method': getDefaultPaymentMethod().name,
-      'cash_on_delivery': {
-        'enabled': _cashOnDeliveryEnabled,
+      'cash_on_pickup': {
+        'enabled': _cashOnPickupEnabled,
         'max_amount': _maxCashAmount,
       },
       'payfast': {
@@ -311,8 +311,8 @@ class PaymentConfig {
     }
 
     switch (method) {
-      case PaymentMethod.cashOnDelivery:
-        _cashOnDeliveryEnabled = enabled;
+      case PaymentMethod.cashOnPickup:
+        _cashOnPickupEnabled = enabled;
         break;
       case PaymentMethod.payfast:
         _payfastEnabled = enabled;

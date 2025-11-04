@@ -140,9 +140,9 @@ class AccessibleOrderTrackingWidget extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: step.isCompleted
-                        ? Colors.green
+                        ? Colors.black87
                         : (step.isActive
-                              ? Colors.orange
+                              ? Colors.black87
                               : Colors.grey.shade300),
                   ),
                   child: step.isCompleted
@@ -171,7 +171,7 @@ class AccessibleOrderTrackingWidget extends StatelessWidget {
                 height: 20,
                 margin: const EdgeInsets.only(left: 15),
                 color: steps[index].isCompleted
-                    ? Colors.green
+                    ? Colors.black87
                     : Colors.grey.shade300,
               ),
           ];
@@ -245,7 +245,7 @@ class AccessibleOrderTrackingWidget extends StatelessWidget {
             child: const Text('Cancel Order'),
             onPressed: onCancelOrder!,
             semanticsLabel: 'Cancel order',
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.black87,
             foregroundColor: Colors.white,
           ),
       ],
@@ -270,12 +270,12 @@ class AccessibleOrderTrackingWidget extends StatelessWidget {
     switch (status) {
       case OrderStatus.placed:
       case OrderStatus.confirmed:
-        return Colors.orange;
+        return Colors.black87;
       case OrderStatus.preparing:
       case OrderStatus.ready_for_pickup:
-        return Colors.blue;
+        return Colors.black87;
       case OrderStatus.cancelled:
-        return Colors.red;
+        return Colors.black87;
     }
   }
 

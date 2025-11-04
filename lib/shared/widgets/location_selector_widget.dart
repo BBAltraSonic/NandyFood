@@ -255,7 +255,7 @@ class _LocationSelectorWidgetState extends State<LocationSelectorWidget> {
         if (_errorMessage != null) ...[
           Card(
             margin: EdgeInsets.zero,
-            color: Colors.red.shade50,
+            color: Colors.grey.shade100,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
@@ -263,7 +263,7 @@ class _LocationSelectorWidgetState extends State<LocationSelectorWidget> {
               padding: const EdgeInsets.all(16),
               child: Text(
                 _errorMessage!,
-                style: const TextStyle(color: Colors.red),
+                style: const TextStyle(color: Colors.black87),
               ),
             ),
           ),

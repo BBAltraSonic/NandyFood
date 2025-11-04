@@ -236,11 +236,11 @@ class _LiveTrackingMapState extends State<LiveTrackingMap>
           : 0,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.green,
+          color: Colors.black87,
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.green.withValues(alpha: 0.5),
+              color: Colors.black87.withValues(alpha: 0.5),
               blurRadius: 10,
               spreadRadius: 2,
             ),
@@ -258,11 +258,11 @@ class _LiveTrackingMapState extends State<LiveTrackingMap>
   Widget _buildDestinationMarker() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.red,
+        color: Colors.black87,
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: Colors.red.withValues(alpha: 0.5),
+            color: Colors.black87.withValues(alpha: 0.5),
             blurRadius: 8,
             spreadRadius: 2,
           ),

@@ -106,9 +106,9 @@ class ReviewCard extends StatelessWidget {
                         value: 'delete',
                         child: Row(
                           children: [
-                            Icon(Icons.delete, size: 20, color: Colors.red),
+                            Icon(Icons.delete, size: 20, color: Colors.black87),
                             SizedBox(width: 8),
-                            Text('Delete', style: TextStyle(color: Colors.red)),
+                            Text('Delete', style: TextStyle(color: Colors.black87)),
                           ],
                         ),
                       ),
@@ -165,7 +165,7 @@ class ReviewCard extends StatelessWidget {
               Navigator.pop(context);
               onDelete?.call();
             },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(foregroundColor: Colors.black87),
             child: const Text('Delete'),
           ),
         ],
@@ -241,14 +241,14 @@ class ReviewSummaryCard extends StatelessWidget {
                             style: const TextStyle(fontSize: 12),
                           ),
                           const SizedBox(width: 4),
-                          const Icon(Icons.star, size: 12, color: Colors.amber),
+                          const Icon(Icons.star, size: 12, color: Colors.black87),
                           const SizedBox(width: 8),
                           Expanded(
                             child: LinearProgressIndicator(
                               value: percentage,
                               backgroundColor: Colors.grey[200],
                               valueColor: const AlwaysStoppedAnimation<Color>(
-                                Colors.amber,
+                                Colors.black87,
                               ),
                             ),
                           ),

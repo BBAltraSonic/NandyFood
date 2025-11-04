@@ -12,19 +12,19 @@ class ErrorMessageWidget extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, color: Colors.red, size: 60),
+          const Icon(Icons.error_outline, color: Colors.black87, size: 60),
           const SizedBox(height: 16),
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 16, color: Colors.red),
+            style: const TextStyle(fontSize: 16, color: Colors.black87),
           ),
           if (onRetry != null) ...[
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: onRetry,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
+                backgroundColor: Colors.black87,
                 foregroundColor: Colors.white,
               ),
               child: const Text('Retry'),

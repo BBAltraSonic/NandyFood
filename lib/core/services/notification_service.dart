@@ -3,6 +3,7 @@ import 'package:food_delivery_app/core/routing/route_paths.dart';
 import 'package:food_delivery_app/core/utils/app_logger.dart';
 import 'package:food_delivery_app/shared/models/order_message.dart';
 import 'package:food_delivery_app/shared/models/order_call.dart';
+import 'package:food_delivery_app/shared/models/support_ticket.dart';
 
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -224,6 +225,78 @@ class NotificationService {
       title: title,
       body: body,
       payload: payload,
+    );
+  }
+
+  // Show support ticket notifications
+  Future<void> showSupportTicketCreated({
+    required String ticketId,
+    required String subject,
+  }) async {
+    await showNotification(
+      id: ticketId.hashCode + 5000,
+      title: 'Support Ticket Created',
+      body: 'Your support ticket "$subject" has been created successfully',
+      payload: '/support/ticket/$ticketId',
+    );
+  }
+
+  Future<void> showSupportTicketStatusUpdate({
+    required String ticketId,
+    required String subject,
+    required SupportTicketStatus newStatus,
+  }) async {
+    String statusMessage;
+    switch (newStatus) {
+      case SupportTicketStatus.inProgress:
+        statusMessage = 'is now being reviewed by our support team';
+        break;
+      case SupportTicketStatus.waitingOnCustomer:
+        statusMessage = 'requires your response';
+        break;
+      case SupportTicketStatus.resolved:
+        statusMessage = 'has been resolved';
+        break;
+      case SupportTicketStatus.closed:
+        statusMessage = 'has been closed';
+        break;
+      default:
+        statusMessage = 'status has been updated';
+    }
+
+    await showNotification(
+      id: ticketId.hashCode + 6000,
+      title: 'Support Ticket Update',
+      body: 'Your ticket "$subject" $statusMessage',
+      payload: '/support/ticket/$ticketId',
+    );
+  }
+
+  Future<void> showSupportMessageReceived({
+    required String ticketId,
+    required String subject,
+    required String message,
+    bool isFromSupport = true,
+  }) async {
+    final sender = isFromSupport ? 'Support Team' : 'You';
+    await showNotification(
+      id: ticketId.hashCode + 7000,
+      title: 'New Support Message',
+      body: '$sender: ${message.length > 50 ? '${message.substring(0, 50)}...' : message}',
+      payload: '/support/ticket/$ticketId',
+    );
+  }
+
+  Future<void> showSupportTicketAssigned({
+    required String ticketId,
+    required String subject,
+    required String assignedToName,
+  }) async {
+    await showNotification(
+      id: ticketId.hashCode + 8000,
+      title: 'Support Ticket Assigned',
+      body: 'Your ticket "$subject" has been assigned to $assignedToName',
+      payload: '/support/ticket/$ticketId',
     );
   }
 
@@ -752,6 +825,26 @@ class NotificationService {
           enableVibration: false,
         ),
       );
+    }
+  }
+
+  /// Dispose notification service and clean up resources
+  Future<void> dispose() async {
+    try {
+      // Cancel all pending notifications
+      await cancelAllNotifications();
+
+      // Re-initialize with null settings to clean up resources
+      await _notifications.initialize(
+        const InitializationSettings(
+          android: AndroidInitializationSettings(''),
+          iOS: DarwinInitializationSettings(),
+        ),
+      );
+
+      AppLogger.info('NotificationService disposed successfully');
+    } catch (e) {
+      AppLogger.error('Failed to dispose NotificationService: $e');
     }
   }
 }

@@ -48,7 +48,7 @@ class PaymentMethodSelectorWidget extends ConsumerWidget {
             padding: const EdgeInsets.all(8.0),
             child: Text(
               'Error: ${paymentMethodsState.errorMessage}',
-              style: const TextStyle(color: Colors.red),
+              style: const TextStyle(color: Colors.black87),
             ),
           )
         else if (paymentMethodsState.paymentMethods.isEmpty)
@@ -78,7 +78,7 @@ class PaymentMethodSelectorWidget extends ConsumerWidget {
                 }
               },
               secondary: method.isDefault
-                  ? const Icon(Icons.star, color: Colors.amber)
+                  ? const Icon(Icons.star, color: Colors.black54)
                   : null,
             ),
           ),
