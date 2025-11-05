@@ -4,17 +4,26 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:latlong2/latlong.dart' as ll;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Configuration for Google Maps integration
 class MapConfig {
   MapConfig._();
 
-  /// Google Maps API key (loaded from environment)
+  /// Google Maps API key (loaded from .env file)
   static String get googleMapsApiKey {
-    // In production, this should be loaded from secure storage
-    // For development, you can set this in your .env file
-    return const String.fromEnvironment('GOOGLE_MAPS_API_KEY',
-           defaultValue: 'your_google_maps_api_key_here');
+    debugPrint('MapConfig: googleMapsApiKey getter called');
+    // Load from .env file with fallback for safety
+    String? apiKey = dotenv.env['GOOGLE_MAPS_API_KEY'];
+    if (apiKey == null || apiKey.isEmpty || apiKey == 'YOUR_API_KEY_HERE') {
+      // Fallback to the hardcoded key as backup
+      apiKey = 'AIzaSyBYiFP4Y-Hi9d-JboqXCcDDP5Kc94iL1ZY';
+      debugPrint('MapConfig: Using fallback API key');
+    } else {
+      debugPrint('MapConfig: Using API key from .env file');
+    }
+    debugPrint('MapConfig: API key length: ${apiKey.length}');
+    return apiKey;
   }
 
   /// Default map center (New York City)
@@ -203,7 +212,10 @@ class MapConfig {
   ''';
 
   /// Get the dark mode map style for Google Maps
-  static String get darkMapStyle => _darkMapStyleJson;
+  static String get darkMapStyle {
+    debugPrint('MapConfig: darkMapStyle getter called');
+    return _darkMapStyleJson;
+  }
 
   /// Create default camera position
   static CameraPosition getDefaultCameraPosition({

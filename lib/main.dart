@@ -25,6 +25,7 @@ import 'package:food_delivery_app/features/order/presentation/screens/promo_deta
 import 'package:food_delivery_app/features/order/presentation/screens/checkout_screen.dart';
 import 'package:food_delivery_app/features/home/presentation/screens/search_screen.dart';
 import 'package:food_delivery_app/features/onboarding/presentation/screens/onboarding_screen.dart';
+import 'package:food_delivery_app/test_map_screen.dart';
 
 import 'package:food_delivery_app/core/routing/route_paths.dart';
 import 'package:food_delivery_app/core/routing/route_guards.dart';
@@ -285,6 +286,10 @@ class _FoodDeliveryAppState extends ConsumerState<FoodDeliveryApp> {
         GoRoute(
           path: '/home',
           builder: (context, state) => const MainNavigationScreen(),
+        ),
+        GoRoute(
+          path: '/test-map',
+          builder: (context, state) => const TestMapScreen(),
         ),
         GoRoute(
           path: '/profile/payment-methods',
