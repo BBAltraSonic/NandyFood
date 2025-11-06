@@ -44,6 +44,7 @@ import 'package:food_delivery_app/features/restaurant_dashboard/presentation/scr
 // Admin screens
 import 'package:food_delivery_app/features/admin/presentation/screens/admin_dashboard_screen.dart';
 import 'package:food_delivery_app/features/admin/presentation/screens/admin_users_screen.dart';
+import 'package:food_delivery_app/features/admin/presentation/screens/admin_promotions_screen.dart';
 import 'package:food_delivery_app/features/admin/presentation/screens/admin_restaurants_screen.dart';
 import 'package:food_delivery_app/features/admin/presentation/screens/admin_orders_screen.dart';
 import 'package:food_delivery_app/features/admin/presentation/screens/admin_analytics_screen.dart';
@@ -349,6 +350,11 @@ class _FoodDeliveryAppState extends ConsumerState<FoodDeliveryApp> {
         GoRoute(
           path: RoutePaths.adminDashboard,
           builder: (context, state) => const AdminDashboardScreen(),
+          redirect: (context, state) => RouteGuards.requireAdminRole(state),
+        ),
+        GoRoute(
+          path: '/admin/promotions',
+          builder: (context, state) => const AdminPromotionsScreen(),
           redirect: (context, state) => RouteGuards.requireAdminRole(state),
         ),
         GoRoute(

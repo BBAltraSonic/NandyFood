@@ -96,8 +96,6 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
               ),
             ],
           ),
-          // Floating Support Chat Widget
-          const SupportChatWidget(),
         ],
       ),
       bottomNavigationBar: ModernBottomNavigation(

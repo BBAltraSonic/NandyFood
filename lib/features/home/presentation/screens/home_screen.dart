@@ -16,7 +16,11 @@ import 'package:food_delivery_app/features/home/presentation/widgets/dish_recomm
 import 'package:food_delivery_app/features/home/presentation/widgets/trending_now_section.dart';
 import 'package:food_delivery_app/features/home/presentation/widgets/quick_reorder_section.dart';
 import 'package:food_delivery_app/features/home/presentation/widgets/chefs_specials_section.dart';
+import 'package:food_delivery_app/features/home/presentation/widgets/popular_restaurants_section.dart';
+import 'package:food_delivery_app/features/home/presentation/widgets/featured_restaurants_section.dart';
+import 'package:food_delivery_app/features/home/presentation/widgets/nearby_restaurants_section.dart';
 import 'package:food_delivery_app/features/home/presentation/providers/map_view_provider.dart';
+import 'package:food_delivery_app/features/home/presentation/providers/home_restaurant_provider.dart';
 import 'package:food_delivery_app/core/services/location_service.dart';
 import 'package:food_delivery_app/core/providers/auth_provider.dart';
 import 'package:food_delivery_app/shared/theme/design_tokens.dart';
@@ -41,6 +45,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     _loadUserLocation();
     // Use Future.microtask to delay provider modification until after build
     Future.microtask(_loadRestaurants);
+    // Initialize the advanced home restaurant provider with location and personalization
+    Future.microtask(_initializeHomeRestaurantProvider);
     _scrollController.addListener(_onScroll);
 
     // Initialize address with current location
@@ -114,6 +120,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _loadRestaurants() async {
     await ref.read(restaurantProvider.notifier).loadRestaurants();
+  }
+
+  // Initialize the advanced home restaurant provider
+  Future<void> _initializeHomeRestaurantProvider() async {
+    await ref.read(homeRestaurantProvider.notifier).initialize();
   }
 
   // Initialize address with current location
@@ -269,6 +280,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
             const SliverToBoxAdapter(child: SizedBox(height: 40)),
 
+            // Categories Section (moved up)
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            SliverToBoxAdapter(
+              child: _buildCategoriesSection(theme, restaurantState),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 32)),
+
+            // Popular Restaurants Section (new)
+            SliverToBoxAdapter(
+              child: RepaintBoundary(
+                child: const PopularRestaurantsSection(),
+              ),
+            ),
+
+            // Featured Restaurants Section (new)
+            SliverToBoxAdapter(
+              child: RepaintBoundary(
+                child: const FeaturedRestaurantsSection(),
+              ),
+            ),
+
+            // Nearby Restaurants Section (new)
+            SliverToBoxAdapter(
+              child: RepaintBoundary(
+                child: const NearbyRestaurantsSection(),
+              ),
+            ),
+
             // Recommended Dishes Section
             SliverToBoxAdapter(
               child: RepaintBoundary(
@@ -281,12 +321,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
             const SliverToBoxAdapter(child: SizedBox(height: 40)),
 
-            // Order Again Section (only visible if user has past orders)
+            // Chef's Specials Section
             SliverToBoxAdapter(
               child: RepaintBoundary(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: const OrderAgainSection(),
+                  child: const ChefsSpecialsSection(),
                 ),
               ),
             ),
@@ -306,7 +346,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             const SliverToBoxAdapter(child: SizedBox(height: 40)),
 
             // Trending Now Section
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
             SliverToBoxAdapter(
               child: RepaintBoundary(
                 child: Padding(
@@ -318,42 +357,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
             const SliverToBoxAdapter(child: SizedBox(height: 40)),
 
-            // Quick Reorder Section
+            // Consolidated Reorder Section (combining Order Again and Quick Reorder)
             SliverToBoxAdapter(
               child: RepaintBoundary(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: const QuickReorderSection(),
+                  child: Column(
+                    children: [
+                      const OrderAgainSection(),
+                      const SizedBox(height: 24),
+                      const QuickReorderSection(),
+                    ],
+                  ),
                 ),
               ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 40)),
+            // Add bottom padding to prevent white space
+            const SliverToBoxAdapter(child: SizedBox(height: 60)),
 
-            // Chef's Specials Section
-            SliverToBoxAdapter(
-              child: RepaintBoundary(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: const ChefsSpecialsSection(),
-                ),
-              ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 32)),
-
-            // Categories Section
-            SliverToBoxAdapter(
-              child: _buildCategoriesSection(theme, restaurantState),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 32)),
-
-            // Nearby Pickup Spots Section (Updated from Popular Restaurants)
-            SliverToBoxAdapter(
-              child: _buildNearbyPickupSpotsSection(theme, restaurantState),
-            ),
-          ],
+            ],
         ),
       ),
     );
@@ -1015,21 +1038,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
           ),
-          const SizedBox(width: 12),
-          // User avatar
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [BrandColors.primary, BrandColors.primaryLight],
-              ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: ShadowTokens.primaryShadow,
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.person, color: Colors.white),
-              onPressed: () => context.push(RoutePaths.profile),
-            ),
-          ),
         ],
       ),
     );
@@ -1143,133 +1151,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  // Updated widget: Nearby pickup spots section
-  Widget _buildNearbyPickupSpotsSection(ThemeData theme, RestaurantState restaurantState) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Nearby Pickup Spots',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  context.push('/restaurants');
-                },
-                child: Text(
-                  'View all',
-                  style: TextStyle(
-                    color: BrandColors.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        const SizedBox(height: 20),
-
-        // Restaurant List
-        if (restaurantState.isLoading)
-          const Padding(
-            padding: EdgeInsets.all(32),
-            child: Center(child: CircularProgressIndicator()),
-          )
-        else if (restaurantState.errorMessage != null)
-          Padding(
-            padding: const EdgeInsets.all(32),
-            child: Center(
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.error_outline_rounded,
-                    size: 64,
-                    color: theme.colorScheme.error,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    restaurantState.errorMessage!,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.colorScheme.error,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _loadRestaurants,
-                    child: const Text('Try Again'),
-                  ),
-                ],
-              ),
-            ),
-          )
-        else if (restaurantState.restaurants.isEmpty)
-          Padding(
-            padding: const EdgeInsets.all(32),
-            child: Center(
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.store_outlined,
-                    size: 64,
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No pickup spots found',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Try adjusting your location or search criteria',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-          )
-        else
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              children: restaurantState.restaurants.map((restaurant) {
-                // Additional null safety check
-                if (restaurant.id.isEmpty) {
-                  return const SizedBox.shrink();
-                }
-
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: RestaurantCard(
-                    restaurant: restaurant,
-                    onTap: () {
-                      if (restaurant.id.isNotEmpty) {
-                        context.push('/restaurant/${restaurant.id}');
-                      }
-                    },
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-      ],
-    );
-  }
-
+  
 
   String _getTimeOfDay() {
     final hour = DateTime.now().hour;

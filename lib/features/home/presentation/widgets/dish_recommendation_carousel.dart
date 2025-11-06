@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:food_delivery_app/features/home/presentation/providers/dish_recommendation_provider.dart';
 import 'package:food_delivery_app/features/home/presentation/widgets/dish_card_compact.dart';
 import 'package:food_delivery_app/features/restaurant/presentation/providers/restaurant_provider.dart';
@@ -16,8 +15,8 @@ class DishRecommendationCarousel extends ConsumerStatefulWidget {
 }
 
 class _DishRecommendationCarouselState extends ConsumerState<DishRecommendationCarousel> {
-  final CarouselSliderController _carouselController = CarouselSliderController();
-  int _currentIndex = 0;
+  final ScrollController _scrollController = ScrollController();
+  bool _isAutoScrolling = false;
 
   @override
   void initState() {
@@ -25,6 +24,73 @@ class _DishRecommendationCarouselState extends ConsumerState<DishRecommendationC
     // Load recommendations when widget is initialized
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(dishRecommendationProvider.notifier).loadRecommendations();
+    });
+
+    // Setup scroll listener for infinite loading
+    _scrollController.addListener(_onScroll);
+
+    // Setup auto-scroll
+    _setupAutoScroll();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+
+    final recommendationsState = ref.read(dishRecommendationProvider);
+    final currentState = recommendationsState.value;
+
+    if (currentState == null || currentState.isLoadingMore || !currentState.hasMore) {
+      return;
+    }
+
+    // Trigger load more when we're near the end
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final currentScroll = _scrollController.position.pixels;
+    final threshold = maxScroll * 0.8; // Load more at 80% of the list
+
+    if (currentScroll >= threshold && !currentState.isLoadingMore) {
+      ref.read(dishRecommendationProvider.notifier).loadMoreRecommendations();
+    }
+  }
+
+  void _setupAutoScroll() {
+    if (_isAutoScrolling) return;
+
+    _isAutoScrolling = true;
+    Future.delayed(const Duration(seconds: 12), () {
+      if (mounted && _scrollController.hasClients && _isAutoScrolling) {
+        final maxScroll = _scrollController.position.maxScrollExtent;
+        if (maxScroll > 0) {
+          _scrollController.animateTo(
+            maxScroll * 0.8, // Scroll to 80% of the list
+            duration: const Duration(milliseconds: 1500),
+            curve: Curves.easeInOut,
+          ).then((_) {
+            // Reset to start after a delay
+            Future.delayed(const Duration(seconds: 3), () {
+              if (mounted && _scrollController.hasClients) {
+                _scrollController.animateTo(
+                  0,
+                  duration: const Duration(milliseconds: 1500),
+                  curve: Curves.easeInOut,
+                );
+              }
+            });
+          });
+        }
+      }
+      _isAutoScrolling = false;
+      // Schedule next auto-scroll
+      if (mounted) {
+        _setupAutoScroll();
+      }
     });
   }
 
@@ -46,14 +112,14 @@ class _DishRecommendationCarouselState extends ConsumerState<DishRecommendationC
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Recommended for Pickup',
+                    _getTimeBasedTitle(),
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Popular dishes from nearby restaurants',
+                    _getTimeBasedSubtitle(),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: NeutralColors.textSecondary,
                     ),
@@ -87,102 +153,116 @@ class _DishRecommendationCarouselState extends ConsumerState<DishRecommendationC
 
         const SizedBox(height: 16),
 
-        // Carousel content
+        // Horizontal list content
         recommendationsState.when(
-          loading: () => _buildShimmerCarousel(),
+          loading: () => _buildShimmerList(),
           error: (error, stackTrace) => _buildErrorWidget(error),
-          data: (recommendations) {
-            if (recommendations.isEmpty) {
+          data: (recommendationState) {
+            if (recommendationState.recommendations.isEmpty) {
               return _buildEmptyState();
             }
-            return _buildCarousel(recommendations);
+            return _buildHorizontalList(recommendationState);
           },
         ),
-
-        // Carousel indicator
-        if (recommendationsState.hasValue && recommendationsState.value!.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: recommendationsState.value!.asMap().entries.map<Widget>((entry) {
-              final isActive = _currentIndex == entry.key;
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                width: isActive ? 24 : 8,
-                height: 8,
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(4),
-                  color: isActive
-                      ? BrandColors.primary
-                      : BrandColors.primary.withValues(alpha: 0.3),
-                ),
-              );
-            }).toList(),
-          ),
-        ],
       ],
     );
   }
 
-  Widget _buildCarousel(List recommendations) {
-    return CarouselSlider.builder(
-      carouselController: _carouselController,
-      options: CarouselOptions(
-        height: 280,
-        viewportFraction: 0.85,
-        enlargeCenterPage: true,
-        enableInfiniteScroll: recommendations.length > 1,
-        autoPlay: recommendations.length > 1,
-        autoPlayInterval: const Duration(seconds: 8),
-        autoPlayAnimationDuration: const Duration(milliseconds: 800),
-        onPageChanged: (index, reason) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-      ),
-      itemCount: recommendations.length,
-      itemBuilder: (context, index, realIndex) {
-        final menuItem = recommendations[index];
-        final restaurant = _getRestaurantForMenuItem(menuItem.restaurantId);
+  Widget _buildHorizontalList(recommendationState) {
+  return RepaintBoundary(
+    child: Container(
+      height: 260, // More accurate height matching actual card dimensions
+      child: ListView.separated(
+        controller: _scrollController,
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        itemCount: recommendationState.recommendations.length + (recommendationState.hasMore ? 1 : 0),
+        separatorBuilder: (context, index) => const SizedBox(width: 16),
+        itemBuilder: (context, index) {
+          // Show loading indicator at the end
+          if (index == recommendationState.recommendations.length) {
+            return _buildLoadingIndicator();
+          }
 
-        if (restaurant == null) {
-          return const SizedBox.shrink();
-        }
+          final menuItem = recommendationState.recommendations[index];
+          final restaurant = _getRestaurantForMenuItem(menuItem.restaurantId);
 
-        return CompactDishCard(
-          menuItem: menuItem,
-          restaurant: restaurant,
-          distance: _calculateDistance(restaurant),
-          onQuickPickup: () {
-            _handleQuickPickup(menuItem, restaurant);
-          },
-        );
-      },
-    );
-  }
+          if (restaurant == null) {
+            return const SizedBox.shrink();
+          }
 
-  Widget _buildShimmerCarousel() {
-    return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
-      child: CarouselSlider.builder(
-        options: CarouselOptions(
-          height: 280,
-          viewportFraction: 0.85,
-          enableInfiniteScroll: false,
-        ),
-        itemCount: 3,
-        itemBuilder: (context, index, realIndex) {
-          return Container(
-            margin: const EdgeInsets.only(right: 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(BorderRadiusTokens.lg),
+          return RepaintBoundary(
+            key: ValueKey('dish_${menuItem.id}'),
+            child: Container(
+              width: 280,
+              child: CompactDishCard(
+                menuItem: menuItem,
+                restaurant: restaurant,
+                distance: _calculateDistance(restaurant),
+                onQuickPickup: () {
+                  _handleQuickPickup(menuItem, restaurant);
+                },
+              ),
             ),
           );
         },
+      ),
+    ),
+  );
+  }
+
+  Widget _buildLoadingIndicator() {
+    return Container(
+      width: 280,
+      decoration: BoxDecoration(
+        color: NeutralColors.surface,
+        borderRadius: BorderRadius.circular(BorderRadiusTokens.lg),
+        border: Border.all(
+          color: NeutralColors.textSecondary.withValues(alpha: 0.2),
+        ),
+      ),
+      child: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(BrandColors.primary),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Loading more...',
+              style: TextStyle(
+                color: NeutralColors.textSecondary,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShimmerList() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Container(
+        height: 260, // Match the actual card height
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          itemCount: 3,
+          separatorBuilder: (context, index) => const SizedBox(width: 16),
+          itemBuilder: (context, index) {
+            return Container(
+              width: 280,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(BorderRadiusTokens.lg),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -190,7 +270,7 @@ class _DishRecommendationCarouselState extends ConsumerState<DishRecommendationC
   Widget _buildErrorWidget(Object error) {
     final theme = Theme.of(context);
     return Container(
-      height: 280,
+      height: 260, // Match the actual card height
       margin: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
         color: theme.colorScheme.errorContainer,
@@ -241,7 +321,7 @@ class _DishRecommendationCarouselState extends ConsumerState<DishRecommendationC
   Widget _buildEmptyState() {
     final theme = Theme.of(context);
     return Container(
-      height: 280,
+      height: 260, // Match the actual card height
       margin: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
         color: NeutralColors.surface,
@@ -307,5 +387,35 @@ class _DishRecommendationCarouselState extends ConsumerState<DishRecommendationC
         backgroundColor: BrandColors.secondary,
       ),
     );
+  }
+
+  String _getTimeBasedTitle() {
+    final hour = DateTime.now().hour;
+    if (hour >= 6 && hour < 11) {
+      return 'Breakfast Recommendations';
+    } else if (hour >= 11 && hour < 14) {
+      return 'Lunch Specials';
+    } else if (hour >= 14 && hour < 17) {
+      return 'Afternoon Snacks';
+    } else if (hour >= 17 && hour < 21) {
+      return 'Dinner Favorites';
+    } else {
+      return 'Late Night Cravings';
+    }
+  }
+
+  String _getTimeBasedSubtitle() {
+    final hour = DateTime.now().hour;
+    if (hour >= 6 && hour < 11) {
+      return 'Start your day with these delicious options';
+    } else if (hour >= 11 && hour < 14) {
+      return 'Quick and satisfying meals for lunch';
+    } else if (hour >= 14 && hour < 17) {
+      return 'Perfect afternoon pick-me-ups';
+    } else if (hour >= 17 && hour < 21) {
+      return 'Hearty meals for dinner time';
+    } else {
+      return 'Late night bites and comfort food';
+    }
   }
 }

@@ -26,6 +26,8 @@ class Restaurant {
   @JsonKey(name: 'opening_hours')
   final Map<String, dynamic> openingHours;
   final double rating;
+  @JsonKey(name: 'total_reviews')
+  final int? totalReviews;
   @JsonKey(name: 'delivery_radius')
   final double deliveryRadius;
   @JsonKey(name: 'estimated_delivery_time')
@@ -36,6 +38,12 @@ class Restaurant {
   final double? minimumOrderAmount;
   @JsonKey(name: 'is_active')
   final bool isActive;
+  @JsonKey(name: 'is_featured')
+  final bool isFeatured;
+  @JsonKey(name: 'latitude')
+  final double? latitude;
+  @JsonKey(name: 'longitude')
+  final double? longitude;
   @JsonKey(name: 'dietary_options')
   final List<String>? dietaryOptions;
   final List<String>? features;
@@ -64,11 +72,15 @@ class Restaurant {
     this.postalCode,
     required this.openingHours,
     required this.rating,
+    this.totalReviews,
     required this.deliveryRadius,
     required this.estimatedDeliveryTime,
     this.deliveryFee,
     this.minimumOrderAmount,
     required this.isActive,
+    this.isFeatured = false,
+    this.latitude,
+    this.longitude,
     this.dietaryOptions,
     this.features,
     this.logoUrl,
@@ -98,11 +110,15 @@ class Restaurant {
     String? postalCode,
     Map<String, dynamic>? openingHours,
     double? rating,
+    int? totalReviews,
     double? deliveryRadius,
     int? estimatedDeliveryTime,
     double? deliveryFee,
     double? minimumOrderAmount,
     bool? isActive,
+    bool? isFeatured,
+    double? latitude,
+    double? longitude,
     List<String>? dietaryOptions,
     List<String>? features,
     String? logoUrl,
@@ -126,12 +142,16 @@ class Restaurant {
       postalCode: postalCode ?? this.postalCode,
       openingHours: openingHours ?? this.openingHours,
       rating: rating ?? this.rating,
+      totalReviews: totalReviews ?? this.totalReviews,
       deliveryRadius: deliveryRadius ?? this.deliveryRadius,
       estimatedDeliveryTime:
           estimatedDeliveryTime ?? this.estimatedDeliveryTime,
       deliveryFee: deliveryFee ?? this.deliveryFee,
       minimumOrderAmount: minimumOrderAmount ?? this.minimumOrderAmount,
       isActive: isActive ?? this.isActive,
+      isFeatured: isFeatured ?? this.isFeatured,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
       dietaryOptions: dietaryOptions ?? this.dietaryOptions,
       features: features ?? this.features,
       logoUrl: logoUrl ?? this.logoUrl,
@@ -139,31 +159,5 @@ class Restaurant {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
-  }
-
-  /// Helper method to get latitude from address
-  double get latitude {
-    try {
-      final lat = address['latitude'];
-      if (lat is double) return lat;
-      if (lat is int) return lat.toDouble();
-      if (lat is String) return double.parse(lat);
-      return 0.0;
-    } catch (e) {
-      return 0.0;
-    }
-  }
-
-  /// Helper method to get longitude from address
-  double get longitude {
-    try {
-      final lng = address['longitude'];
-      if (lng is double) return lng;
-      if (lng is int) return lng.toDouble();
-      if (lng is String) return double.parse(lng);
-      return 0.0;
-    } catch (e) {
-      return 0.0;
-    }
   }
 }

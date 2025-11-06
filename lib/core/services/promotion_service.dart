@@ -26,7 +26,7 @@ class PromotionService {
       if (restaurantId != null) {
         query = query.or('restaurant_id.eq.$restaurantId,restaurant_id.is.null');
       } else {
-        query = query.isFilter('restaurant_id', null);
+        query = query.filter('restaurant_id', 'is', null);
       }
 
       final response = await query;
@@ -321,6 +321,88 @@ class PromotionService {
       return recommended;
     } catch (e, stack) {
       AppLogger.error('Failed to get recommended promotions',
+          error: e, stack: stack);
+      rethrow;
+    }
+  }
+
+  
+  /// Get all promotions (for admin management)
+  Future<List<Promotion>> getAllPromotions() async {
+    AppLogger.function('PromotionService.getAllPromotions', 'ENTER');
+
+    try {
+      final response = await _dbService.client
+          .from('promotions')
+          .select()
+          .order('created_at', ascending: false);
+
+      final promotions = (response as List)
+          .map((json) => Promotion.fromJson(json as Map<String, dynamic>))
+          .toList();
+
+      AppLogger.success('Found ${promotions.length} total promotions');
+      AppLogger.function('PromotionService.getAllPromotions', 'EXIT',
+          result: promotions.length);
+
+      return promotions;
+    } catch (e, stack) {
+      AppLogger.error('Failed to get all promotions',
+          error: e, stack: stack);
+      rethrow;
+    }
+  }
+
+  
+  /// Create a new promotion
+  Future<void> createPromotion(Promotion promotion) async {
+    AppLogger.function('PromotionService.createPromotion', 'ENTER',
+        params: {'code': promotion.code});
+
+    try {
+      await _dbService.client.from('promotions').insert(promotion.toJson());
+
+      AppLogger.success('Created promotion: ${promotion.code}');
+      AppLogger.function('PromotionService.createPromotion', 'EXIT');
+    } catch (e, stack) {
+      AppLogger.error('Failed to create promotion',
+          error: e, stack: stack);
+      rethrow;
+    }
+  }
+
+  /// Update an existing promotion
+  Future<void> updatePromotion(Promotion promotion) async {
+    AppLogger.function('PromotionService.updatePromotion', 'ENTER',
+        params: {'id': promotion.id});
+
+    try {
+      await _dbService.client
+          .from('promotions')
+          .update(promotion.toJson())
+          .eq('id', promotion.id);
+
+      AppLogger.success('Updated promotion: ${promotion.code}');
+      AppLogger.function('PromotionService.updatePromotion', 'EXIT');
+    } catch (e, stack) {
+      AppLogger.error('Failed to update promotion',
+          error: e, stack: stack);
+      rethrow;
+    }
+  }
+
+  /// Delete a promotion
+  Future<void> deletePromotion(String id) async {
+    AppLogger.function('PromotionService.deletePromotion', 'ENTER',
+        params: {'id': id});
+
+    try {
+      await _dbService.client.from('promotions').delete().eq('id', id);
+
+      AppLogger.success('Deleted promotion: $id');
+      AppLogger.function('PromotionService.deletePromotion', 'EXIT');
+    } catch (e, stack) {
+      AppLogger.error('Failed to delete promotion',
           error: e, stack: stack);
       rethrow;
     }
