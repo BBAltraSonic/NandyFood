@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:food_delivery_app/core/routing/route_paths.dart';
@@ -9,6 +10,12 @@ import 'package:food_delivery_app/features/restaurant/presentation/widgets/resta
 import 'package:food_delivery_app/features/home/presentation/widgets/home_map_view_widget.dart';
 import 'package:food_delivery_app/features/home/presentation/widgets/categories_horizontal_list.dart';
 import 'package:food_delivery_app/features/home/presentation/widgets/order_again_section.dart';
+import 'package:food_delivery_app/features/home/presentation/widgets/promotions_section.dart';
+import 'package:food_delivery_app/features/home/presentation/widgets/favorites_section.dart';
+import 'package:food_delivery_app/features/home/presentation/widgets/dish_recommendation_carousel.dart';
+import 'package:food_delivery_app/features/home/presentation/widgets/trending_now_section.dart';
+import 'package:food_delivery_app/features/home/presentation/widgets/quick_reorder_section.dart';
+import 'package:food_delivery_app/features/home/presentation/widgets/chefs_specials_section.dart';
 import 'package:food_delivery_app/features/home/presentation/providers/map_view_provider.dart';
 import 'package:food_delivery_app/core/services/location_service.dart';
 import 'package:food_delivery_app/core/providers/auth_provider.dart';
@@ -42,17 +49,44 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _onScroll() {
     if (!_scrollController.hasClients) return;
-    final threshold = 200.0;
-    final position = _scrollController.position;
-    if (position.pixels >= position.maxScrollExtent - threshold) {
-      ref.read(restaurantProvider.notifier).loadMoreRestaurants();
+
+    // Debounce scroll events to improve performance
+    _debouncedScrollCall();
+  }
+
+  void _handleScroll() {
+    if (!_scrollController.hasClients) return;
+
+    try {
+      final threshold = 300.0; // Increased threshold for better performance
+      final position = _scrollController.position;
+
+      // Only trigger load more if we're close to bottom and not already loading
+      if (position.pixels >= position.maxScrollExtent - threshold) {
+        // Check if provider is not already loading more restaurants
+        final restaurantState = ref.read(restaurantProvider);
+        if (!restaurantState.isLoading && restaurantState.hasMore) {
+          ref.read(restaurantProvider.notifier).loadMoreRestaurants();
+        }
+      }
+    } catch (e) {
+      // Handle potential errors gracefully
+      debugPrint('Scroll listener error: $e');
     }
+  }
+
+  Timer? _scrollDebouncer;
+
+  void _debouncedScrollCall() {
+    _scrollDebouncer?.cancel();
+    _scrollDebouncer = Timer(const Duration(milliseconds: 100), _handleScroll);
   }
 
   @override
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    _scrollDebouncer?.cancel();
     _addressController.dispose();
     super.dispose();
   }
@@ -158,18 +192,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               delegate: ParallaxMapDelegate(
                 maxHeight: MediaQuery.of(context).size.height * 0.6,
                 minHeight: 100,
-                child: Stack(
-                  children: [
-                    // Full viewport map
-                    Positioned.fill(
-                      child: HomeMapViewWidget(
-                        restaurants: restaurantState.restaurants.where((Restaurant r) => r.id.isNotEmpty).toList(),
-                        userLocation: _userLocation,
-                        height: double.infinity,
-                        showRestaurantPreview: false,
-                        showPickupMarkers: true,
+                child: RepaintBoundary(
+                  child: Stack(
+                    children: [
+                      // Full viewport map
+                      Positioned.fill(
+                        child: HomeMapViewWidget(
+                          restaurants: restaurantState.restaurants.where((Restaurant r) => r.id.isNotEmpty).toList(),
+                          userLocation: _userLocation,
+                          height: double.infinity,
+                          showRestaurantPreview: false,
+                          showPickupMarkers: true,
+                        ),
                       ),
-                    ),
 
                     // Floating header with location and user controls
                     Positioned(
@@ -181,11 +216,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ),
 
-                    // Floating search bar overlapping from bottom of map
+                    // Floating search bar with improved positioning
                     Positioned(
-                      bottom: 20, // Position to overlap from bottom of map
-                      left: 24,
-                      right: 24,
+                      bottom: 32, // Increased spacing to prevent overlap
+                      left: 20,
+                      right: 20, // Slightly reduced margins for better balance
                       child: _buildFloatingSearchBar(context, theme),
                     ),
 
@@ -195,7 +230,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       left: 0,
                       right: 0,
                       child: Container(
-                        height: 120, // Increased height to cover search bar overlap area
+                        height: 140, // Increased height for better coverage
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
@@ -203,32 +238,107 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             colors: [
                               Colors.transparent,
                               Colors.transparent,
-                              NeutralColors.background.withValues(alpha: 0.6),
+                              NeutralColors.background.withValues(alpha: 0.4),
+                              NeutralColors.background.withValues(alpha: 0.8),
                               NeutralColors.background,
                             ],
-                            stops: const [0.0, 0.3, 0.7, 1.0],
+                            stops: const [0.0, 0.2, 0.5, 0.8, 1.0],
                           ),
                         ),
                       ),
                     ),
                   ],
                 ),
+                ),
               ),
             ),
 
             // Search Bar (moved to parallax map section)
 
-            const SliverToBoxAdapter(child: SizedBox(height: 32)),
+            const SliverToBoxAdapter(child: SizedBox(height: 40)),
 
-            // Promotional Banner (Updated for pickup focus)
+            // Dynamic Promotions Section
             SliverToBoxAdapter(
-              child: _buildPickupPromotionalBanner(theme),
+              child: RepaintBoundary(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: const PromotionsSection(),
+                ),
+              ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 32)),
+            const SliverToBoxAdapter(child: SizedBox(height: 40)),
+
+            // Recommended Dishes Section
+            SliverToBoxAdapter(
+              child: RepaintBoundary(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: const DishRecommendationCarousel(),
+                ),
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 40)),
 
             // Order Again Section (only visible if user has past orders)
-            const SliverToBoxAdapter(child: OrderAgainSection()),
+            SliverToBoxAdapter(
+              child: RepaintBoundary(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: const OrderAgainSection(),
+                ),
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 40)),
+
+            // Favorites Section
+            SliverToBoxAdapter(
+              child: RepaintBoundary(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: const FavoritesSection(),
+                ),
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 40)),
+
+            // Trending Now Section
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            SliverToBoxAdapter(
+              child: RepaintBoundary(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: const TrendingNowSection(),
+                ),
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 40)),
+
+            // Quick Reorder Section
+            SliverToBoxAdapter(
+              child: RepaintBoundary(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: const QuickReorderSection(),
+                ),
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 40)),
+
+            // Chef's Specials Section
+            SliverToBoxAdapter(
+              child: RepaintBoundary(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: const ChefsSpecialsSection(),
+                ),
+              ),
+            ),
 
             const SliverToBoxAdapter(child: SizedBox(height: 32)),
 
@@ -1195,14 +1305,32 @@ class ParallaxMapDelegate extends SliverPersistentHeaderDelegate {
     bool overlapsContent,
   ) {
     final progress = shrinkOffset / (maxExtent - minHeight);
-    final scale = 1.0 + (progress * 0.5); // Zoom in slightly as scrolled
 
-    return Transform.scale(
-      scale: scale,
-      child: OverflowBox(
-        minHeight: maxHeight,
-        maxHeight: maxHeight,
-        child: child,
+    // Clamp scale to prevent overflow - use smaller scale factor for better boundaries
+    final clampedProgress = progress.clamp(0.0, 1.0);
+    final scale = 1.0 + (clampedProgress * 0.3); // Reduced from 0.5 to 0.3 for better control
+
+    // Get screen dimensions for responsive calculations
+    final screenSize = MediaQuery.of(context).size;
+    final safeAreaPadding = MediaQuery.of(context).padding;
+
+    // Calculate maximum allowed scale to prevent overflow
+    final maxScale = (screenSize.height - safeAreaPadding.top - safeAreaPadding.bottom) / maxHeight;
+    final finalScale = scale.clamp(1.0, maxScale.clamp(1.0, 1.3)); // Cap at reasonable maximum
+
+    return RepaintBoundary( // Add RepaintBoundary for performance
+      child: Transform.scale(
+        scale: finalScale,
+        alignment: Alignment.center, // Ensure scaling from center
+        child: ClipRect( // Prevent overflow
+          child: OverflowBox(
+            minHeight: maxHeight,
+            maxHeight: maxHeight * 1.1, // Slightly larger to accommodate scaling
+            minWidth: screenSize.width,
+            maxWidth: screenSize.width * 1.1,
+            child: child,
+          ),
+        ),
       ),
     );
   }

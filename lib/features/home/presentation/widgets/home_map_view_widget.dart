@@ -319,7 +319,7 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
 
         // Recenter button (bottom right) - Black theme
         Positioned(
-          bottom: _selectedRestaurant != null ? 100 : 16,
+          bottom: _selectedRestaurant != null ? 120 : 16,
           right: 16,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 300),
@@ -358,7 +358,7 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
           Positioned(
             bottom: 16,
             left: 16,
-            right: 80,
+            right: 80, // Reduced to prevent overlap with recenter button
             child: ScaleTransition(
               scale: _scaleAnimation,
               child: _buildRestaurantPreviewCard(_selectedRestaurant!),
