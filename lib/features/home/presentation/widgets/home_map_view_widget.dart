@@ -98,12 +98,14 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
     _animationController.forward();
 
     // Smoothly move map to center on restaurant with slight offset for preview card
-    if (_mapController != null && restaurant.latitude != 0 && restaurant.longitude != 0) {
+    if (_mapController != null &&
+        restaurant.latitude != null && restaurant.latitude != 0 &&
+        restaurant.longitude != null && restaurant.longitude != 0) {
       final targetZoom = _currentZoom < 14 ? 15.0 : _currentZoom;
       _mapController!.animateCamera(
         CameraUpdate.newCameraPosition(
           CameraPosition(
-            target: LatLng(restaurant.latitude, restaurant.longitude),
+            target: LatLng(restaurant.latitude!, restaurant.longitude!),
             zoom: targetZoom,
           ),
         ),
@@ -158,7 +160,7 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
         markers.add(
           Marker(
             markerId: MarkerId('restaurant_${restaurant.id}'),
-            position: LatLng(restaurant.latitude, restaurant.longitude),
+            position: LatLng(restaurant.latitude ?? 0.0, restaurant.longitude ?? 0.0),
             icon: BitmapDescriptor.defaultMarkerWithHue(markerColor),
             infoWindow: InfoWindow(
               title: restaurant.name,
@@ -178,8 +180,8 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
             Marker(
               markerId: MarkerId('rating_${restaurant.id}'),
               position: LatLng(
-                restaurant.latitude + 0.0005, // Slight offset for visibility
-                restaurant.longitude + 0.0005,
+                (restaurant.latitude ?? 0.0) + 0.0005, // Slight offset for visibility
+                (restaurant.longitude ?? 0.0) + 0.0005,
               ),
               icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
               infoWindow: InfoWindow(

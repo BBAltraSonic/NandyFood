@@ -84,7 +84,7 @@ class HomeRestaurantNotifier extends StateNotifier<HomeRestaurantState> {
   final DatabaseService _dbService = DatabaseService();
   final LocationService _locationService = LocationService();
   StreamSubscription<Position>? _locationSubscription;
-  StreamSubscription<List<Map<String, dynamic>>>? _restaurantSubscription;
+  RealtimeChannel? _restaurantSubscription;
   Timer? _refreshTimer;
 
   bool _isDisposed = false;
@@ -112,7 +112,7 @@ class HomeRestaurantNotifier extends StateNotifier<HomeRestaurantState> {
     }
 
     try {
-      _restaurantSubscription?.cancel();
+      _restaurantSubscription?.unsubscribe();
       _restaurantSubscription = null;
     } catch (e) {
       AppLogger.error('Error cancelling restaurant subscription', error: e);
@@ -190,7 +190,7 @@ class HomeRestaurantNotifier extends StateNotifier<HomeRestaurantState> {
     state = state.copyWith(isLocationLoading: true, locationError: null);
 
     try {
-      final permission = await _locationService.checkLocationPermission();
+      final permission = await _locationService.checkPermission();
 
       switch (permission) {
         case LocationPermission.whileInUse:
@@ -314,7 +314,7 @@ class HomeRestaurantNotifier extends StateNotifier<HomeRestaurantState> {
         try {
           return DateTime.parse(timestamp);
         } catch (e) {
-          AppLogger.warning('Error parsing timestamp', details: timestamp, error: e);
+          AppLogger.warning('Error parsing timestamp: $timestamp');
           return DateTime.now();
         }
       }
@@ -378,7 +378,7 @@ class HomeRestaurantNotifier extends StateNotifier<HomeRestaurantState> {
 
     // Validate UUID format
     if (!_isValidUUID(userId)) {
-      AppLogger.warning('Invalid user ID format', details: userId);
+      AppLogger.warning('Invalid user ID format: $userId');
       _safeUpdateState((state) => state.copyWith(
         popularRestaurants: _getGeneralPopularRestaurants(restaurants),
         popularRestaurantsCount: _getGeneralPopularRestaurants(restaurants).length,
@@ -587,13 +587,14 @@ class HomeRestaurantNotifier extends StateNotifier<HomeRestaurantState> {
 
     // Listen to real-time database changes
     _restaurantSubscription = _dbService.client
-        .from('restaurants')
-        .onChanges()
-        .listen((event) {
-          if (mounted) {
-            _loadRestaurants();
-          }
-        });
+        .channel('restaurants_changes')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'restaurants',
+          callback: (payload) {},
+        )
+        .subscribe();
   }
 
   // Retry location permission

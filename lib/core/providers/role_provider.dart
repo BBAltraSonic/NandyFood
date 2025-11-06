@@ -141,6 +141,29 @@ final primaryRoleTypeProvider = Provider<UserRoleType?>((ref) {
   return roleState.primaryRole?.role;
 });
 
+/// Provider to get primary role type directly (alias for compatibility)
+final primaryRoleProvider = primaryRoleTypeProvider;
+
+/// Provider to get all user roles
+final userRolesProvider = Provider<List<UserRole>>((ref) {
+  final roleState = ref.watch(roleProvider);
+  return roleState.allRoles;
+});
+
+/// Provider to get staff data (placeholder for now)
+final staffDataProvider = Provider<Map<String, dynamic>?>((ref) {
+  // This would typically come from a staff service
+  // For now, return null as placeholder
+  return null;
+});
+
+/// Provider to get restaurant data (placeholder for now)
+final restaurantDataProvider = Provider<Map<String, dynamic>?>((ref) {
+  // This would typically come from a restaurant service
+  // For now, return null as placeholder
+  return null;
+});
+
 /// Helper provider to check if user is restaurant owner
 final isRestaurantOwnerProvider = Provider<bool>((ref) {
   final roleState = ref.watch(roleProvider);

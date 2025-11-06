@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:food_delivery_app/core/providers/auth_provider.dart';
+import 'package:food_delivery_app/core/services/role_service.dart';
+import 'package:food_delivery_app/shared/models/user_role.dart';
 import 'package:food_delivery_app/features/onboarding/providers/onboarding_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -65,63 +67,103 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     if (!mounted) return;
 
     try {
-      // Check onboarding status first
-      final onboardingStatus = await Future.microtask(
-        () => ref.read(onboardingCompletedProvider),
-      ).timeout(
-        const Duration(seconds: 2),
-        onTimeout: () => const AsyncValue.data(false),
+      // Check auth status first
+      final authState = await Future.microtask(() => ref.read(authStateProvider)).timeout(
+        const Duration(seconds: 3),
+        onTimeout: () {
+          print('WARNING: Auth provider initialization timed out. Using default state.');
+          return AuthState(isAuthenticated: false);
+        },
       );
 
-      // If user hasn't completed onboarding, show onboarding
-      final hasCompletedOnboarding = onboardingStatus.value ?? false;
-      if (!hasCompletedOnboarding) {
+      if (!authState.isAuthenticated) {
+        // User is not authenticated, check onboarding status
+        final onboardingStatus = await Future.microtask(
+          () => ref.read(onboardingCompletedProvider),
+        ).timeout(
+          const Duration(seconds: 2),
+          onTimeout: () => const AsyncValue.data(false),
+        );
+
+        final hasCompletedOnboarding = onboardingStatus.value ?? false;
+        if (!hasCompletedOnboarding) {
+          if (mounted) {
+            print('INFO: First-time user, navigating to onboarding');
+            context.go('/onboarding');
+          }
+          return;
+        }
+
+        // User is not authenticated but has completed onboarding, go to login
         if (mounted) {
-          print('INFO: First-time user, navigating to onboarding');
-          context.go('/onboarding');
+          print('INFO: User not authenticated, navigating to login');
+          context.go('/auth/login');
         }
         return;
       }
 
-      // Check auth status with timeout
-      final authState =
-          await Future.microtask(() => ref.read(authStateProvider)).timeout(
-            const Duration(seconds: 3),
-            onTimeout: () {
-              print(
-                'WARNING: Auth provider initialization timed out. Using default state.',
-              );
-              return AuthState(isAuthenticated: false);
-            },
-          );
+      // User is authenticated, check their roles
+      final userId = authState.user?.id;
+      if (userId == null) {
+        if (mounted) {
+          print('ERROR: User ID is null, navigating to login');
+          context.go('/auth/login');
+        }
+        return;
+      }
 
-      if (mounted) {
-        // Always navigate to home - authentication is optional
-        // Users can browse as guests
-        print(
-          'INFO: Navigating to home (authenticated: ${authState.isAuthenticated})',
-        );
-        context.go('/home');
+      final roleService = RoleService();
+      try {
+        final userRoles = await roleService.getUserRoles(userId);
+        final primaryRole = await roleService.getPrimaryRole(userId);
+
+        if (userRoles.isEmpty || primaryRole == null) {
+          // User has no roles, send to role selection
+          if (mounted) {
+            print('INFO: User has no roles, navigating to role selection');
+            context.go('/onboarding/role-selection');
+          }
+          return;
+        }
+
+        // TODO: Check if user has completed setup for their primary role
+        // For now, redirect based on primary role
+        String targetRoute;
+        String roleDescription;
+
+        switch (primaryRole) {
+          case UserRoleType.restaurantOwner:
+            targetRoute = '/restaurant/dashboard';
+            roleDescription = 'Restaurant Owner';
+            break;
+          case UserRoleType.admin:
+            targetRoute = '/admin/dashboard';
+            roleDescription = 'Administrator';
+            break;
+          case UserRoleType.consumer:
+          default:
+            targetRoute = '/home';
+            roleDescription = 'Customer';
+            break;
+        }
+
+        if (mounted) {
+          print('INFO: User authenticated as $roleDescription, navigating to $targetRoute');
+          context.go(targetRoute);
+        }
+      } catch (e) {
+        print('ERROR getting user roles: $e');
+        if (mounted) {
+          print('INFO: Error getting roles, navigating to role selection');
+          context.go('/onboarding/role-selection');
+        }
       }
     } catch (e) {
       print('ERROR checking auth/onboarding status: $e');
       if (mounted) {
-        // On error, check if it's first launch by trying onboarding status
-        try {
-          final onboardingStatus = ref.read(onboardingCompletedProvider);
-          final hasCompleted = onboardingStatus.value ?? false;
-          if (!hasCompleted) {
-            print('INFO: Error occurred, navigating to onboarding');
-            context.go('/onboarding');
-          } else {
-            print('INFO: Error occurred, navigating to home as guest');
-            context.go('/home');
-          }
-        } catch (e) {
-          // If everything fails, go to onboarding for safety
-          print('INFO: All checks failed, navigating to onboarding');
-          context.go('/onboarding');
-        }
+        // On any error, default to role selection for existing users
+        print('INFO: Error occurred, navigating to role selection');
+        context.go('/onboarding/role-selection');
       }
     }
   }

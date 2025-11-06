@@ -11,11 +11,14 @@ import 'package:food_delivery_app/core/utils/performance_monitor.dart';
 import 'package:food_delivery_app/firebase_options.dart';
 import 'package:food_delivery_app/core/services/database_service.dart';
 import 'package:food_delivery_app/core/services/notification_service.dart';
+import 'package:food_delivery_app/core/services/role_service.dart';
+import 'package:food_delivery_app/shared/models/user_role.dart';
 import 'package:food_delivery_app/features/authentication/presentation/screens/login_screen.dart';
 import 'package:food_delivery_app/features/authentication/presentation/screens/signup_screen.dart';
 import 'package:food_delivery_app/features/authentication/presentation/screens/splash_screen.dart';
 import 'package:food_delivery_app/features/home/presentation/screens/home_screen.dart';
 import 'package:food_delivery_app/shared/screens/main_navigation_screen.dart';
+import 'package:food_delivery_app/features/restaurant_navigation/presentation/screens/restaurant_navigation_screen.dart';
 import 'package:food_delivery_app/features/profile/presentation/screens/add_edit_payment_screen.dart';
 import 'package:food_delivery_app/features/order/presentation/screens/order_tracking_screen.dart';
 import 'package:food_delivery_app/features/order/presentation/screens/cart_screen.dart';
@@ -25,14 +28,17 @@ import 'package:food_delivery_app/features/order/presentation/screens/promo_deta
 import 'package:food_delivery_app/features/order/presentation/screens/checkout_screen.dart';
 import 'package:food_delivery_app/features/home/presentation/screens/search_screen.dart';
 import 'package:food_delivery_app/features/onboarding/presentation/screens/onboarding_screen.dart';
+import 'package:food_delivery_app/features/onboarding/presentation/screens/role_selection_screen.dart';
+import 'package:food_delivery_app/features/onboarding/presentation/screens/restaurant_setup_screen.dart';
+import 'package:food_delivery_app/features/onboarding/presentation/screens/customer_setup_screen.dart';
 import 'package:food_delivery_app/test_map_screen.dart';
 
 import 'package:food_delivery_app/core/routing/route_paths.dart';
 import 'package:food_delivery_app/core/routing/route_guards.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_dashboard_screen.dart';
-import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_orders_screen.dart';
-import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_menu_screen.dart';
-import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_analytics_screen.dart';
+import 'package:food_delivery_app/features/restaurant_orders/presentation/screens/restaurant_orders_screen.dart';
+import 'package:food_delivery_app/features/restaurant_menu/presentation/screens/restaurant_menu_screen.dart';
+import 'package:food_delivery_app/features/restaurant_analytics/presentation/screens/restaurant_analytics_screen.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/widgets/restaurant_analytics_session_wrapper.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_settings_screen.dart';
 import 'package:food_delivery_app/features/restaurant_dashboard/presentation/screens/restaurant_info_screen.dart';
@@ -317,7 +323,7 @@ class _FoodDeliveryAppState extends ConsumerState<FoodDeliveryApp> {
         ),
         GoRoute(
           path: RoutePaths.restaurantDashboard,
-          builder: (context, state) => const RestaurantDashboardScreen(),
+          builder: (context, state) => const RestaurantNavigationScreen(),
           redirect: (context, state) => RouteGuards.requireRestaurantRole(state),
         ),
         GoRoute(
@@ -416,6 +422,18 @@ class _FoodDeliveryAppState extends ConsumerState<FoodDeliveryApp> {
           builder: (context, state) => const OnboardingScreen(),
         ),
         GoRoute(
+          path: '/onboarding/role-selection',
+          builder: (context, state) => const RoleSelectionScreen(),
+        ),
+        GoRoute(
+          path: '/onboarding/restaurant-setup',
+          builder: (context, state) => const RestaurantSetupScreen(),
+        ),
+        GoRoute(
+          path: '/onboarding/customer-setup',
+          builder: (context, state) => const CustomerSetupScreen(),
+        ),
+        GoRoute(
           path: '/profile',
           builder: (context, state) => const ProfileScreen(),
         ),
@@ -443,8 +461,8 @@ class _FoodDeliveryAppState extends ConsumerState<FoodDeliveryApp> {
           builder: (context, state) => const PromotionsScreen(),
         ),
       ],
-      // Add redirect logic based on authentication state
-      redirect: (BuildContext context, GoRouterState state) {
+      // Add redirect logic based on authentication state and user roles
+      redirect: (BuildContext context, GoRouterState state) async {
         try {
           final authState = DatabaseService().client.auth.currentSession;
           final location = state.uri.toString();
@@ -452,19 +470,71 @@ class _FoodDeliveryAppState extends ConsumerState<FoodDeliveryApp> {
           // If user is not authenticated and not on auth screens, redirect to login
           if (authState == null &&
               !location.startsWith('/auth') &&
+              !location.startsWith('/onboarding') &&
               location != '/') {
             return RoutePaths.authLogin;
           }
 
-          // If user is authenticated and on auth screens, redirect to home
-          if (authState != null && location.startsWith('/auth')) {
-            return RoutePaths.home;
+          // If user is authenticated and on auth screens, redirect based on role
+          if (authState != null) {
+            if (location.startsWith('/auth')) {
+              // Check if user has completed onboarding
+              final userId = authState.user.id;
+              final roleService = RoleService();
+
+              try {
+                final userRoles = await roleService.getUserRoles(userId);
+                final primaryRole = await roleService.getPrimaryRole(userId);
+
+                if (userRoles.isEmpty || primaryRole == null) {
+                  // User has no roles, send to role selection
+                  return '/onboarding/role-selection';
+                }
+
+                // TODO: Check if user has completed setup for their primary role
+                // For now, redirect based on primary role
+                if (primaryRole == UserRoleType.restaurantOwner) {
+                  return RoutePaths.restaurantDashboard;
+                } else if (primaryRole == UserRoleType.admin) {
+                  return RoutePaths.adminDashboard;
+                } else {
+                  // Default to consumer/home
+                  return RoutePaths.home;
+                }
+              } catch (e) {
+                // If there's an error getting roles, default to role selection
+                return '/onboarding/role-selection';
+              }
+            }
+
+            // Additional role-based redirects for specific routes
+            if (location == '/') {
+              final userId = authState.user.id;
+              final roleService = RoleService();
+
+              try {
+                final primaryRole = await roleService.getPrimaryRole(userId);
+
+                if (primaryRole == UserRoleType.restaurantOwner) {
+                  return RoutePaths.restaurantDashboard;
+                } else if (primaryRole == UserRoleType.admin) {
+                  return RoutePaths.adminDashboard;
+                } else {
+                  // Default to consumer/home
+                  return RoutePaths.home;
+                }
+              } catch (e) {
+                return RoutePaths.home;
+              }
+            }
           }
         } catch (e) {
           // If there's an error accessing the client (e.g., invalid Supabase config),
           // default to showing login screen
           final location = state.uri.toString();
-          if (!location.startsWith('/auth') && location != '/') {
+          if (!location.startsWith('/auth') &&
+              !location.startsWith('/onboarding') &&
+              location != '/') {
             return RoutePaths.authLogin;
           }
         }

@@ -18,6 +18,12 @@ class AppTheme {
   // Primary color for easy access
   static const Color primaryColor = BrandColors.primary;
 
+  // Primary black color for easy access
+  static const Color primaryBlack = BrandColors.primary;
+
+// Secondary text color for easy access
+  static const Color secondaryText = NeutralColors.textSecondary;
+
   // Meal time colors (legacy)
   static const Color breakfastColor = MealTimeColors.breakfast;
   static const Color lunchColor = MealTimeColors.lunch;

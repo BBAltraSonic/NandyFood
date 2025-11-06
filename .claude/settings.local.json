@@ -58,7 +58,13 @@
       "Bash(then)",
       "Bash(echo:*)",
       "Bash(fi:*)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(taskkill:*)",
+      "Bash(nul:*)",
+      "Bash(git pull:*)",
+      "mcp__supabase__get_publishable_keys",
+      "Bash(socat:*)",
+      "Bash(\"C:\\Users\\BB\\Documents\\NandyFood\\lib\\shared\\models\\restaurant.dart\")"
     ],
     "deny": [],
     "ask": []

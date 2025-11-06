@@ -644,8 +644,12 @@ class NearbyRestaurantsSection extends ConsumerWidget {
 
       if (openTime == null || closeTime == null) return false;
 
-      // Simple time comparison (you may want to enhance this for complex scenarios)
-      return currentTime >= openTime && currentTime <= closeTime;
+      // Convert time strings to minutes for proper comparison
+      final currentMinutes = _timeToMinutes(currentTime);
+      final openMinutes = _timeToMinutes(openTime);
+      final closeMinutes = _timeToMinutes(closeTime);
+
+      return currentMinutes >= openMinutes && currentMinutes <= closeMinutes;
     } catch (e) {
       return false; // Assume closed if there's an error
     }
@@ -678,6 +682,22 @@ class NearbyRestaurantsSection extends ConsumerWidget {
       return '${difference.inHours}h ago';
     } else {
       return '${difference.inDays}d ago';
+    }
+  }
+
+  /// Convert time string "HH:MM" to minutes since midnight
+  int _timeToMinutes(String? timeStr) {
+    if (timeStr == null) return 0;
+
+    final parts = timeStr.split(':');
+    if (parts.length != 2) return 0;
+
+    try {
+      final hours = int.parse(parts[0]);
+      final minutes = int.parse(parts[1]);
+      return hours * 60 + minutes;
+    } catch (e) {
+      return 0;
     }
   }
 }

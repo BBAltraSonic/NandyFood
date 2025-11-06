@@ -316,7 +316,7 @@ class FeaturedRestaurantsSection extends ConsumerWidget {
                       height: double.infinity,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
-                        return _buildImagePlaceholder();
+                        return _buildImagePlaceholder(restaurant.name);
                       },
                       loadingBuilder: (context, child, loadingProgress) {
                         if (loadingProgress == null) return child;
@@ -332,7 +332,7 @@ class FeaturedRestaurantsSection extends ConsumerWidget {
                     ),
                   )
                 else
-                  _buildImagePlaceholder(),
+                  _buildImagePlaceholder(restaurant.name),
 
                 // Featured badge
                 Positioned(
@@ -540,7 +540,7 @@ class FeaturedRestaurantsSection extends ConsumerWidget {
     );
   }
 
-  Widget _buildImagePlaceholder() {
+  Widget _buildImagePlaceholder(String restaurantName) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -552,9 +552,9 @@ class FeaturedRestaurantsSection extends ConsumerWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            restaurant.name.length > 15
-                ? '${restaurant.name.substring(0, 15)}...'
-                : restaurant.name,
+            restaurantName.length > 15
+                ? '${restaurantName.substring(0, 15)}...'
+                : restaurantName,
             style: TextStyle(
               color: Colors.white.withOpacity(0.9),
               fontSize: 12,
