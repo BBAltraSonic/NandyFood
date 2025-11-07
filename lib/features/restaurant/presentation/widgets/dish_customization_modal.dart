@@ -23,23 +23,29 @@ class Topping {
   const Topping({required this.name, required this.price});
 }
 
-/// Available dish sizes
-const List<DishSize> dishSizes = [
-  DishSize(label: 'Small', priceMultiplier: 0.8),
-  DishSize(label: 'Medium', priceMultiplier: 1.0),
-  DishSize(label: 'Large', priceMultiplier: 1.3),
-];
+// TODO: Load dish sizes from database based on restaurant customization options
+/// Available dish sizes - should be loaded from database
+List<DishSize> getDishSizes() {
+  return [
+    DishSize(label: 'Small', priceMultiplier: 0.8),
+    DishSize(label: 'Medium', priceMultiplier: 1.0),
+    DishSize(label: 'Large', priceMultiplier: 1.3),
+  ];
+}
 
-/// Common toppings/add-ons
-const List<Topping> commonToppings = [
-  Topping(name: 'Extra Cheese', price: 1.50),
-  Topping(name: 'Bacon', price: 2.00),
-  Topping(name: 'Avocado', price: 2.50),
-  Topping(name: 'Mushrooms', price: 1.00),
-  Topping(name: 'Jalapeños', price: 0.75),
-  Topping(name: 'Olives', price: 0.75),
-  Topping(name: 'Extra Sauce', price: 0.50),
-];
+// TODO: Load toppings from database based on restaurant available add-ons
+/// Common toppings/add-ons - should be loaded from database
+List<Topping> getCommonToppings() {
+  return [
+    Topping(name: 'Extra Cheese', price: 1.50),
+    Topping(name: 'Bacon', price: 2.00),
+    Topping(name: 'Avocado', price: 2.50),
+    Topping(name: 'Mushrooms', price: 1.00),
+    Topping(name: 'Jalapeños', price: 0.75),
+    Topping(name: 'Olives', price: 0.75),
+    Topping(name: 'Extra Sauce', price: 0.50),
+  ];
+}
 
 /// Show dish customization modal
 Future<void> showDishCustomizationModal({
@@ -130,9 +136,9 @@ class _DishCustomizationModalState extends State<DishCustomizationModal> {
     }
 
     final basePrice =
-        widget.menuItem.price * dishSizes[_selectedSizeIndex].priceMultiplier;
+        widget.menuItem.price * getDishSizes()[_selectedSizeIndex].priceMultiplier;
     final toppingsPrice = _selectedToppings.fold(0.0, (sum, toppingName) {
-      final topping = commonToppings.firstWhere((t) => t.name == toppingName);
+      final topping = getCommonToppings().firstWhere((t) => t.name == toppingName);
       return sum + topping.price;
     });
     return (basePrice + toppingsPrice) * _quantity;
@@ -150,11 +156,11 @@ class _DishCustomizationModalState extends State<DishCustomizationModal> {
     }
 
     return {
-      'size': dishSizes[_selectedSizeIndex].label,
-      'sizeMultiplier': dishSizes[_selectedSizeIndex].priceMultiplier,
+      'size': getDishSizes()[_selectedSizeIndex].label,
+      'sizeMultiplier': getDishSizes()[_selectedSizeIndex].priceMultiplier,
       'toppings': _selectedToppings.toList(),
       'toppingsPrice': _selectedToppings.fold(0.0, (sum, toppingName) {
-        final topping = commonToppings.firstWhere((t) => t.name == toppingName);
+        final topping = getCommonToppings().firstWhere((t) => t.name == toppingName);
         return sum + topping.price;
       }),
       'spiceLevel': _spiceLevel.toInt(),
@@ -413,15 +419,15 @@ class _DishCustomizationModalState extends State<DishCustomizationModal> {
         ),
         const SizedBox(height: 12),
         Row(
-          children: List.generate(dishSizes.length, (index) {
-            final size = dishSizes[index];
+          children: List.generate(getDishSizes().length, (index) {
+            final size = getDishSizes()[index];
             final isSelected = index == _selectedSizeIndex;
             final price = widget.menuItem.price * size.priceMultiplier;
 
             return Expanded(
               child: Padding(
                 padding: EdgeInsets.only(
-                  right: index < dishSizes.length - 1 ? 8.0 : 0,
+                  right: index < getDishSizes().length - 1 ? 8.0 : 0,
                 ),
                 child: GestureDetector(
                   onTap: () {
@@ -486,7 +492,7 @@ class _DishCustomizationModalState extends State<DishCustomizationModal> {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: commonToppings.map((topping) {
+          children: getCommonToppings().map((topping) {
             final isSelected = _selectedToppings.contains(topping.name);
 
             return GestureDetector(

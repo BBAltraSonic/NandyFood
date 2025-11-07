@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:food_delivery_app/core/services/database_service.dart';
+import 'package:food_delivery_app/core/services/restaurant_service.dart';
 import 'package:food_delivery_app/core/services/location_service.dart';
 import 'package:food_delivery_app/core/utils/location_utils.dart';
 import 'package:food_delivery_app/core/utils/app_logger.dart';
@@ -16,9 +17,11 @@ class HomeRestaurantState {
   final List<Restaurant> popularRestaurants;
   final List<Restaurant> featuredRestaurants;
   final List<Restaurant> nearbyRestaurants;
+  final List<Restaurant> gridRestaurants;
   final Position? userLocation;
   final bool isLoading;
   final bool isLocationLoading;
+  final bool isGridLoading;
   final String? errorMessage;
   final String? locationError;
   final bool hasLocationPermission;
@@ -27,14 +30,18 @@ class HomeRestaurantState {
   final int popularRestaurantsCount;
   final int featuredRestaurantsCount;
   final int nearbyRestaurantsCount;
+  final bool hasMoreGridRestaurants;
+  final int gridPage;
 
   const HomeRestaurantState({
     this.popularRestaurants = const [],
     this.featuredRestaurants = const [],
     this.nearbyRestaurants = const [],
+    this.gridRestaurants = const [],
     this.userLocation,
     this.isLoading = false,
     this.isLocationLoading = false,
+    this.isGridLoading = false,
     this.errorMessage,
     this.locationError,
     this.hasLocationPermission = false,
@@ -43,15 +50,19 @@ class HomeRestaurantState {
     this.popularRestaurantsCount = 0,
     this.featuredRestaurantsCount = 0,
     this.nearbyRestaurantsCount = 0,
+    this.hasMoreGridRestaurants = true,
+    this.gridPage = 1,
   });
 
   HomeRestaurantState copyWith({
     List<Restaurant>? popularRestaurants,
     List<Restaurant>? featuredRestaurants,
     List<Restaurant>? nearbyRestaurants,
+    List<Restaurant>? gridRestaurants,
     Position? userLocation,
     bool? isLoading,
     bool? isLocationLoading,
+    bool? isGridLoading,
     String? errorMessage,
     String? locationError,
     bool? hasLocationPermission,
@@ -60,14 +71,18 @@ class HomeRestaurantState {
     int? popularRestaurantsCount,
     int? featuredRestaurantsCount,
     int? nearbyRestaurantsCount,
+    bool? hasMoreGridRestaurants,
+    int? gridPage,
   }) {
     return HomeRestaurantState(
       popularRestaurants: popularRestaurants ?? this.popularRestaurants,
       featuredRestaurants: featuredRestaurants ?? this.featuredRestaurants,
       nearbyRestaurants: nearbyRestaurants ?? this.nearbyRestaurants,
+      gridRestaurants: gridRestaurants ?? this.gridRestaurants,
       userLocation: userLocation ?? this.userLocation,
       isLoading: isLoading ?? this.isLoading,
       isLocationLoading: isLocationLoading ?? this.isLocationLoading,
+      isGridLoading: isGridLoading ?? this.isGridLoading,
       errorMessage: errorMessage ?? this.errorMessage,
       locationError: locationError ?? this.locationError,
       hasLocationPermission: hasLocationPermission ?? this.hasLocationPermission,
@@ -76,13 +91,16 @@ class HomeRestaurantState {
       popularRestaurantsCount: popularRestaurantsCount ?? this.popularRestaurantsCount,
       featuredRestaurantsCount: featuredRestaurantsCount ?? this.featuredRestaurantsCount,
       nearbyRestaurantsCount: nearbyRestaurantsCount ?? this.nearbyRestaurantsCount,
+      hasMoreGridRestaurants: hasMoreGridRestaurants ?? this.hasMoreGridRestaurants,
+      gridPage: gridPage ?? this.gridPage,
     );
   }
 }
 
 class HomeRestaurantNotifier extends StateNotifier<HomeRestaurantState> {
-  final DatabaseService _dbService = DatabaseService();
-  final LocationService _locationService = LocationService();
+  final RestaurantService _restaurantService;
+  final DatabaseService _dbService;
+  final LocationService _locationService;
   StreamSubscription<Position>? _locationSubscription;
   RealtimeChannel? _restaurantSubscription;
   Timer? _refreshTimer;
@@ -90,7 +108,14 @@ class HomeRestaurantNotifier extends StateNotifier<HomeRestaurantState> {
   bool _isDisposed = false;
   bool _isInitializing = false;
 
-  HomeRestaurantNotifier() : super(const HomeRestaurantState()) {
+  HomeRestaurantNotifier({
+    required RestaurantService restaurantService,
+    required DatabaseService dbService,
+    required LocationService locationService,
+  }) : _restaurantService = restaurantService,
+       _dbService = dbService,
+       _locationService = locationService,
+       super(const HomeRestaurantState()) {
     _initializePeriodicRefresh();
   }
 
@@ -258,41 +283,11 @@ class HomeRestaurantNotifier extends StateNotifier<HomeRestaurantState> {
     );
   }
 
-  // Load restaurants from database with personalization
+  // Load restaurants from database with personalization using RestaurantService
   Future<void> _loadRestaurants() async {
     try {
-      final response = await _dbService.client
-          .from('restaurants')
-          .select('''
-            id,
-            name,
-            description,
-            cuisine_type,
-            rating,
-            total_reviews,
-            delivery_radius,
-            estimated_delivery_time,
-            delivery_fee,
-            minimum_order_amount,
-            is_active,
-            is_featured,
-            logo_url,
-            cover_image_url,
-            latitude,
-            longitude,
-            opening_hours,
-            dietary_options,
-            features,
-            city,
-            state
-          ''')
-          .eq('is_active', true)
-          .order('rating', ascending: false);
-
-      final List<Restaurant> restaurants = (response as List)
-          .map((json) => _parseRestaurantFromJson(json as Map<String, dynamic>))
-          .where((restaurant) => restaurant.latitude != null && restaurant.longitude != null)
-          .toList();
+      // Get restaurants using RestaurantService
+      final restaurants = await _restaurantService.getRestaurants(limit: 100);
 
       await Future.wait([
         _calculatePopularRestaurants(restaurants),
@@ -454,20 +449,30 @@ class HomeRestaurantNotifier extends StateNotifier<HomeRestaurantState> {
     }
   }
 
-  // Calculate featured restaurants based on admin flags and user preferences
+  // Calculate featured restaurants using RestaurantService
   Future<void> _calculateFeaturedRestaurants(List<Restaurant> restaurants) async {
-    final featuredRestaurants = restaurants
-        .where((r) => r.isFeatured)
-        .take(4)
-        .toList();
+    try {
+      final featuredRestaurants = await _restaurantService.getFeaturedRestaurants(limit: 4);
 
-    state = state.copyWith(
-      featuredRestaurants: featuredRestaurants,
-      featuredRestaurantsCount: featuredRestaurants.length,
-    );
+      state = state.copyWith(
+        featuredRestaurants: featuredRestaurants,
+        featuredRestaurantsCount: featuredRestaurants.length,
+      );
+    } catch (e) {
+      // Fallback to filtering local list
+      final featuredRestaurants = restaurants
+          .where((r) => r.isFeatured)
+          .take(4)
+          .toList();
+
+      state = state.copyWith(
+        featuredRestaurants: featuredRestaurants,
+        featuredRestaurantsCount: featuredRestaurants.length,
+      );
+    }
   }
 
-  // Calculate nearby restaurants based on user location
+  // Calculate nearby restaurants using RestaurantService
   Future<void> _calculateNearbyRestaurants(List<Restaurant> restaurants) async {
     if (state.userLocation == null) {
       // If no location, return empty list
@@ -478,40 +483,59 @@ class HomeRestaurantNotifier extends StateNotifier<HomeRestaurantState> {
       return;
     }
 
-    final userLat = state.userLocation!.latitude;
-    final userLng = state.userLocation!.longitude;
+    try {
+      final userLat = state.userLocation!.latitude;
+      final userLng = state.userLocation!.longitude;
 
-    // Calculate distances and sort using LocationUtils
-    final restaurantsWithDistance = restaurants.map((restaurant) {
-      final restaurantLat = restaurant.latitude ?? 0.0;
-      final restaurantLng = restaurant.longitude ?? 0.0;
-
-      // Validate coordinates before calculating distance
-      if (!LocationUtils.isValidCoordinate(restaurantLat, restaurantLng)) {
-        return MapEntry(restaurant, double.infinity);
-      }
-
-      final distance = LocationUtils.calculateDistance(
+      // Use RestaurantService's nearby functionality
+      final nearbyRestaurants = await _restaurantService.getNearbyRestaurants(
         userLat,
         userLng,
-        restaurantLat,
-        restaurantLng,
+        radiusKm: 50.0,
+        limit: 4,
       );
-      return MapEntry(restaurant, distance);
-    }).where((entry) => entry.value <= 50.0 && entry.value != double.infinity) // Within 50km
-      .toList();
 
-    restaurantsWithDistance.sort((a, b) => a.value.compareTo(b.value));
+      state = state.copyWith(
+        nearbyRestaurants: nearbyRestaurants,
+        nearbyRestaurantsCount: nearbyRestaurants.length,
+      );
+    } catch (e) {
+      // Fallback to manual distance calculation
+      final userLat = state.userLocation!.latitude;
+      final userLng = state.userLocation!.longitude;
 
-    final nearbyRestaurants = restaurantsWithDistance
-        .take(4)
-        .map((entry) => entry.key)
+      // Calculate distances and sort using LocationUtils
+      final restaurantsWithDistance = restaurants.map((restaurant) {
+        final restaurantLat = restaurant.latitude ?? 0.0;
+        final restaurantLng = restaurant.longitude ?? 0.0;
+
+        // Validate coordinates before calculating distance
+        if (!LocationUtils.isValidCoordinate(restaurantLat, restaurantLng)) {
+          return MapEntry(restaurant, double.infinity);
+        }
+
+        final distance = LocationUtils.calculateDistance(
+          userLat,
+          userLng,
+          restaurantLat,
+          restaurantLng,
+        );
+        return MapEntry(restaurant, distance);
+      }).where((entry) => entry.value <= 50.0 && entry.value != double.infinity) // Within 50km
         .toList();
 
-    state = state.copyWith(
-      nearbyRestaurants: nearbyRestaurants,
-      nearbyRestaurantsCount: nearbyRestaurants.length,
-    );
+      restaurantsWithDistance.sort((a, b) => a.value.compareTo(b.value));
+
+      final nearbyRestaurants = restaurantsWithDistance
+          .take(4)
+          .map((entry) => entry.key)
+          .toList();
+
+      state = state.copyWith(
+        nearbyRestaurants: nearbyRestaurants,
+        nearbyRestaurantsCount: nearbyRestaurants.length,
+      );
+    }
   }
 
   // Refresh only nearby restaurants (for location updates)
@@ -622,6 +646,86 @@ class HomeRestaurantNotifier extends StateNotifier<HomeRestaurantState> {
         .toList();
   }
 
+  // Grid restaurant loading methods
+  Future<void> loadGridRestaurants() async {
+    if (_isDisposed) return;
+
+    try {
+      _safeUpdateState((state) => state.copyWith(isGridLoading: true));
+
+      const pageSize = 20;
+      final offset = 0;
+
+      final response = await _dbService.client
+          .from('restaurants')
+          .select('*')
+          .order('rating', ascending: false)
+          .range(offset, offset + pageSize - 1);
+
+      if (_isDisposed) return;
+
+      final restaurants = (response as List)
+          .map((data) => Restaurant.fromJson(data as Map<String, dynamic>))
+          .toList();
+
+      _safeUpdateState((state) => state.copyWith(
+        gridRestaurants: restaurants,
+        isGridLoading: false,
+        hasMoreGridRestaurants: restaurants.length >= pageSize,
+        gridPage: 1,
+      ));
+
+    } catch (e) {
+      AppLogger.error('Error loading grid restaurants', error: e);
+      if (_isDisposed) return;
+
+      _safeUpdateState((state) => state.copyWith(isGridLoading: false));
+    }
+  }
+
+  Future<void> loadMoreGridRestaurants() async {
+    if (_isDisposed || !state.hasMoreGridRestaurants || state.isGridLoading) return;
+
+    try {
+      _safeUpdateState((state) => state.copyWith(isGridLoading: true));
+
+      const pageSize = 20;
+      final currentPage = state.gridPage;
+      final offset = currentPage * pageSize;
+
+      final response = await _dbService.client
+          .from('restaurants')
+          .select('*')
+          .order('rating', ascending: false)
+          .range(offset, offset + pageSize - 1);
+
+      if (_isDisposed) return;
+
+      final newRestaurants = (response as List)
+          .map((data) => Restaurant.fromJson(data as Map<String, dynamic>))
+          .toList();
+
+      final updatedRestaurants = [...state.gridRestaurants, ...newRestaurants];
+
+      _safeUpdateState((state) => state.copyWith(
+        gridRestaurants: updatedRestaurants,
+        isGridLoading: false,
+        hasMoreGridRestaurants: newRestaurants.length >= pageSize,
+        gridPage: currentPage + 1,
+      ));
+
+    } catch (e) {
+      AppLogger.error('Error loading more grid restaurants', error: e);
+      if (_isDisposed) return;
+
+      _safeUpdateState((state) => state.copyWith(isGridLoading: false));
+    }
+  }
+
+  // Getters for grid state
+  bool get hasMoreGridRestaurants => state.hasMoreGridRestaurants;
+  bool get isGridLoading => state.isGridLoading;
+
   // Validate UUID format
   bool _isValidUUID(String uuid) {
     if (uuid.isEmpty) return false;
@@ -638,7 +742,17 @@ class HomeRestaurantNotifier extends StateNotifier<HomeRestaurantState> {
 // Provider for home restaurants with advanced personalization
 final homeRestaurantProvider =
     StateNotifierProvider<HomeRestaurantNotifier, HomeRestaurantState>(
-      (ref) => HomeRestaurantNotifier(),
+      (ref) {
+        final restaurantService = ref.watch(restaurantServiceProvider);
+        final dbService = ref.watch(databaseServiceProvider);
+        final locationService = ref.watch(locationServiceProvider);
+
+        return HomeRestaurantNotifier(
+          restaurantService: restaurantService,
+          dbService: dbService,
+          locationService: locationService,
+        );
+      },
     );
 
 // Computed providers for UI
@@ -660,4 +774,17 @@ final isLoadingRestaurantsProvider = Provider<bool>(
 
 final hasLocationPermissionProvider = Provider<bool>(
   (ref) => ref.watch(homeRestaurantProvider).hasLocationPermission,
+);
+
+// Grid restaurant providers
+final gridRestaurantsProvider = Provider<List<Restaurant>>(
+  (ref) => ref.watch(homeRestaurantProvider).gridRestaurants,
+);
+
+final isGridLoadingProvider = Provider<bool>(
+  (ref) => ref.watch(homeRestaurantProvider).isGridLoading,
+);
+
+final hasMoreGridRestaurantsProvider = Provider<bool>(
+  (ref) => ref.watch(homeRestaurantProvider).hasMoreGridRestaurants,
 );

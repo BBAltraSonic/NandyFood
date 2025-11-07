@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:path/path.dart' as path;
@@ -276,3 +277,8 @@ class ImageUploadService {
     );
   }
 }
+
+/// Provider for ImageUploadService
+final imageUploadServiceProvider = Provider<ImageUploadService>((ref) {
+  return ImageUploadService();
+});

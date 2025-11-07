@@ -18,7 +18,7 @@ import 'package:food_delivery_app/features/home/presentation/widgets/quick_reord
 import 'package:food_delivery_app/features/home/presentation/widgets/chefs_specials_section.dart';
 import 'package:food_delivery_app/features/home/presentation/widgets/popular_restaurants_section.dart';
 import 'package:food_delivery_app/features/home/presentation/widgets/featured_restaurants_section.dart';
-import 'package:food_delivery_app/features/home/presentation/widgets/nearby_restaurants_section.dart';
+import 'package:food_delivery_app/features/home/presentation/widgets/restaurant_grid_section.dart';
 import 'package:food_delivery_app/features/home/presentation/providers/map_view_provider.dart';
 import 'package:food_delivery_app/features/home/presentation/providers/home_restaurant_provider.dart';
 import 'package:food_delivery_app/core/services/location_service.dart';
@@ -196,12 +196,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: CustomScrollView(
           controller: _scrollController,
           slivers: [
-            // Parallax Map Section (60% of screen)
+            // Address search field above the map
+            SliverToBoxAdapter(
+              child: SafeArea(
+                bottom: false,
+                child: _buildFloatingHeader(context, theme),
+              ),
+            ),
+
+            // Parallax Map Section with seamless transition
             SliverPersistentHeader(
               pinned: false,
               floating: false,
               delegate: ParallaxMapDelegate(
-                maxHeight: MediaQuery.of(context).size.height * 0.6,
+                maxHeight: MediaQuery.of(context).size.height * 0.5,
                 minHeight: 100,
                 child: RepaintBoundary(
                   child: Stack(
@@ -217,155 +225,132 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       ),
 
-                    // Floating header with location and user controls
-                    Positioned(
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      child: SafeArea(
-                        child: _buildFloatingHeader(context, theme),
-                      ),
-                    ),
-
-                    // Floating search bar with improved positioning
-                    Positioned(
-                      bottom: 32, // Increased spacing to prevent overlap
-                      left: 20,
-                      right: 20, // Slightly reduced margins for better balance
-                      child: _buildFloatingSearchBar(context, theme),
-                    ),
-
-                    // Gradient fade at bottom for smooth transition with search bar
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      child: Container(
-                        height: 140, // Increased height for better coverage
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.transparent,
-                              Colors.transparent,
-                              NeutralColors.background.withValues(alpha: 0.4),
-                              NeutralColors.background.withValues(alpha: 0.8),
-                              NeutralColors.background,
-                            ],
-                            stops: const [0.0, 0.2, 0.5, 0.8, 1.0],
+                      // Enhanced gradient fade with rounded overlay for seamless transition
+                      Positioned(
+                        bottom: -24, // Overlap into content area
+                        left: 0,
+                        right: 0,
+                        child: Container(
+                          height: 180, // Increased for better coverage
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.transparent,
+                                NeutralColors.background.withValues(alpha: 0.3),
+                                NeutralColors.background.withValues(alpha: 0.7),
+                                NeutralColors.background,
+                              ],
+                              stops: const [0.0, 0.3, 0.6, 0.85, 1.0],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
                 ),
               ),
             ),
 
-            // Search Bar (moved to parallax map section)
-
-            const SliverToBoxAdapter(child: SizedBox(height: 40)),
-
-            // Dynamic Promotions Section
+            // Search Bar in main content area
             SliverToBoxAdapter(
-              child: RepaintBoundary(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: const PromotionsSection(),
-                ),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: _buildFloatingSearchBar(context, theme),
               ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 40)),
+            const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
-            // Categories Section (moved up)
+            // Categories Section with improved spacing
+            SliverToBoxAdapter(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8), // Increased horizontal padding
+                child: _buildCategoriesSection(theme, restaurantState),
+              ),
+            ),
+
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
-            SliverToBoxAdapter(
-              child: _buildCategoriesSection(theme, restaurantState),
-            ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 32)),
-
-            // Popular Restaurants Section (new)
+            // Popular Restaurants Section with consistent padding
             SliverToBoxAdapter(
-              child: RepaintBoundary(
-                child: const PopularRestaurantsSection(),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: RepaintBoundary(
+                  child: const PopularRestaurantsSection(),
+                ),
               ),
             ),
 
-            // Featured Restaurants Section (new)
+            // Featured Restaurants Section with consistent padding
             SliverToBoxAdapter(
-              child: RepaintBoundary(
-                child: const FeaturedRestaurantsSection(),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: RepaintBoundary(
+                  child: const FeaturedRestaurantsSection(),
+                ),
               ),
             ),
 
-            // Nearby Restaurants Section (new)
+            // Recommended Dishes Section with consistent spacing
             SliverToBoxAdapter(
-              child: RepaintBoundary(
-                child: const NearbyRestaurantsSection(),
-              ),
-            ),
-
-            // Recommended Dishes Section
-            SliverToBoxAdapter(
-              child: RepaintBoundary(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: RepaintBoundary(
                   child: const DishRecommendationCarousel(),
                 ),
               ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 40)),
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-            // Chef's Specials Section
+            // Chef's Specials Section with consistent padding
             SliverToBoxAdapter(
-              child: RepaintBoundary(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: RepaintBoundary(
                   child: const ChefsSpecialsSection(),
                 ),
               ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 40)),
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-            // Favorites Section
+            // Favorites Section with consistent padding
             SliverToBoxAdapter(
-              child: RepaintBoundary(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: RepaintBoundary(
                   child: const FavoritesSection(),
                 ),
               ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 40)),
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-            // Trending Now Section
+            // Trending Now Section with consistent padding
             SliverToBoxAdapter(
-              child: RepaintBoundary(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: RepaintBoundary(
                   child: const TrendingNowSection(),
                 ),
               ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 40)),
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-            // Consolidated Reorder Section (combining Order Again and Quick Reorder)
+            // Consolidated Reorder Section with consistent padding
             SliverToBoxAdapter(
-              child: RepaintBoundary(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: RepaintBoundary(
                   child: Column(
                     children: [
                       const OrderAgainSection(),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
                       const QuickReorderSection(),
                     ],
                   ),
@@ -373,8 +358,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
 
+            // Restaurant Grid Section with consistent padding
+            SliverToBoxAdapter(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: RepaintBoundary(
+                  child: const RestaurantGridSection(),
+                ),
+              ),
+            ),
+
             // Add bottom padding to prevent white space
-            const SliverToBoxAdapter(child: SizedBox(height: 60)),
+            const SliverToBoxAdapter(child: SizedBox(height: 32)),
 
             ],
         ),
@@ -910,18 +905,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  // New widget: Floating search bar for map overlay
+  // Enhanced floating search bar with better shadow and elevation
   Widget _buildFloatingSearchBar(BuildContext context, ThemeData theme) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.95),
+        color: Colors.white.withValues(alpha: 0.98),
         borderRadius: BorderRadius.circular(BorderRadiusTokens.xxl),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
             spreadRadius: 0,
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 32,
+            offset: const Offset(0, 8),
+            spreadRadius: -8,
           ),
         ],
       ),
@@ -976,10 +977,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  // New widget: Floating header with address input and user controls
+  // Enhanced floating header with better shadow and elevation
   Widget _buildFloatingHeader(BuildContext context, ThemeData theme) {
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(
+        left: 16,
+        right: 16,
+        top: 16,
+        bottom: 8,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -988,9 +994,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.95),
+                color: Colors.white.withValues(alpha: 0.98),
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: ShadowTokens.shadowMd,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.06),
+                    blurRadius: 12,
+                    offset: const Offset(0, 2),
+                    spreadRadius: 0,
+                  ),
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 24,
+                    offset: const Offset(0, 4),
+                    spreadRadius: -4,
+                  ),
+                ],
               ),
               child: Row(
                 children: [

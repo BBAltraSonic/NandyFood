@@ -8,7 +8,7 @@ import 'package:food_delivery_app/features/favourites/presentation/screens/favou
 import 'package:food_delivery_app/features/order/presentation/screens/order_history_screen.dart';
 import 'package:food_delivery_app/features/profile/presentation/screens/profile_screen.dart';
 import 'package:food_delivery_app/features/support/presentation/screens/customer_support_screen.dart';
-import 'package:food_delivery_app/shared/widgets/modern_bottom_navigation.dart';
+import 'package:food_delivery_app/shared/widgets/glass_nav_bar.dart';
 import 'package:food_delivery_app/features/order/presentation/providers/cart_provider.dart';
 import 'package:food_delivery_app/shared/widgets/role_switcher_widget.dart';
 import 'package:food_delivery_app/features/support/presentation/widgets/support_chat_widget.dart';
@@ -98,7 +98,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: ModernBottomNavigation(
+      bottomNavigationBar: GlassNavBar(
         currentIndex: _currentIndex,
         onTap: _onTabTapped,
         cartItemCount: cartItemCount,

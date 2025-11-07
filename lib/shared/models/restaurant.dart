@@ -9,7 +9,7 @@ class Restaurant {
   final String? description;
   @JsonKey(name: 'cuisine_type')
   final String cuisineType;
-  final Map<String, dynamic> address;
+  final Map<String, dynamic>? address;
   @JsonKey(name: 'phone_number')
   final String? phoneNumber;
   final String? email;
@@ -61,7 +61,7 @@ class Restaurant {
     required this.name,
     this.description,
     required this.cuisineType,
-    required this.address,
+    this.address,
     this.phoneNumber,
     this.email,
     this.websiteUrl,

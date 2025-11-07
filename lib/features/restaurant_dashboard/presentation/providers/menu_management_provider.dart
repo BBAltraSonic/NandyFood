@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:food_delivery_app/core/services/image_upload_service.dart';
-import 'package:food_delivery_app/features/restaurant_dashboard/services/restaurant_management_service.dart';
+import 'package:food_delivery_app/core/services/menu_service.dart';
 import 'package:food_delivery_app/shared/models/menu_item.dart';
 
 /// Menu management state
@@ -64,22 +64,21 @@ class MenuManagementState {
 
 /// Menu management notifier
 class MenuManagementNotifier extends StateNotifier<MenuManagementState> {
-  MenuManagementNotifier(this._restaurantId) : super(const MenuManagementState()) {
-    _restaurantService = RestaurantManagementService();
-    _imageUploadService = ImageUploadService();
+  MenuManagementNotifier(this._restaurantId, this._menuService, this._imageUploadService)
+      : super(const MenuManagementState()) {
     loadMenuItems();
   }
 
   final String _restaurantId;
-  late final RestaurantManagementService _restaurantService;
-  late final ImageUploadService _imageUploadService;
+  final MenuService _menuService;
+  final ImageUploadService _imageUploadService;
 
   /// Load all menu items
   Future<void> loadMenuItems() async {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final items = await _restaurantService.getMenuItems(_restaurantId);
+      final items = await _menuService.getMenuItems(_restaurantId);
       state = state.copyWith(
         items: items,
         isLoading: false,
@@ -104,31 +103,31 @@ class MenuManagementNotifier extends StateNotifier<MenuManagementState> {
       String? imageUrl;
       if (imageFile != null) {
         // Create item first to get ID, then upload image
-        final tempItem = await _restaurantService.createMenuItem(item);
+        final tempItem = await _menuService.createMenuItem(item.toJson());
         imageUrl = await _imageUploadService.uploadMenuItemImage(
           imageFile,
           tempItem.id,
         );
-        
+
         // Update item with image URL
-        await _restaurantService.updateMenuItem(
+        final updatedItem = await _menuService.updateMenuItem(
           tempItem.id,
           {'image_url': imageUrl},
         );
-        
+
         // Reload menu to get updated item
         await loadMenuItems();
-        return state.items.firstWhere((i) => i.id == tempItem.id);
+        return updatedItem;
       } else {
-        final createdItem = await _restaurantService.createMenuItem(item);
-        
+        final createdItem = await _menuService.createMenuItem(item.toJson());
+
         // Add to local state
         final updatedItems = [...state.items, createdItem];
         state = state.copyWith(
           items: updatedItems,
           isLoading: false,
         );
-        
+
         return createdItem;
       }
     } catch (e) {
@@ -175,7 +174,7 @@ class MenuManagementNotifier extends StateNotifier<MenuManagementState> {
         }
       }
 
-      await _restaurantService.updateMenuItem(itemId, updates);
+      await _menuService.updateMenuItem(itemId, updates);
 
       // Reload menu items
       await loadMenuItems();
@@ -194,7 +193,7 @@ class MenuManagementNotifier extends StateNotifier<MenuManagementState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      await _restaurantService.deleteMenuItem(itemId);
+      await _menuService.deleteMenuItem(itemId);
 
       // Remove from local state
       final updatedItems = state.items.where((item) => item.id != itemId).toList();
@@ -214,20 +213,25 @@ class MenuManagementNotifier extends StateNotifier<MenuManagementState> {
   }
 
   /// Toggle menu item availability
-  Future<bool> toggleAvailability(String itemId, bool isAvailable) async {
+  Future<bool> toggleAvailability(String itemId) async {
     try {
-      await _restaurantService.toggleMenuItemAvailability(itemId, isAvailable);
+      final updatedItem = await _menuService.toggleMenuItemAvailability(itemId);
 
-      // Update local state
-      final updatedItems = state.items.map((item) {
-        if (item.id == itemId) {
-          return item.copyWith(isAvailable: isAvailable);
-        }
-        return item;
-      }).toList();
+      if (updatedItem != null) {
+        // Update local state
+        final updatedItems = state.items.map((item) {
+          if (item.id == itemId) {
+            return updatedItem;
+          }
+          return item;
+        }).toList();
 
-      state = state.copyWith(items: updatedItems);
-      return true;
+        state = state.copyWith(items: updatedItems);
+        return true;
+      } else {
+        state = state.copyWith(error: 'Failed to toggle availability');
+        return false;
+      }
     } catch (e) {
       state = state.copyWith(
         error: 'Failed to toggle availability: ${e.toString()}',
@@ -259,10 +263,7 @@ class MenuManagementNotifier extends StateNotifier<MenuManagementState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      // Update each item
-      await Future.wait(
-        itemIds.map((id) => _restaurantService.toggleMenuItemAvailability(id, isAvailable)),
-      );
+      await _menuService.bulkUpdateAvailability(itemIds, isAvailable);
 
       // Update local state
       final updatedItems = state.items.map((item) {
@@ -293,7 +294,16 @@ final menuManagementProvider = StateNotifierProvider.family<
     MenuManagementNotifier,
     MenuManagementState,
     String>(
-  (ref, restaurantId) => MenuManagementNotifier(restaurantId),
+  (ref, restaurantId) {
+    final menuService = ref.watch(menuServiceProvider);
+    final imageUploadService = ref.watch(imageUploadServiceProvider);
+
+    return MenuManagementNotifier(
+      restaurantId,
+      menuService,
+      imageUploadService,
+    );
+  },
 );
 
 /// Provider for filtered items

@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:food_delivery_app/core/providers/auth_provider.dart';
 import 'package:food_delivery_app/core/providers/role_provider.dart';
 import 'package:food_delivery_app/shared/models/user_role.dart';
@@ -57,23 +59,26 @@ class _UnifiedRoleSwitcherState extends ConsumerState<UnifiedRoleSwitcher>
     final primaryRole = ref.watch(primaryRoleProvider);
     final currentLocation = widget.showCurrentLocation ? _getCurrentLocation() : null;
 
+    final roleTypes = userRoles.map((r) => r.role).toList();
+    final currentRoleType = primaryRole ?? UserRoleType.consumer;
+
     if (userRoles.length <= 1) {
-      return _buildSingleRoleDisplay(primaryRole, currentLocation);
+      return _buildSingleRoleDisplay(currentRoleType, currentLocation);
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildRoleSwitcherHeader(userRoles, primaryRole, currentLocation),
+        _buildRoleSwitcherHeader(roleTypes, currentRoleType, currentLocation),
         if (_isExpanded) ...[
           const SizedBox(height: 12),
-          _buildRoleOptions(userRoles, primaryRole),
+          _buildRoleOptions(roleTypes, currentRoleType),
         ],
       ],
     );
   }
 
-  Widget _buildSingleRoleDisplay(UserRoleType? role, String? currentLocation) {
+  Widget _buildSingleRoleDisplay(UserRoleType role, String? currentLocation) {
     final roleInfo = _getRoleInfo(role);
 
     return widget.isCompact
@@ -244,7 +249,7 @@ class _UnifiedRoleSwitcherState extends ConsumerState<UnifiedRoleSwitcher>
                         ),
                         if (!widget.isCompact && currentLocation != null)
                           Text(
-                            currentLocation!,
+                            currentLocation,
                             style: TextStyle(
                               fontSize: 11,
                               color: Colors.grey.shade600,
@@ -405,27 +410,44 @@ class _UnifiedRoleSwitcherState extends ConsumerState<UnifiedRoleSwitcher>
   }
 
   void _switchRole(UserRoleType newRole) async {
-    if (newRole == ref.read(primaryRoleProvider)) {
+    final currentRole = ref.read(primaryRoleProvider);
+    if (newRole == currentRole) {
       _toggleExpanded();
       return;
     }
 
-    // Store current location for context preservation
+    final userId = ref.read(authStateProvider).user?.id;
+    if (userId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('User not authenticated'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
     if (widget.allowCustomRouting) {
       final contextState = _captureCurrentContext();
       await _storeContextForRole(newRole, contextState);
     }
 
     try {
-      // Switch role
-      await ref.read(roleProvider.notifier).switchPrimaryRole(newRole);
+      final success = await ref.read(roleProvider.notifier).switchRole(userId, newRole);
 
-      // Navigate to appropriate screen for the new role
-      final targetRoute = _getRouteForRole(newRole);
-
-      if (mounted) {
+      if (success && mounted) {
         _toggleExpanded();
+        final targetRoute = _getRouteForRole(newRole);
         context.go(targetRoute);
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to switch role'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -440,32 +462,43 @@ class _UnifiedRoleSwitcherState extends ConsumerState<UnifiedRoleSwitcher>
   }
 
   RoleContext _captureCurrentContext() {
-    // Capture current app state for context preservation
+    final modalRoute = ModalRoute.of(context);
+    _currentRoute = modalRoute?.settings.name;
+    
     return RoleContext(
-      route: ModalRoute.of(context)?.settings.name,
-      arguments: ModalRoute.of(context)?.settings.arguments,
+      route: _currentRoute,
+      arguments: modalRoute?.settings.arguments,
       timestamp: DateTime.now(),
       userData: {
         'lastScreen': _getCurrentScreen(),
-        'scrollPosition': 0.0, // TODO: Capture scroll position
-        'activeFilters': [], // TODO: Capture active filters
+        'scrollPosition': 0.0,
+        'activeFilters': [],
       },
     );
   }
 
   Future<void> _storeContextForRole(UserRoleType role, RoleContext context) async {
-    // TODO: Store context in local storage or database
-    // This would allow users to return to their previous state
+    await RoleContextService.storeContext(role, context);
   }
 
   String _getCurrentLocation() {
-    // TODO: Get current location/route name
-    return 'Home';
+    final route = ModalRoute.of(context)?.settings.name;
+    if (route == null) return 'Home';
+    
+    final routeMap = {
+      '/home': 'Home',
+      '/restaurant/dashboard': 'Restaurant Dashboard',
+      '/restaurant/orders': 'Restaurant Orders',
+      '/admin/dashboard': 'Admin Dashboard',
+      '/driver/dashboard': 'Driver Dashboard',
+    };
+    
+    return routeMap[route] ?? route.split('/').last.replaceAll('_', ' ').split(' ').map((word) => word.isEmpty ? '' : '${word[0].toUpperCase()}${word.substring(1)}').join(' ');
   }
 
   String _getCurrentScreen() {
-    // TODO: Get current screen name
-    return 'home';
+    final route = ModalRoute.of(context)?.settings.name;
+    return route?.split('/').last ?? 'home';
   }
 
   String _getRouteForRole(UserRoleType role) {
@@ -479,12 +512,11 @@ class _UnifiedRoleSwitcherState extends ConsumerState<UnifiedRoleSwitcher>
       case UserRoleType.deliveryDriver:
         return '/driver/dashboard';
       case UserRoleType.consumer:
-      default:
         return '/home';
     }
   }
 
-  RoleInfo _getRoleInfo(UserRoleType? role) {
+  RoleInfo _getRoleInfo(UserRoleType role) {
     switch (role) {
       case UserRoleType.restaurantOwner:
         return const RoleInfo(
@@ -519,7 +551,6 @@ class _UnifiedRoleSwitcherState extends ConsumerState<UnifiedRoleSwitcher>
           color: Colors.green,
         );
       case UserRoleType.consumer:
-      default:
         return const RoleInfo(
           displayName: 'Customer',
           shortName: 'CUSTOMER',
@@ -583,19 +614,44 @@ class RoleContext {
 
 /// Context-aware role switching service
 class RoleContextService {
-  static const String _contextKey = 'role_contexts';
+  static const String _contextKeyPrefix = 'role_context_';
 
   static Future<void> storeContext(UserRoleType role, RoleContext context) async {
-    // TODO: Implement context storage using SharedPreferences or database
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = '$_contextKeyPrefix${role.name}';
+      final jsonString = jsonEncode(context.toJson());
+      await prefs.setString(key, jsonString);
+    } catch (e) {
+      debugPrint('Error storing role context: $e');
+    }
   }
 
   static Future<RoleContext?> getContext(UserRoleType role) async {
-    // TODO: Retrieve stored context for a role
-    return null;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = '$_contextKeyPrefix${role.name}';
+      final jsonString = prefs.getString(key);
+      if (jsonString == null) return null;
+      
+      final json = jsonDecode(jsonString) as Map<String, dynamic>;
+      return RoleContext.fromJson(json);
+    } catch (e) {
+      debugPrint('Error retrieving role context: $e');
+      return null;
+    }
   }
 
   static Future<void> clearAllContexts() async {
-    // TODO: Clear all stored contexts
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final keys = prefs.getKeys().where((key) => key.startsWith(_contextKeyPrefix));
+      for (final key in keys) {
+        await prefs.remove(key);
+      }
+    } catch (e) {
+      debugPrint('Error clearing role contexts: $e');
+    }
   }
 }
 
@@ -774,7 +830,6 @@ class RoleSwitchDialog extends StatelessWidget {
           color: Colors.green,
         );
       case UserRoleType.consumer:
-      default:
         return const RoleInfo(
           displayName: 'Customer',
           shortName: 'CUSTOMER',

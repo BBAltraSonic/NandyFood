@@ -64,7 +64,11 @@
       "Bash(git pull:*)",
       "mcp__supabase__get_publishable_keys",
       "Bash(socat:*)",
-      "Bash(\"C:\\Users\\BB\\Documents\\NandyFood\\lib\\shared\\models\\restaurant.dart\")"
+      "Bash(\"C:\\Users\\BB\\Documents\\NandyFood\\lib\\shared\\models\\restaurant.dart\")",
+      "Bash(where:*)",
+      "Bash(.supabase.exe:*)",
+      "Bash(\"C:\\Users\\BB\\Documents\\NandyFood\\supabase.exe\" db push)",
+      "Bash(/dev/stdin)"
     ],
     "deny": [],
     "ask": []

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:food_delivery_app/core/services/category_service.dart';
 
 /// Categories that users can filter restaurants by
 class RestaurantCategory {
@@ -97,11 +99,11 @@ class CategoriesHorizontalList extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Container(
-      height: 56,
-      margin: const EdgeInsets.symmetric(vertical: 12),
+      height: 60,
+      margin: const EdgeInsets.symmetric(vertical: 8),
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 20), // Increased to 20px for better clearance
         itemCount: RestaurantCategories.all.length,
         separatorBuilder: (context, index) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
@@ -162,14 +164,14 @@ class _CategoryChip extends StatelessWidget {
           boxShadow: [
             if (isSelected)
               BoxShadow(
-                color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                blurRadius: 10,
+                color: theme.colorScheme.primary.withValues(alpha: 0.25),
+                blurRadius: 8,
                 offset: const Offset(0, 4),
               )
             else
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 8,
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 6,
                 offset: const Offset(0, 2),
               ),
           ],

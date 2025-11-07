@@ -280,13 +280,19 @@ class ShadowTokens {
     ),
   ];
 
-  // Special food card shadow
+  // Enhanced food card shadow with better elevation
   static List<BoxShadow> foodCardShadow = [
     BoxShadow(
-      color: Color(0x10000000),
+      color: Color(0x0A000000), // More subtle shadow
+      offset: const Offset(0, 4),
+      blurRadius: 12,
+      spreadRadius: 0,
+    ),
+    BoxShadow(
+      color: Color(0x05000000), // Even more subtle ambient shadow
       offset: const Offset(0, 8),
       blurRadius: 24,
-      spreadRadius: 0,
+      spreadRadius: -4,
     ),
   ];
 }

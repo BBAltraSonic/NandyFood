@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 
@@ -222,3 +223,8 @@ class LocationService {
     return [];
   }
 }
+
+/// Provider for LocationService
+final locationServiceProvider = Provider<LocationService>((ref) {
+  return LocationService();
+});

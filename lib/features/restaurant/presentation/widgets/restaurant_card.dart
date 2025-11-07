@@ -22,7 +22,7 @@ class RestaurantCard extends ConsumerWidget {
     );
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
       height: 220,
       child: GestureDetector(
         onTap: onTap,
@@ -216,7 +216,7 @@ class RestaurantCard extends ConsumerWidget {
               ),
               const SizedBox(width: 4),
               Text(
-                '2.5 km',
+                'Distance', // TODO: Calculate actual distance from user location
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: Colors.white.withValues(alpha: 0.9),
                 ),
