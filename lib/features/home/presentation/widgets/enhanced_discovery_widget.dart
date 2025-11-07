@@ -24,7 +24,7 @@ class _EnhancedDiscoveryWidgetState
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -142,7 +142,6 @@ class _EnhancedDiscoveryWidgetState
         tabs: const [
           Tab(text: 'For You'),
           Tab(text: 'Categories'),
-          Tab(text: 'Nearby'),
           Tab(text: 'Trending'),
         ],
         labelColor: AppTheme.primaryBlack,
@@ -162,7 +161,6 @@ class _EnhancedDiscoveryWidgetState
         children: [
           _buildForYouTab(),
           _buildCategoriesTab(),
-          _buildNearbyTab(),
           _buildTrendingTab(),
         ],
       ),
@@ -265,44 +263,6 @@ class _EnhancedDiscoveryWidgetState
             () => _browseCategory(category['name'] as String),
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildNearbyTab() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.location_on, color: Colors.green),
-              const SizedBox(width: 8),
-              Text(
-                'Restaurants Near You',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const Spacer(),
-              TextButton(
-                onPressed: () => _changeLocation(),
-                child: const Text('Change Location'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: ListView.builder(
-              itemCount: 5, // Mock data
-              itemBuilder: (context, index) {
-                return _buildNearbyRestaurantCard(index);
-              },
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -435,80 +395,6 @@ class _EnhancedDiscoveryWidgetState
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildNearbyRestaurantCard(int index) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.restaurant, size: 30),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Restaurant ${index + 1}',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  '${(index + 1) * 0.3} km away',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 12,
-                  ),
-                ),
-                Row(
-                  children: [
-                    const Icon(Icons.star, color: Colors.amber, size: 12),
-                    Text('4.${(index + 1) % 5 + 5}'),
-                    const SizedBox(width: 8),
-                    const Icon(Icons.schedule, size: 12),
-                    Text('${20 + index * 5} min'),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Column(
-            children: [
-              Text(
-                '\$${(15 + index * 3)}.99',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green,
-                ),
-              ),
-              const SizedBox(height: 4),
-              ElevatedButton(
-                onPressed: () => _viewRestaurant(index),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryBlack,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                ),
-                child: const Text('View'),
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }

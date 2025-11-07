@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -307,25 +308,24 @@ class _RestaurantNavigationScreenState
   }
 
   Widget _buildRestaurantBottomNav() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.55),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
-        ],
-      ),
-      child: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: _onTabTapped,
-        destinations: _destinations,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+          child: NavigationBar(
+            selectedIndex: _currentIndex,
+            onDestinationSelected: _onTabTapped,
+            destinations: _destinations,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+          ),
+        ),
       ),
     );
   }
@@ -483,7 +483,7 @@ class _RestaurantNavigationScreenState
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: (action['color'] as Color).withOpacity(0.1),
+                color: (action['color'] as Color).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(

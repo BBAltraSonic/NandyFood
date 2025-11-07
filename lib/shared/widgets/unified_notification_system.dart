@@ -238,7 +238,6 @@ class _UnifiedNotificationSystemState extends ConsumerState<UnifiedNotificationS
         color: notification.isRead
             ? Colors.transparent
             : _getRoleColor(userRole).withValues(alpha: 0.05),
-        ),
         border: Border(
           left: BorderSide(
             color: _getNotificationColor(notification.type),

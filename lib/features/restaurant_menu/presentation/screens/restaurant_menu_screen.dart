@@ -3,7 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:food_delivery_app/core/routing/route_paths.dart';
 import 'package:food_delivery_app/core/providers/role_provider.dart';
+import 'package:food_delivery_app/core/providers/auth_provider.dart';
+import 'package:food_delivery_app/core/services/menu_service.dart';
+import 'package:food_delivery_app/core/services/restaurant_service.dart';
 import 'package:food_delivery_app/shared/models/user_role.dart';
+import 'package:food_delivery_app/shared/models/menu_item.dart';
 import 'package:food_delivery_app/shared/theme/app_theme.dart';
 
 /// Restaurant menu management screen
@@ -148,126 +152,308 @@ class _RestaurantMenuScreenState extends ConsumerState<RestaurantMenuScreen> {
   }
 
   Widget _buildMenuItems() {
-    // TODO: Implement actual menu items from backend
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: 6, // Mock data
-      itemBuilder: (context, index) {
-        return _buildMenuItemCard(index);
+    final authState = ref.watch(authStateProvider);
+    final menuService = ref.watch(menuServiceProvider);
+
+    if (authState == null) {
+      return _buildEmptyState('User not authenticated', false);
+    }
+
+    return FutureBuilder<List<MenuItem>>(
+      future: _getMenuItemsForUser(authState.user?.id ?? '', menuService),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return _buildEmptyState('Error loading menu: ${snapshot.error}', false);
+        }
+
+        final menuItems = snapshot.data ?? [];
+
+        if (menuItems.isEmpty) {
+          final userRole = ref.watch(primaryRoleProvider);
+          final isOwner = userRole == UserRoleType.restaurantOwner;
+          return _buildEmptyState('No menu items yet', isOwner);
+        }
+
+        // Filter by selected category
+        final filteredItems = _selectedCategory == null
+            ? menuItems
+            : menuItems.where((item) => item.category == _selectedCategory).toList();
+
+        if (filteredItems.isEmpty) {
+          return _buildEmptyState('No items in $_selectedCategory', false);
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: filteredItems.length,
+          itemBuilder: (context, index) {
+            return _buildMenuItemCard(filteredItems[index]);
+          },
+        );
       },
     );
   }
 
-  Widget _buildMenuItemCard(int index) {
+  Widget _buildMenuItemCard(MenuItem menuItem) {
     final userRole = ref.watch(primaryRoleProvider);
     final isOwner = userRole == UserRoleType.restaurantOwner;
     final staffData = ref.watch(staffDataProvider);
     final canEdit = isOwner || _canEditMenu(staffData);
 
-    final mockItems = [
-      {'name': 'Classic Burger', 'price': 12.99, 'category': 'Main Courses', 'available': true},
-      {'name': 'Caesar Salad', 'price': 8.99, 'category': 'Appetizers', 'available': true},
-      {'name': 'Grilled Salmon', 'price': 18.99, 'category': 'Main Courses', 'available': false},
-      {'name': 'Chocolate Cake', 'price': 6.99, 'category': 'Desserts', 'available': true},
-      {'name': 'Fresh Orange Juice', 'price': 3.99, 'category': 'Beverages', 'available': true},
-      {'name': 'French Fries', 'price': 4.99, 'category': 'Appetizers', 'available': true},
-    ];
-
-    final item = mockItems[index % mockItems.length];
-    final isAvailable = item['available'] as bool;
-
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        leading: Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            color: Colors.grey.shade200,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: const Icon(Icons.restaurant_menu, size: 30),
-        ),
-        title: Row(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Menu item image
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: Colors.grey.shade200,
+              ),
+              child: menuItem.imageUrl != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        menuItem.imageUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(Icons.restaurant, color: Colors.grey.shade400);
+                        },
+                      ),
+                    )
+                  : Icon(Icons.restaurant, color: Colors.grey.shade400),
+            ),
+            const SizedBox(width: 16),
+
+            // Menu item details
             Expanded(
-              child: Text(
-                item['name'] as String,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  decoration: !isAvailable ? TextDecoration.lineThrough : null,
-                  color: !isAvailable ? Colors.grey : null,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          menuItem.name,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      // Availability indicator
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: menuItem.isAvailable ? Colors.green.shade100 : Colors.red.shade100,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          menuItem.isAvailable ? 'Available' : 'Unavailable',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: menuItem.isAvailable ? Colors.green.shade800 : Colors.red.shade800,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+
+                  if (menuItem.description != null) ...[
+                    Text(
+                      menuItem.description!,
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 14,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+
+                  Row(
+                    children: [
+                      Text(
+                        '\$${menuItem.price.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+
+                      // Category tag
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          menuItem.category,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                      ),
+
+                      if (menuItem.preparationTime > 0) ...[
+                        const SizedBox(width: 8),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.access_time, size: 14, color: Colors.grey.shade600),
+                            const SizedBox(width: 2),
+                            Text(
+                              '${menuItem.preparationTime}min',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+
+                  // Dietary restrictions if any
+                  if (menuItem.dietaryRestrictions != null && menuItem.dietaryRestrictions!.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 4,
+                      children: menuItem.dietaryRestrictions!.take(3).map((dietary) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            dietary,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.blue.shade700,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ],
               ),
             ),
-            if (!isAvailable)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Text(
-                  'Unavailable',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-          ],
-        ),
-        subtitle: Text(
-          '\$${(item['price'] as double).toStringAsFixed(2)} • ${item['category']}',
-          style: TextStyle(
-            color: !isAvailable ? Colors.grey.shade500 : null,
-          ),
-        ),
-        trailing: canEdit
-            ? PopupMenuButton<String>(
-                onSelected: (value) => _handleItemAction(value, item['name'] as String),
+
+            // Action buttons
+            if (canEdit)
+              PopupMenuButton<String>(
+                onSelected: (value) => _handleItemAction(value, menuItem.id),
                 itemBuilder: (context) => [
                   PopupMenuItem(
                     value: 'edit',
                     child: ListTile(
-                      leading: Icon(Icons.edit, color: Colors.blue),
-                      title: Text('Edit Item'),
+                      leading: const Icon(Icons.edit),
+                      title: const Text('Edit'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: menuItem.isAvailable ? 'unavailable' : 'available',
+                    child: ListTile(
+                      leading: Icon(
+                        menuItem.isAvailable ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      title: Text(menuItem.isAvailable ? 'Mark Unavailable' : 'Mark Available'),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
                   PopupMenuItem(
                     value: 'duplicate',
                     child: ListTile(
-                      leading: Icon(Icons.copy, color: Colors.green),
-                      title: Text('Duplicate Item'),
+                      leading: const Icon(Icons.copy),
+                      title: const Text('Duplicate'),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
                   PopupMenuItem(
-                    value: isAvailable ? 'unavailable' : 'available',
-                    child: ListTile(
-                      leading: Icon(
-                        isAvailable ? Icons.visibility_off : Icons.visibility,
-                        color: isAvailable ? Colors.orange : Colors.green,
-                      ),
-                      title: Text(isAvailable ? 'Mark Unavailable' : 'Mark Available'),
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  ),
-                  const PopupMenuItem(
                     value: 'delete',
                     child: ListTile(
-                      leading: Icon(Icons.delete, color: Colors.red),
-                      title: Text('Delete Item'),
+                      leading: const Icon(Icons.delete, color: Colors.red),
+                      title: const Text('Delete', style: TextStyle(color: Colors.red)),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
                 ],
-              )
-            : null,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyMenuItemCard(bool canEdit) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 1,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: Icon(Icons.restaurant_menu, size: 30, color: Colors.grey.shade400),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'No menu items yet',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Add menu items to get started',
+                    style: TextStyle(
+                      color: Colors.grey.shade500,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (canEdit)
+              IconButton(
+                icon: Icon(Icons.add_circle, color: Colors.blue.shade600),
+                onPressed: () => context.push('${RoutePaths.restaurantMenu}/add'),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -406,6 +592,113 @@ class _RestaurantMenuScreenState extends ConsumerState<RestaurantMenuScreen> {
             ),
             child: const Text('Delete'),
           ),
+        ],
+      ),
+    );
+  }
+
+  /// Get menu items for the current user's restaurant
+  Future<List<MenuItem>> _getMenuItemsForUser(String userId, MenuService menuService) async {
+    try {
+      // First, get the user's restaurant (this would depend on your user-restaurant relationship)
+      // For now, we'll assume we need to get restaurant_id from user profile or another service
+      // This is a placeholder - you'll need to implement the actual logic
+
+      // Option 1: If user has a direct restaurant_id in their profile
+      // Option 2: If you have a separate user_restaurants table
+      // Option 3: If restaurant owners are linked differently
+
+      // For demonstration, let's assume we have a method to get the restaurant ID
+      // This would typically be in a UserProfileService or similar
+      final restaurantId = await _getUserRestaurantId(userId);
+
+      if (restaurantId == null) {
+        throw Exception('User does not have an associated restaurant');
+      }
+
+      // Get menu items for the restaurant
+      final menuItems = await menuService.getMenuItems(restaurantId);
+
+      // Load categories for filtering
+      _loadCategories(restaurantId, menuService);
+
+      return menuItems;
+    } catch (e) {
+      print('Error getting menu items: $e');
+      throw e;
+    }
+  }
+
+  /// Get restaurant ID for the current user
+  Future<String?> _getUserRestaurantId(String userId) async {
+    try {
+      // This is a placeholder implementation
+      // You would typically:
+      // 1. Query user_profiles for restaurant_id
+      // 2. Query a restaurants table where owner_id = userId
+      // 3. Query a user_restaurants join table
+
+      // For now, return null and let the calling code handle it
+      // In a real implementation, this would be:
+      // final userProfile = await _userProfileService.getUserProfile(userId);
+      // return userProfile?.restaurantId;
+
+      // Or query restaurants directly:
+      // final restaurants = await _restaurantService.getRestaurantsByOwner(userId);
+      // return restaurants.isNotEmpty ? restaurants.first.id : null;
+
+      return null; // Placeholder
+    } catch (e) {
+      print('Error getting user restaurant ID: $e');
+      return null;
+    }
+  }
+
+  /// Load categories for the restaurant
+  Future<void> _loadCategories(String restaurantId, MenuService menuService) async {
+    try {
+      final categories = await menuService.getMenuCategories(restaurantId);
+      // You could update state or store categories for filtering
+      // For now, we'll just log them
+      print('Available categories: $categories');
+    } catch (e) {
+      print('Error loading categories: $e');
+    }
+  }
+
+  /// Build empty state with message
+  Widget _buildEmptyState(String message, bool canEdit) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.restaurant_menu,
+            size: 64,
+            color: Colors.grey.shade400,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            style: TextStyle(
+              color: Colors.grey.shade600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            canEdit ? 'Add menu items to get started' : 'No menu items available',
+            style: TextStyle(
+              color: Colors.grey.shade500,
+              fontSize: 14,
+            ),
+          ),
+          if (canEdit) ...[
+            const SizedBox(height: 16),
+            IconButton(
+              icon: Icon(Icons.add_circle, color: Colors.blue.shade600),
+              onPressed: () => context.push('${RoutePaths.restaurantMenu}/add'),
+            ),
+          ],
         ],
       ),
     );

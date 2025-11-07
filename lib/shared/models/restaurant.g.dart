@@ -11,7 +11,7 @@ Restaurant _$RestaurantFromJson(Map<String, dynamic> json) => Restaurant(
   name: json['name'] as String,
   description: json['description'] as String?,
   cuisineType: json['cuisine_type'] as String,
-  address: json['address'] as Map<String, dynamic>,
+  address: json['address'] as Map<String, dynamic>?,
   phoneNumber: json['phone_number'] as String?,
   email: json['email'] as String?,
   websiteUrl: json['website_url'] as String?,

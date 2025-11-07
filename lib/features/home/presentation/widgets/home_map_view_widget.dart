@@ -251,8 +251,11 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
         // Map controls cluster (right side) - Black theme
         Positioned(
           top: 16,
-          right: 16,
-          child: Column(
+          right: 32, // Increased to 32px for better clearance from Categories
+          child: Material(
+            elevation: 8, // Add elevation for proper z-index layering
+            color: Colors.transparent,
+            child: Column(
             children: [
               // Zoom in button
               Container(
@@ -316,15 +319,19 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
                 ),
               ),
             ],
+            ),
           ),
         ),
 
         // Recenter button (bottom right) - Black theme
         Positioned(
           bottom: _selectedRestaurant != null ? 120 : 16,
-          right: 16,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
+          right: 32, // Increased to 32px to match zoom controls
+          child: Material(
+            elevation: 8, // Add elevation for proper z-index layering
+            color: Colors.transparent,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
             decoration: BoxDecoration(
               color: Colors.black,
               borderRadius: BorderRadius.circular(16),
@@ -350,6 +357,7 @@ class _HomeMapViewWidgetState extends State<HomeMapViewWidget>
                     size: 24,
                   ),
                 ),
+              ),
               ),
             ),
           ),

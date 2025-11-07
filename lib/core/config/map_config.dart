@@ -13,15 +13,19 @@ class MapConfig {
   /// Google Maps API key (loaded from .env file)
   static String get googleMapsApiKey {
     debugPrint('MapConfig: googleMapsApiKey getter called');
-    // Load from .env file with fallback for safety
+    // Load from .env file - no hardcoded fallback for security
     String? apiKey = dotenv.env['GOOGLE_MAPS_API_KEY'];
+
     if (apiKey == null || apiKey.isEmpty || apiKey == 'YOUR_API_KEY_HERE') {
-      // Fallback to the hardcoded key as backup
-      apiKey = 'AIzaSyBYiFP4Y-Hi9d-JboqXCcDDP5Kc94iL1ZY';
-      debugPrint('MapConfig: Using fallback API key');
-    } else {
-      debugPrint('MapConfig: Using API key from .env file');
+      // Throw an error instead of using hardcoded key for security
+      throw Exception(
+        'Google Maps API key not found or invalid. '
+        'Please set GOOGLE_MAPS_API_KEY in your .env file.\n'
+        'Get your API key from: https://console.developers.google.com/apis/credentials'
+      );
     }
+
+    debugPrint('MapConfig: Using API key from .env file');
     debugPrint('MapConfig: API key length: ${apiKey.length}');
     return apiKey;
   }
