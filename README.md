@@ -7,6 +7,8 @@ A full-featured, production-ready food delivery application built with Flutter a
 ![Riverpod](https://img.shields.io/badge/Riverpod-2.6.1-purple)
 ![Supabase](https://img.shields.io/badge/Supabase-2.10.3-green)
 ![License](https://img.shields.io/badge/License-Private-red)
+![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen)
+![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20iOS-informational)
 
 ---
 
@@ -55,12 +57,13 @@ A full-featured, production-ready food delivery application built with Flutter a
 
 Before you begin, ensure you have the following installed:
 
-- **Flutter SDK**: 3.8.0 or higher ([Install Flutter](https://flutter.dev/docs/get-started/install))
+- **Flutter SDK**: 3.35.5 or higher ([Install Flutter](https://flutter.dev/docs/get-started/install))
 - **Dart SDK**: 3.8.0 or higher (comes with Flutter)
-- **Android Studio** or **Xcode** (for mobile development)
+- **Android Studio** or **VS Code** with Flutter extension
 - **Git**: For version control
 - **Supabase Account**: [Create free account](https://supabase.com)
 - **Firebase Account**: [Create free account](https://firebase.google.com)
+- **Android SDK**: API level 21+ (Android 5.0) for mobile development
 
 ### Installation
 
@@ -91,6 +94,9 @@ ENVIRONMENT=development  # development, staging, or production
 PAYFAST_MERCHANT_ID=your_merchant_id
 PAYFAST_MERCHANT_KEY=your_merchant_key
 PAYFAST_PASSPHRASE=your_passphrase
+
+# Google Maps Configuration
+GOOGLE_MAPS_API_KEY=your_google_maps_api_key
 ```
 
 4. **Configure Firebase**
@@ -102,14 +108,17 @@ PAYFAST_PASSPHRASE=your_passphrase
 
 5. **Run database migrations**
 
-```bash
-# Connect to your Supabase project
-cd supabase/migrations
+Use the Supabase CLI for automated migrations:
 
-# Apply all migrations in order
-psql -h <db-host> -U postgres -d postgres -f 001_create_user_profiles.sql
-psql -h <db-host> -U postgres -d postgres -f 002_create_addresses.sql
-# ... continue for all migration files
+```bash
+# Install Supabase CLI if not already installed
+npm install -g supabase
+
+# Link to your project
+supabase link --project-ref your-project-ref
+
+# Apply all migrations
+supabase db push
 ```
 
 Or use the PowerShell script:
@@ -121,8 +130,8 @@ Or use the PowerShell script:
 
 ```bash
 supabase functions deploy send-order-notification
-supabase functions deploy initialize-paystack-payment
-supabase functions deploy verify-paystack-payment
+supabase functions deploy initialize-payment
+supabase functions deploy verify-payment
 # ... deploy other functions as needed
 ```
 
@@ -135,6 +144,10 @@ flutter run
 # Or specify a device
 flutter run -d chrome  # Web
 flutter run -d <device-id>  # Specific device
+
+# For debugging
+flutter run --debug
+flutter run --profile
 ```
 
 ---
@@ -153,7 +166,7 @@ lib/
 │   ├── providers/                 # Core Riverpod providers
 │   ├── routing/                   # Navigation & routing
 │   ├── security/                  # Security utilities
-│   ├── services/                  # Business logic services (21 services)
+│   ├── services/                  # Business logic services (21+ services)
 │   └── utils/                     # Utility functions & helpers
 │
 ├── features/                      # Feature modules
@@ -173,8 +186,8 @@ lib/
 │   └── onboarding/                # App introduction
 │
 ├── shared/                        # Shared resources
-│   ├── models/                    # Data models (37 models)
-│   ├── widgets/                   # Reusable widgets (41 widgets)
+│   ├── models/                    # Data models (40+ models)
+│   ├── widgets/                   # Reusable widgets (50+ widgets)
 │   ├── theme/                     # App theming
 │   └── utils/                     # Shared utilities
 │
@@ -186,8 +199,8 @@ test/                              # Test suite
 └── integration/                   # Integration tests
 
 supabase/
-├── migrations/                    # Database migrations (18 files)
-└── functions/                     # Edge functions (7 functions)
+├── migrations/                    # Database migrations (20+ files)
+└── functions/                     # Edge functions (10+ functions)
 ```
 
 ---
@@ -210,12 +223,15 @@ Role-based access control
 Restaurant information and settings
 - `id`, `name`, `description`, `address`, `location` (PostGIS)
 - `owner_id`, `cuisine_type`, `rating`, `hero_image_url`
-- `is_active`, `operating_hours` (JSONB)
+- `is_active`, `operating_hours` (JSONB), `delivery_radius`
+- `min_order_amount`, `delivery_fee`, `accepts_cash_on_delivery`
 
 #### `menu_items`
 Restaurant menu items
 - `id`, `restaurant_id`, `name`, `description`, `price`
 - `image_url`, `category`, `is_available`, `dietary_info` (JSONB)
+- `preparation_time`, `spice_level`, `allergens` (JSONB)
+- `customization_options` (JSONB), `stock_quantity`
 
 #### `orders`
 Customer orders
@@ -232,6 +248,8 @@ Junction table for order details
 Delivery tracking information
 - `id`, `order_id`, `driver_id`, `status`
 - `pickup_time`, `delivery_time`, `driver_location` (PostGIS)
+- `estimated_arrival`, `delivery_instructions`, `customer_rating`
+- `driver_notes`, `proof_of_delivery_url`
 
 ### Security
 
@@ -277,20 +295,23 @@ Role assignment handled via `user_roles` table with granular permissions.
 
 #### PayFast (Primary - South Africa)
 - Local payment gateway
-- Multiple payment methods
+- Multiple payment methods (Credit Card, EFT, Zapper, Masterpass)
 - Instant payment verification
 - Production-ready implementation
+- Secure checkout experience
 
 #### Stripe (International)
 - Global payment processing
 - Credit/debit cards
 - Payment Intent API
 - Strong Customer Authentication (SCA)
+- Apple Pay & Google Pay integration
 
 #### Cash on Delivery
 - No online payment required
 - Driver collects payment
 - Manual confirmation
+- Supported for selected areas only
 
 ### Configuration
 
@@ -348,13 +369,19 @@ flutter test test/unit/services/auth_service_test.dart
 
 # Run with coverage
 flutter test --coverage
+
+# Run tests on specific platform
+flutter test --platform chrome
+
+# Generate coverage report
+genhtml coverage/lcov.info -o coverage/html
 ```
 
 ### Test Structure
 
-- **Unit Tests** - Service layer business logic
-- **Widget Tests** - UI component behavior
-- **Integration Tests** - End-to-end user flows
+- **Unit Tests** - Service layer business logic and models
+- **Widget Tests** - UI component behavior and interactions
+- **Integration Tests** - End-to-end user flows and API integration
 
 ### Test Coverage Goals
 
@@ -362,6 +389,19 @@ flutter test --coverage
 - Providers: 85%+
 - Screens: 70%+
 - Overall: 80%+
+
+### Test Commands
+
+```bash
+# Run tests with detailed output
+flutter test --verbose
+
+# Run tests and update golden files
+flutter test --update-goldens
+
+# Run specific test groups
+flutter test --name "Authentication"
+```
 
 ---
 
@@ -471,6 +511,12 @@ PAYFAST_MERCHANT_KEY=
 PAYFAST_PASSPHRASE=
 
 STRIPE_PUBLISHABLE_KEY=
+
+# Maps & Location
+GOOGLE_MAPS_API_KEY=
+
+# Analytics
+FIREBASE_ANALYTICS_API_KEY=
 ```
 
 ### Build Flavors
@@ -478,7 +524,7 @@ STRIPE_PUBLISHABLE_KEY=
 The app supports multiple environments:
 - **Development** - Debug builds with verbose logging
 - **Staging** - Pre-production testing
-- **Production** - Release builds
+- **Production** - Release builds with optimized performance
 
 ---
 
@@ -515,6 +561,11 @@ Output: `build/ios/archive/`
 - [ ] Test on physical devices
 - [ ] Verify environment variables
 - [ ] Update release notes
+- [ ] Check Google Maps API quota
+- [ ] Verify payment provider settings
+- [ ] Test Supabase RLS policies
+- [ ] Review API rate limits
+- [ ] Test push notifications
 
 ---
 
@@ -536,15 +587,30 @@ Output: `build/ios/archive/`
 - Update CocoaPods: `cd ios && pod install`
 - Clean build: `flutter clean`
 - Verify Xcode version compatibility
+- Check iOS deployment target (minimum 12.0)
 
 **4. Provider Not Found Errors**
-- Ensure `build_runner` has been run
+- Ensure `build_runner` has been run: `dart run build_runner build`
 - Check for proper `ProviderScope` in `main.dart`
+- Verify proper imports in provider files
 
 **5. Payment Integration Issues**
 - Verify environment-specific credentials
 - Check payment provider dashboard for API status
 - Review server logs in Supabase Functions
+- Test with sandbox credentials first
+
+**6. Google Maps API Issues**
+- Verify API key is correctly configured
+- Check API key restrictions in Google Cloud Console
+- Ensure Maps SDK for Android/iOS is enabled
+- Verify billing is enabled for the project
+
+**7. Real-time Updates Not Working**
+- Check Supabase Realtime permissions
+- Verify RLS policies allow subscriptions
+- Check network connectivity
+- Review Realtime JWT configuration
 
 ### Debug Mode
 
@@ -662,9 +728,143 @@ For questions or support, please contact the development team.
 
 ---
 
+## ⚠️ Known Issues & Current Problems
+
+### Critical Issues 🚨
+
+#### Map Integration Issues
+- **Problem**: Google Maps integration is not functional
+- **Impact**: Users cannot view restaurant locations or track deliveries
+- **Status**: API key configuration needed
+- **Priority**: High
+
+#### App Not Fully Wired
+- **Problem**: Many features and screens are not properly connected
+- **Impact**: Incomplete user experience, broken navigation flows
+- **Examples**:
+  - Restaurant details not loading
+  - Cart functionality inconsistent
+  - Order tracking not updating
+  - Profile settings not saving
+- **Status**: Backend integration incomplete
+- **Priority**: Critical
+
+### UI/UX Issues 🎨
+
+#### Visual Design Problems
+- **Problem**: Overall app appearance is visually unappealing
+- **Issues**:
+  - Inconsistent styling across screens
+  - Poor color scheme implementation
+  - Lack of visual hierarchy
+  - Outdated UI components
+- **Impact**: Poor user experience and unprofessional appearance
+- **Status**: Design system needs overhaul
+- **Priority**: High
+
+#### No Clear Role-Based UI
+- **Problem**: User interface doesn't adapt based on user roles
+- **Expected Behavior**:
+  - **Customers**: See restaurant browsing, ordering, tracking
+  - **Restaurant Owners**: See dashboard, menu management, orders
+  - **Drivers**: See delivery assignments, navigation
+  - **Admins**: See admin panel, analytics
+- **Current State**: All users see same interface regardless of role
+- **Impact**: Role-based functionality completely broken
+- **Status**: Role management system not implemented
+- **Priority**: Critical
+
+#### UI Overflow Issues
+- **Problem**: Multiple UI elements overflow their containers
+- **Affected Areas**:
+  - Restaurant cards in list views
+  - Menu item descriptions
+  - Checkout forms
+  - Profile information sections
+  - Navigation drawers
+- **Impact**: Text and buttons cut off, poor readability
+- **Status**: Layout constraints need fixing
+- **Priority**: Medium
+
+### Integration Problems 🔌
+
+#### Backend Connectivity
+- **Problem**: Frontend not properly connected to Supabase backend
+- **Issues**:
+  - Data fetching failures
+  - Real-time updates not working
+  - Authentication state not persistent
+  - CRUD operations incomplete
+- **Status**: API integration incomplete
+- **Priority**: Critical
+
+#### State Management Issues
+- **Problem**: Riverpod providers not properly configured
+- **Symptoms**:
+  - State not updating across screens
+  - Providers throwing exceptions
+  - Build runner generation failures
+  - State persistence problems
+- **Status**: State architecture needs refactoring
+- **Priority**: High
+
+---
+
+## 📋 Comprehensive Improvement Plan
+
+For a detailed 14-week phased improvement plan addressing all current issues, see:
+**[NandyFood – Codebase Analysis and Improvement Plan](./NandyFood_Codebase_Analysis_and_Improvement_Plan.md)**
+
+This plan includes:
+- **Phase 1 (Weeks 1-3)**: Testing foundations, observability, security, CI/CD
+- **Phase 2 (Weeks 4-7)**: Payment reliability, offline/realtime, performance optimization
+- **Phase 3 (Weeks 8-10)**: SRE practices, data governance, operational excellence
+- **Phase 4 (Weeks 11-14)**: Scalability, advanced testing, web parity, accessibility
+
+### Quick Actions from Improvement Plan
+- **Immediate (This Sprint)**: CI coverage gates, integration tests, payment reliability
+- **High Priority**: Fix map integration, complete backend wiring, implement role-based UI
+- **Medium Priority**: UI/UX redesign, performance optimization, accessibility audit
+
+---
+
+## 🆕 Recent Updates
+
+### Version 1.1.0 (Latest)
+
+**New Features** ✨
+- Enhanced restaurant discovery with advanced filtering
+- Improved map integration with Google Maps API
+- Real-time order tracking with driver location
+- Enhanced payment gateway integrations
+- Improved offline mode functionality
+
+**Improvements** 🔧
+- Theme system overhaul with Material 3
+- Performance optimizations for large datasets
+- Enhanced error handling and user feedback
+- Improved accessibility support
+- Better state management with Riverpod 2.6.1
+
+**Bug Fixes** 🐛
+- Fixed parallax scrolling issues
+- Resolved compilation errors across platforms
+- Addressed content visibility problems
+- Fixed notification delivery issues
+- Resolved memory leaks in image caching
+
+**Infrastructure Updates** 🏗️
+- Updated Flutter to 3.35.5
+- Migrated to newer Supabase SDK
+- Enhanced database schema with additional fields
+- Improved RLS policies for better security
+- Added comprehensive logging system
+
+---
+
 ## 🗺️ Roadmap
 
-### Current Version: 1.0.0
+### Current Version: 1.1.0
 
 **Completed Features** ✅
 - User authentication (Email, Google, Apple)
@@ -699,14 +899,30 @@ For questions or support, please contact the development team.
 
 | Category | Completion | Status |
 |----------|------------|--------|
-| Core Features | 85% | 🟢 Production Ready |
-| Testing | 60% | 🟡 In Progress |
-| Documentation | 70% | 🟡 Good |
-| Performance | 80% | 🟢 Optimized |
+| Core Features | 60% | 🔴 Critical Issues |
+| Testing | 65% | 🟡 Good Progress |
+| Documentation | 85% | 🟢 Comprehensive |
+| Performance | 70% | 🟡 Needs Optimization |
 | Security | 95% | 🟢 Secure |
-| UI/UX | 90% | 🟢 Polished |
+| UI/UX | 45% | 🔴 Major Problems |
+| API Integration | 55% | 🔴 Not Fully Wired |
+| Offline Support | 75% | 🟡 Functional |
 
-**Overall Project Health: 82/100** 🟢
+**Overall Project Health: 64/100** 🔴
+
+### Critical Blockers 🚫
+- Maps integration completely broken
+- App not fully wired with backend
+- No role-based UI implementation
+- Visual design requires complete overhaul
+- Multiple overflow issues affecting usability
+
+### Immediate Action Items 📋
+1. Fix Google Maps API integration
+2. Complete backend wiring for all features
+3. Implement proper role-based UI routing
+4. Redesign entire UI/UX with modern components
+5. Fix all overflow and layout issues
 
 ---
 
@@ -725,6 +941,13 @@ Built with amazing open-source packages:
 
 **Made with ❤️ using Flutter**
 
-[Report Bug](issues) · [Request Feature](issues) · [Documentation](docs)
+[Report Bug](https://github.com/your-repo/nandyfood/issues) ·
+[Request Feature](https://github.com/your-repo/nandyfood/issues) ·
+[Documentation](./docs) ·
+[Live Demo](https://demo.nandyfood.com)
+
+---
+
+⭐ Star this repository if it helped you!
 
 </div>
